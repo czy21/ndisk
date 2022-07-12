@@ -21,7 +21,7 @@ func WebDavTest(c *gin.Context) {
 func WebDavController(r *gin.Engine) {
 	r.Any("/dav/*proxyPath", func(c *gin.Context) {
 		fmt.Println(c.Param("proxyPath"))
-		handler := webdav.Handler{Prefix: "/dav", FileSystem: FileSystem{}, LockSystem: webdav.NewMemLS()}
+		handler := webdav.Handler{Prefix: "/dav", FileSystem: CloudFileSystem{}, LockSystem: webdav.NewMemLS()}
 		handler.ServeHTTP(c.Writer, c.Request)
 	})
 }
