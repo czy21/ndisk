@@ -1,27 +1,26 @@
 package webdav
 
 import (
-	"fmt"
-	"github.com/czy21/cloud-disk-sync/exception"
-	"github.com/czy21/cloud-disk-sync/model"
-	"github.com/czy21/cloud-disk-sync/web"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/webdav"
 )
 
-func WebDavTest(c *gin.Context) {
-	input := model.OptionQuery{}
-	err := c.Bind(&input)
-	exception.Check(err)
-	web.Context{Context: c}.
-		OK(model.ResponseModel{Data: "hahaha"}.Build())
-
+func Controller(r *gin.Engine) {
+	v1 := r.Group("/dav")
+	{
+		v1.Any("/*path", ServeWebDAV)
+		v1.Any("", ServeWebDAV)
+		v1.Handle("PROPFIND", "/*path", ServeWebDAV)
+		v1.Handle("PROPFIND", "", ServeWebDAV)
+		v1.Handle("MKCOL", "/*path", ServeWebDAV)
+		v1.Handle("LOCK", "/*path", ServeWebDAV)
+		v1.Handle("UNLOCK", "/*path", ServeWebDAV)
+		v1.Handle("PROPPATCH", "/*path", ServeWebDAV)
+		v1.Handle("COPY", "/*path", ServeWebDAV)
+		v1.Handle("MOVE", "/*path", ServeWebDAV)
+	}
 }
-
-func WebDavController(r *gin.Engine) {
-	r.Any("/dav/*proxyPath", func(c *gin.Context) {
-		fmt.Println(c.Param("proxyPath"))
-		handler := webdav.Handler{Prefix: "/dav", FileSystem: CloudFileSystem{}, LockSystem: webdav.NewMemLS()}
-		handler.ServeHTTP(c.Writer, c.Request)
-	})
+func ServeWebDAV(c *gin.Context) {
+	handler := webdav.Handler{Prefix: "/dav", FileSystem: CloudFileSystem{}, LockSystem: webdav.NewMemLS()}
+	handler.ServeHTTP(c.Writer, c.Request)
 }

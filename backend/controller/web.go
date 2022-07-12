@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"github.com/czy21/cloud-disk-sync/exception"
-	"github.com/czy21/cloud-disk-sync/web"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"net/http"
@@ -29,9 +28,9 @@ func resourceProxy(c *gin.Context, subPath string) {
 
 func WebEngine() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
-		Formatter: web.LogFormatter("WEB"),
-	}))
+	//r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+	//	Formatter: web.LogFormatter("WEB"),
+	//}))
 	r.Use(gin.Recovery())
 	mode := os.Getenv("GIN_MODE")
 	if mode == "release" {
