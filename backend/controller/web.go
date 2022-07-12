@@ -12,8 +12,9 @@ import (
 	"os"
 )
 
-func resourceProxy(c *gin.Context) {
-	remote, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%s", viper.GetString("server.port")))
+func resourceProxy(c *gin.Context, subPath string) {
+	path := fmt.Sprintf("http://127.0.0.1:%s", viper.GetString("server.port"))
+	remote, err := url.Parse(path)
 	exception.Check(err)
 	proxy := httputil.NewSingleHostReverseProxy(remote)
 	proxy.Director = func(req *http.Request) {
@@ -21,7 +22,7 @@ func resourceProxy(c *gin.Context) {
 		req.Host = remote.Host
 		req.URL.Scheme = remote.Scheme
 		req.URL.Host = remote.Host
-		req.URL.Path = c.Param("proxyPath")
+		req.URL.Path = subPath + c.Param("proxyPath")
 	}
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
@@ -41,7 +42,12 @@ func WebEngine() *gin.Engine {
 		})
 		r.StaticFile("/", indexFile)
 		r.Static("/static/", staticFile)
-		r.Any("/api/*proxyPath", resourceProxy)
 	}
+	r.Any("/api/*proxyPath", func(c *gin.Context) {
+		resourceProxy(c, "")
+	})
+	r.Any("/dav/*proxyPath", func(c *gin.Context) {
+		resourceProxy(c, "/dav")
+	})
 	return r
 }

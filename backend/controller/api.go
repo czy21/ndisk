@@ -13,5 +13,6 @@ func ApiEngine() *gin.Engine {
 	r.Use(gin.Recovery())
 	r.Use(web.ErrorHandle())
 	OptionController(r)
+	WebDavController(r)
 	return r
 }
