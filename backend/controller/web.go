@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"github.com/czy21/cloud-disk-sync/constant"
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -11,7 +12,7 @@ import (
 	"os"
 )
 
-func resourceProxy(c *gin.Context, subPath string) {
+func backendReverseProxy(c *gin.Context, subPath string) {
 	path := fmt.Sprintf("http://127.0.0.1:%s", viper.GetString("server.port"))
 	remote, err := url.Parse(path)
 	exception.Check(err)
@@ -21,7 +22,7 @@ func resourceProxy(c *gin.Context, subPath string) {
 		req.Host = remote.Host
 		req.URL.Scheme = remote.Scheme
 		req.URL.Host = remote.Host
-		req.URL.Path = subPath + c.Param("proxyPath")
+		req.URL.Path = subPath + c.Param("path")
 	}
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
@@ -42,11 +43,16 @@ func WebEngine() *gin.Engine {
 		r.StaticFile("/", indexFile)
 		r.Static("/static/", staticFile)
 	}
-	r.Any("/api/*proxyPath", func(c *gin.Context) {
-		resourceProxy(c, "")
+	r.Any("/api/*path", func(c *gin.Context) {
+		backendReverseProxy(c, "")
 	})
-	r.Any("/dav/*proxyPath", func(c *gin.Context) {
-		resourceProxy(c, "/dav")
+	r.Any("/dav/*path", func(c *gin.Context) {
+		backendReverseProxy(c, "/dav")
 	})
+	for _, t := range constant.WebDavMethods {
+		r.Handle(t, "/dav/*path", func(c *gin.Context) {
+			backendReverseProxy(c, "/dav")
+		})
+	}
 	return r
 }
