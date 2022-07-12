@@ -56,5 +56,5 @@ func (CloudFileSystem) Rename(ctx context.Context, oldName, newName string) erro
 	return errors.New("aa")
 }
 func (CloudFileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
-	return CloudFileInfo{isDir: true}, errors.New("aa")
+	return CloudFileInfo{isDir: true}, nil
 }
