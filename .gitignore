@@ -1,0 +1,47 @@
+# idea #
+.idea
+*.iml
+*.log
+
+# web #
+node_modules/
+dist/
+yarn.lock
+/package.json
+
+# dependencies
+.pnp/
+.pnp.js
+
+# misc #
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+# build #
+build/
+___output/
+__pycache__/
+
+# go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+*.test
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+go.work
+
+backend/app.yaml
