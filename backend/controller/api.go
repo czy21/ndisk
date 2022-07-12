@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/czy21/cloud-disk-sync/web"
+	"github.com/czy21/cloud-disk-sync/webdav"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +14,6 @@ func ApiEngine() *gin.Engine {
 	r.Use(gin.Recovery())
 	r.Use(web.ErrorHandle())
 	OptionController(r)
-	WebDavController(r)
+	webdav.WebDavController(r)
 	return r
 }

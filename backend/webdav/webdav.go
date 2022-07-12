@@ -1,10 +1,12 @@
-package controller
+package webdav
 
 import (
+	"fmt"
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/czy21/cloud-disk-sync/model"
 	"github.com/czy21/cloud-disk-sync/web"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/net/webdav"
 )
 
 func WebDavTest(c *gin.Context) {
@@ -17,10 +19,9 @@ func WebDavTest(c *gin.Context) {
 }
 
 func WebDavController(r *gin.Engine) {
-
-	v1 := r.Group("/dav")
-	{
-		v1.POST("/test", WebDavTest)
-	}
-
+	r.Any("/dav/*proxyPath", func(c *gin.Context) {
+		fmt.Println(c.Param("proxyPath"))
+		handler := webdav.Handler{Prefix: "/dav", FileSystem: FileSystem{}, LockSystem: webdav.NewMemLS()}
+		handler.ServeHTTP(c.Writer, c.Request)
+	})
 }
