@@ -45,3 +45,4 @@ __pycache__/
 go.work
 
 backend/app.yaml
+backend/data
