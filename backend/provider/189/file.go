@@ -38,3 +38,29 @@ func (c FileInfo) IsDir() bool {
 func (c FileInfo) Sys() any {
 	return c.sys
 }
+
+type File struct{}
+
+func (f File) Close() error {
+	return nil
+}
+
+func (f File) Read(p []byte) (n int, err error) {
+	panic("implement me")
+}
+
+func (f File) Seek(offset int64, whence int) (int64, error) {
+	panic("implement me")
+}
+
+func (f File) Readdir(count int) ([]fs.FileInfo, error) {
+	panic("implement me")
+}
+
+func (f File) Stat() (fs.FileInfo, error) {
+	panic("implement me")
+}
+
+func (f File) Write(p []byte) (n int, err error) {
+	panic("implement me")
+}
