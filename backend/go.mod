@@ -5,8 +5,9 @@ go 1.18
 require (
 	github.com/gin-gonic/gin v1.8.0
 	github.com/go-playground/validator/v10 v10.11.0
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/spf13/viper v1.12.0
-	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
+	golang.org/x/net v0.0.0-20220708220712-1185a9018129
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	gorm.io/driver/mysql v1.3.4
 	gorm.io/gorm v1.23.5

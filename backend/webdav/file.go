@@ -1,15 +1,11 @@
 package webdav
 
 import (
-	"golang.org/x/net/context"
-	"golang.org/x/net/webdav"
 	"io/fs"
-	"log"
 	"os"
 	"time"
 )
 
-type CloudFileSystem struct{}
 type CloudFileInfo struct {
 	name    string
 	size    int64
@@ -43,25 +39,28 @@ func (c CloudFileInfo) Sys() any {
 	return c.sys
 }
 
-const localDir = "data"
+type CloudFile struct{}
 
-func (CloudFileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
-	log.Printf("Mkdir: %s", name)
-	return webdav.Dir(localDir).Mkdir(ctx, name, perm)
+func (f CloudFile) Close() error {
+	return nil
 }
-func (CloudFileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
-	log.Printf("OpenFile: %s", name)
-	return webdav.Dir(localDir).OpenFile(ctx, name, flag, perm)
+
+func (f CloudFile) Read(p []byte) (n int, err error) {
+	panic("implement me")
 }
-func (CloudFileSystem) RemoveAll(ctx context.Context, name string) error {
-	log.Printf("RemoveAll: %s", name)
-	return webdav.Dir(localDir).RemoveAll(ctx, name)
+
+func (f CloudFile) Seek(offset int64, whence int) (int64, error) {
+	panic("implement me")
 }
-func (CloudFileSystem) Rename(ctx context.Context, oldName, newName string) error {
-	log.Printf("%s", "Rename")
-	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
+
+func (f CloudFile) Readdir(count int) ([]fs.FileInfo, error) {
+	panic("implement me")
 }
-func (CloudFileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
-	log.Printf("Stat: %s", name)
-	return webdav.Dir(localDir).Stat(ctx, name)
+
+func (f CloudFile) Stat() (fs.FileInfo, error) {
+	return CloudFileInfo{isDir: true}, nil
+}
+
+func (f CloudFile) Write(p []byte) (n int, err error) {
+	panic("implement me")
 }

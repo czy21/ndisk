@@ -3,6 +3,7 @@ package util
 import (
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
 	"log"
 	"net/http"
 )

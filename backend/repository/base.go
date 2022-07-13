@@ -18,7 +18,7 @@ func Boot() {
 	dbLogger := logger.New(log.New(log.Writer(), "[DB] ", log.LstdFlags),
 		logger.Config{
 			SlowThreshold:             time.Second,
-			LogLevel:                  logger.Silent,
+			LogLevel:                  logger.Info,
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  true,
 		})
