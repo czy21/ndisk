@@ -16,6 +16,11 @@ func Controller(r *gin.Engine) {
 	}
 }
 func ServeWebDAV(c *gin.Context) {
-	handler := webdav.Handler{Prefix: "/dav", FileSystem: webdav.Dir("./data/"), LockSystem: webdav.NewMemLS()}
+	handler := webdav.Handler{
+		Prefix: "/dav",
+		//FileSystem: CloudFileSystem{},
+		FileSystem: webdav.Dir("data"),
+		LockSystem: webdav.NewMemLS(),
+	}
 	handler.ServeHTTP(c.Writer, c.Request)
 }

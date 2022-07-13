@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	"io/fs"
+	"log"
 	"os"
 	"time"
 )
@@ -44,17 +45,22 @@ func (c CloudFileInfo) Sys() any {
 }
 
 func (CloudFileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
+	log.Printf("%s", "Mkdir")
 	return errors.New("aaa")
 }
 func (CloudFileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
+	log.Printf("%s", "OpenFile")
 	return nil, errors.New("aaa")
 }
 func (CloudFileSystem) RemoveAll(ctx context.Context, name string) error {
+	log.Printf("%s", "RemoveAll")
 	return errors.New("aaa")
 }
 func (CloudFileSystem) Rename(ctx context.Context, oldName, newName string) error {
+	log.Printf("%s", "Rename")
 	return errors.New("aa")
 }
 func (CloudFileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
+	log.Printf("%s", "Stat")
 	return CloudFileInfo{isDir: true}, nil
 }
