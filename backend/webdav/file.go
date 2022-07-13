@@ -1,7 +1,6 @@
 package webdav
 
 import (
-	"errors"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	"io/fs"
@@ -44,23 +43,25 @@ func (c CloudFileInfo) Sys() any {
 	return c.sys
 }
 
+const localDir = "data"
+
 func (CloudFileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
-	log.Printf("%s", "Mkdir")
-	return errors.New("aaa")
+	log.Printf("Mkdir: %s", name)
+	return webdav.Dir(localDir).Mkdir(ctx, name, perm)
 }
 func (CloudFileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
-	log.Printf("%s", "OpenFile")
-	return nil, errors.New("aaa")
+	log.Printf("OpenFile: %s", name)
+	return webdav.Dir(localDir).OpenFile(ctx, name, flag, perm)
 }
 func (CloudFileSystem) RemoveAll(ctx context.Context, name string) error {
-	log.Printf("%s", "RemoveAll")
-	return errors.New("aaa")
+	log.Printf("RemoveAll: %s", name)
+	return webdav.Dir(localDir).RemoveAll(ctx, name)
 }
 func (CloudFileSystem) Rename(ctx context.Context, oldName, newName string) error {
 	log.Printf("%s", "Rename")
-	return errors.New("aa")
+	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
 }
 func (CloudFileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
-	log.Printf("%s", "Stat")
-	return CloudFileInfo{isDir: true}, nil
+	log.Printf("Stat: %s", name)
+	return webdav.Dir(localDir).Stat(ctx, name)
 }
