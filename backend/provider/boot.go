@@ -2,12 +2,11 @@ package provider
 
 import (
 	_189 "github.com/czy21/cloud-disk-sync/provider/189"
-	"golang.org/x/net/webdav"
 )
 
-var All map[string]webdav.FileSystem
+var Providers map[string]FileSystem
 
 func init() {
-	All = make(map[string]webdav.FileSystem)
-	All["189"] = _189.FileSystem{}
+	Providers = make(map[string]FileSystem)
+	Providers[string(Cloud189)] = _189.FileSystem{}
 }

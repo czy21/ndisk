@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type CloudFileInfo struct {
+type FileInfo struct {
 	name    string
 	size    int64
 	mode    os.FileMode
@@ -15,27 +15,27 @@ type CloudFileInfo struct {
 	sys     any
 }
 
-func (c CloudFileInfo) Name() string {
+func (c FileInfo) Name() string {
 	return c.name
 }
 
-func (c CloudFileInfo) Size() int64 {
+func (c FileInfo) Size() int64 {
 	return c.size
 }
 
-func (c CloudFileInfo) Mode() fs.FileMode {
+func (c FileInfo) Mode() fs.FileMode {
 	return c.mode
 }
 
-func (c CloudFileInfo) ModTime() time.Time {
+func (c FileInfo) ModTime() time.Time {
 	return c.modTime
 }
 
-func (c CloudFileInfo) IsDir() bool {
+func (c FileInfo) IsDir() bool {
 	return c.isDir
 }
 
-func (c CloudFileInfo) Sys() any {
+func (c FileInfo) Sys() any {
 	return c.sys
 }
 
@@ -55,9 +55,9 @@ func (f CloudFile) Seek(offset int64, whence int) (int64, error) {
 
 func (f CloudFile) Readdir(count int) ([]fs.FileInfo, error) {
 	var fileInfos []fs.FileInfo
-	for _, t := range ProviderFolders {
+	for _, t := range providers {
 		fileInfos = append(fileInfos,
-			CloudFileInfo{
+			FileInfo{
 				isDir: true,
 				name:  t.Name,
 			})
@@ -66,7 +66,7 @@ func (f CloudFile) Readdir(count int) ([]fs.FileInfo, error) {
 }
 
 func (f CloudFile) Stat() (fs.FileInfo, error) {
-	return CloudFileInfo{isDir: true}, nil
+	return FileInfo{isDir: true}, nil
 }
 
 func (f CloudFile) Write(p []byte) (n int, err error) {

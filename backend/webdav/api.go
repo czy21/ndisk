@@ -7,19 +7,19 @@ import (
 )
 
 func Controller(r *gin.Engine) {
-	v1 := r.Group("/dav")
+	r1 := r.Group("/dav")
 	{
-		v1.Any("/*path", ServeWebDAV)
+		r1.Any("/*path", ServeHttp)
 		for _, t := range constant.WebDavMethods {
-			v1.Handle(t, "/*path", ServeWebDAV)
+			r1.Handle(t, "/*path", ServeHttp)
 		}
 	}
 }
-func ServeWebDAV(c *gin.Context) {
-	handler := webdav.Handler{
+func ServeHttp(c *gin.Context) {
+	h := webdav.Handler{
 		Prefix:     "/dav",
-		FileSystem: CloudFileSystem{},
+		FileSystem: FileSystem{},
 		LockSystem: webdav.NewMemLS(),
 	}
-	handler.ServeHTTP(c.Writer, c.Request)
+	h.ServeHTTP(c.Writer, c.Request)
 }

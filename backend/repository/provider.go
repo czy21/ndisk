@@ -25,10 +25,10 @@ func (Provider) InsertOneForFolder(po model.ProviderFolderPO) {
 	dbClient.Create(&po)
 }
 
-func (Provider) SelectAllForFolder() []model.ProviderFolderDTO {
-	d := dbClient.Model(&model.ProviderFolderDTO{})
+func (Provider) SelectList() []model.Provider {
+	d := dbClient.Model(&model.Provider{})
 	d.Preload("Account")
-	var list []model.ProviderFolderDTO
+	var list []model.Provider
 	d.Find(&list)
 	return list
 }

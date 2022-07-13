@@ -10,42 +10,48 @@ import (
 	"os"
 )
 
-type CloudFileSystem struct{}
+type FileSystem struct{}
+
+var providers []model.Provider
 
 const localDir = "data"
 
-var ProviderFolders []model.ProviderFolderDTO
-
-func (CloudFileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
+func (FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
 	log.Printf("Mkdir: %s", name)
 	return webdav.Dir(localDir).Mkdir(ctx, name, perm)
 }
-func (CloudFileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
+func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
 	log.Printf("OpenFile: %s", name)
 	if name == "/" {
 		return CloudFile{}, nil
 	}
-	return provider.All[ctx.Value("providerKind").(string)].OpenFile(ctx, name, flag, perm)
+	var p model.Provider
+	for _, t := range providers {
+		if name == "/"+t.Name {
+			p = t
+		}
+	}
+	return provider.Providers[p.Account.Kind].OpenFile(ctx, p, name, flag, perm)
 }
-func (CloudFileSystem) RemoveAll(ctx context.Context, name string) error {
+func (FileSystem) RemoveAll(ctx context.Context, name string) error {
 	log.Printf("RemoveAll: %s", name)
 	return webdav.Dir(localDir).RemoveAll(ctx, name)
 }
-func (CloudFileSystem) Rename(ctx context.Context, oldName, newName string) error {
+func (FileSystem) Rename(ctx context.Context, oldName, newName string) error {
 	log.Printf("%s", "Rename")
 	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
 }
-func (CloudFileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
+func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	log.Printf("Stat: %s", name)
 	if name == "/" {
-		ProviderFolders = repository.Provider{}.SelectAllForFolder()
-		return CloudFileInfo{isDir: true}, nil
+		providers = repository.Provider{}.SelectList()
+		return FileInfo{isDir: true}, nil
 	}
-	var provider model.ProviderFolderDTO
-	for _, t := range ProviderFolders {
-		if "/"+t.Name == name {
-			provider = t
+	var p model.Provider
+	for _, t := range providers {
+		if name == "/"+t.Name {
+			p = t
 		}
 	}
-	return provider.All[ctx.Value("providerKind").(string)].Stat(ctx, name)
+	return provider.Providers[p.Account.Kind].Stat(ctx, p, name)
 }
