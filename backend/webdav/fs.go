@@ -14,7 +14,7 @@ type CloudFileSystem struct{}
 
 const localDir = "data"
 
-var folders []model.ProviderFolderDTO
+var ProviderFolders []model.ProviderFolderDTO
 
 func (CloudFileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
 	log.Printf("Mkdir: %s", name)
@@ -38,8 +38,14 @@ func (CloudFileSystem) Rename(ctx context.Context, oldName, newName string) erro
 func (CloudFileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	log.Printf("Stat: %s", name)
 	if name == "/" {
-		folders = repository.Provider{}.SelectAllForFolder()
+		ProviderFolders = repository.Provider{}.SelectAllForFolder()
 		return CloudFileInfo{isDir: true}, nil
+	}
+	var provider model.ProviderFolderDTO
+	for _, t := range ProviderFolders {
+		if "/"+t.Name == name {
+			provider = t
+		}
 	}
 	return provider.All[ctx.Value("providerKind").(string)].Stat(ctx, name)
 }
