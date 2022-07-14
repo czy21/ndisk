@@ -8,26 +8,29 @@ import (
 	"golang.org/x/net/webdav"
 	"log"
 	"os"
+	"strings"
 )
 
 type FileSystem struct{}
 
-var providers []model.Provider
-
-const localDir = "data"
-
 func (FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
 	log.Printf("Mkdir: %s", name)
-	return webdav.Dir(localDir).Mkdir(ctx, name, perm)
+	var p model.ProviderMeta
+	for _, t := range providerMetas {
+		if strings.HasPrefix(name, "/"+t.Name) {
+			p = t
+		}
+	}
+	return provider.Providers[p.Account.Kind].Mkdir(ctx, p, name, perm)
 }
 func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
 	log.Printf("OpenFile: %s", name)
 	if name == "/" {
 		return CloudFile{}, nil
 	}
-	var p model.Provider
-	for _, t := range providers {
-		if name == "/"+t.Name {
+	var p model.ProviderMeta
+	for _, t := range providerMetas {
+		if strings.HasPrefix(name, "/"+t.Name) {
 			p = t
 		}
 	}
@@ -35,21 +38,33 @@ func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.F
 }
 func (FileSystem) RemoveAll(ctx context.Context, name string) error {
 	log.Printf("RemoveAll: %s", name)
-	return webdav.Dir(localDir).RemoveAll(ctx, name)
+	var p model.ProviderMeta
+	for _, t := range providerMetas {
+		if strings.HasPrefix(name, "/"+t.Name) {
+			p = t
+		}
+	}
+	return provider.Providers[p.Account.Kind].RemoveAll(ctx, p, name)
 }
 func (FileSystem) Rename(ctx context.Context, oldName, newName string) error {
 	log.Printf("%s", "Rename")
-	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
+	var p model.ProviderMeta
+	for _, t := range providerMetas {
+		if strings.HasPrefix(newName, "/"+t.Name) {
+			p = t
+		}
+	}
+	return provider.Providers[p.Account.Kind].Rename(ctx, p, oldName, newName)
 }
 func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	log.Printf("Stat: %s", name)
 	if name == "/" {
-		providers = repository.Provider{}.SelectList()
+		providerMetas = repository.Provider{}.SelectList()
 		return FileInfo{isDir: true}, nil
 	}
-	var p model.Provider
-	for _, t := range providers {
-		if name == "/"+t.Name {
+	var p model.ProviderMeta
+	for _, t := range providerMetas {
+		if strings.HasPrefix(name, "/"+t.Name) {
 			p = t
 		}
 	}

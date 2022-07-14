@@ -16,7 +16,7 @@ CREATE TABLE provider_account (
 CREATE TABLE provider_folder (
  id int NOT NULL AUTO_INCREMENT,
  name        varchar(50) NOT NULL,
- remote_name varchar(50) NOT NULL,
+ remote_name varchar(50) NULL,
  provider_account_id int NOT NULL,
  create_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
  create_user int NULL,

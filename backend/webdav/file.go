@@ -55,7 +55,7 @@ func (f CloudFile) Seek(offset int64, whence int) (int64, error) {
 
 func (f CloudFile) Readdir(count int) ([]fs.FileInfo, error) {
 	var fileInfos []fs.FileInfo
-	for _, t := range providers {
+	for _, t := range providerMetas {
 		fileInfos = append(fileInfos,
 			FileInfo{
 				isDir: true,

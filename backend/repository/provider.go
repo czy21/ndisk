@@ -25,10 +25,10 @@ func (Provider) InsertOneForFolder(po model.ProviderFolderPO) {
 	dbClient.Create(&po)
 }
 
-func (Provider) SelectList() []model.Provider {
-	d := dbClient.Model(&model.Provider{})
+func (Provider) SelectList() []model.ProviderMeta {
+	d := dbClient.Model(&model.ProviderMeta{})
 	d.Preload("Account")
-	var list []model.Provider
+	var list []model.ProviderMeta
 	d.Find(&list)
 	return list
 }
