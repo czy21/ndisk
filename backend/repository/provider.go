@@ -28,6 +28,7 @@ func (Provider) InsertOneForFolder(po model.ProviderFolderPO) {
 func (Provider) SelectList() []model.ProviderMeta {
 	d := dbClient.Model(&model.ProviderMeta{})
 	d.Preload("Account")
+	d.Where("deleted = 0 ")
 	var list []model.ProviderMeta
 	d.Find(&list)
 	return list
