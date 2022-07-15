@@ -9,6 +9,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type FileSystem struct {
@@ -36,51 +37,58 @@ func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name 
 		fileInfo.isDir = true
 		return fileInfo, nil
 	}
-	api := API{Client: util.HttpUtil{}.NewClient()}
 	d, f := path.Split(name)
-	dirSeq := strings.Split(strings.TrimSuffix(strings.TrimPrefix(d, "/"), "/"), "/")[1:]
-	if len(dirSeq) == 0 && f == "" {
+	ds := strings.Split(strings.TrimSuffix(strings.TrimPrefix(d, "/"), "/"), "/")[1:]
+	if len(ds) == 0 && f == "" {
 		env[name] = FileInfo{isDir: true, remoteName: pctx.Meta.RemoteName}
 		fileInfo.isDir = true
 		return fileInfo, nil
 	}
-	remoteName, isDir := getFolderId(dirSeq, f, pctx.Meta.RemoteName, api)
-	env[name] = FileInfo{remoteName: remoteName, isDir: isDir}
-	fileInfo.isDir = isDir
+	fileInfo = getFolderId(ds, f, pctx.Meta.RemoteName, API{Client: util.HttpUtil{}.NewClient()})
+	env[name] = fileInfo
 	return fileInfo, nil
 }
 
-func getFolderId(dirSeq []string, fName string, folderId string, api API) (string, bool) {
-	var isDir bool
-	folder, folderId, isDir := iteratorDirs(dirSeq, api, folderId, isDir)
+func getFolderId(ds []string, fName string, folderId string, api API) FileInfo {
+	var folder FileListAO
+	fileInfo := iteratorDirs(ds, api, folderId)
 	if fName != "" {
-		folder = api.queryMeta(folderId)
+		folder = api.queryMeta(fileInfo.remoteName)
 		for _, q := range folder.Files {
 			if q.Name == fName {
-				folderId = strconv.FormatInt(q.Id, 10)
-				isDir = false
+				fileInfo.name = q.Name
+				fileInfo.isDir = false
+				fileInfo.size = q.Size
+				fileInfo.remoteName = strconv.FormatInt(q.Id, 10)
+				fileInfo.modTime = time.Time(q.UpdateDate)
 			}
 		}
 		for _, q := range folder.Folders {
 			if q.Name == fName {
-				folderId = strconv.FormatInt(q.Id, 10)
-				isDir = true
+				fileInfo.name = q.Name
+				fileInfo.remoteName = strconv.FormatInt(q.Id, 10)
+				fileInfo.isDir = true
+				fileInfo.modTime = time.Time(q.UpdateDate)
 			}
 		}
 	}
-	return folderId, isDir
+	return fileInfo
 }
 
-func iteratorDirs(dPaths []string, api API, folderId string, isDir bool) (FileListAO, string, bool) {
+func iteratorDirs(ds []string, api API, folderId string) FileInfo {
 	var folder FileListAO
-	for _, t := range dPaths {
+	var fileInfo FileInfo
+	for _, t := range ds {
 		folder = api.queryMeta(folderId)
 		for _, q := range folder.Folders {
 			if q.Name == t {
-				folderId = strconv.FormatInt(q.Id, 10)
-				isDir = true
+				fileInfo.name = q.Name
+				fileInfo.isDir = true
+				fileInfo.remoteName = strconv.FormatInt(q.Id, 10)
+				fileInfo.modTime = time.Time(q.UpdateDate)
+				folderId = fileInfo.remoteName
 			}
 		}
 	}
-	return folder, folderId, isDir
+	return fileInfo
 }

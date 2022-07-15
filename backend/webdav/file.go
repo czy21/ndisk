@@ -59,7 +59,7 @@ func (f CloudFile) Readdir(count int) ([]fs.FileInfo, error) {
 		fileInfos = append(fileInfos,
 			FileInfo{
 				isDir: true,
-				name:  t.Name + "/",
+				name:  t.Name,
 			})
 	}
 	return fileInfos, nil

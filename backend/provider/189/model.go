@@ -1,17 +1,27 @@
 package _189
 
+import (
+	"github.com/czy21/cloud-disk-sync/model"
+)
+
 type Response struct {
 	Code    int    `json:"res_code"`
 	Message string `json:"res_message"`
 }
 
+type BaseTrackModel[TID any] struct {
+	Id         TID                `json:"id"`
+	CreateDate model.StandardTime `json:"createDate"`
+	UpdateDate model.StandardTime `json:"lastOpTime"`
+}
+
 type FolderMeta struct {
-	Id   int64  `json:"id"`
+	BaseTrackModel[int64]
 	Name string `json:"name"`
 }
 
 type FileMeta struct {
-	Id   int64  `json:"id"`
+	BaseTrackModel[int64]
 	Name string `json:"name"`
 	Size int64  `json:"size"`
 }
