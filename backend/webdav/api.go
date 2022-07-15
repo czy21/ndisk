@@ -12,8 +12,8 @@ import (
 var providerMetas []model.ProviderMeta
 
 func Controller(r *gin.Engine) {
-	providerMetas = repository.Provider{}.SelectList()
 	serveFn := func(c *gin.Context) {
+		providerMetas = repository.Provider{}.SelectList()
 		h := webdav.Handler{
 			Prefix:     "/dav",
 			FileSystem: FileSystem{},
