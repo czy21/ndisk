@@ -2,6 +2,9 @@ package cache
 
 import (
 	"context"
+	"github.com/czy21/cloud-disk-sync/exception"
+	"github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"time"
 )
 
@@ -13,25 +16,15 @@ type Cache interface {
 	Del(ctx context.Context, key string)
 }
 
-type Client struct {
-}
+var Client Cache
 
-func (c Client) Set(ctx context.Context, key string, value interface{}) {
-	panic("implement me")
-}
-
-func (c Client) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) {
-	panic("implement me")
-}
-
-func (c Client) Get(ctx context.Context, key string) string {
-	panic("implement me")
-}
-
-func (c Client) GetObj(ctx context.Context, key string, v interface{}) {
-	panic("implement me")
-}
-
-func (c Client) Del(ctx context.Context, key string) {
-	panic("implement me")
+func Boot() {
+	cacheType := viper.GetString("cache.type")
+	if cacheType == "redis" {
+		opt, err := redis.ParseURL(viper.GetString("cache.redis.url"))
+		exception.Check(err)
+		Client = Redis{
+			Client: redis.NewClient(opt),
+		}
+	}
 }

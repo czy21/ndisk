@@ -2,8 +2,14 @@ server:
   port: 8080
 db:
   driver-name: mysql
-  url: [user]:[password]@tcp([host]:port)/cloud-disk-sync?charset=utf8mb4&parseTime=True
+  url: [user]:[password]@tcp([host]:port)/cloud_disk_sync?charset=utf8mb4&parseTime=True
 
 log:
 #  file: app.log # if removed,log in console
   level: info # info,debug,error
+
+cache:
+  type: redis # redis
+  redis:
+    url: redis://<user>:<pass>@localhost:6379/<db>
+  expire: 60000

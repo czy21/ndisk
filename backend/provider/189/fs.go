@@ -44,6 +44,7 @@ func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name 
 		fileInfo.isDir = true
 		return fileInfo, nil
 	}
+	//cache.Client.Set(context.Background(), "a", 1)
 	fileInfo = getFolderId(ds, f, pctx.Meta.RemoteName, API{Client: util.HttpUtil{}.NewClient()})
 	env[name] = fileInfo
 	return fileInfo, nil
