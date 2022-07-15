@@ -5,8 +5,11 @@ import (
 )
 
 type Response struct {
-	Code    int    `json:"res_code"`
-	Message string `json:"res_message"`
+	ResCode   int    `json:"res_code"`
+	ResMsg    string `json:"res_message"`
+	Success   string `json:"success"`
+	ErrorCode string `json:"errorCode"`
+	ErrorMsg  string `json:"errorMsg"`
 }
 
 type BaseTrackModel[TID any] struct {

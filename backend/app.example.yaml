@@ -12,4 +12,7 @@ cache:
   type: redis # redis
   redis:
     url: redis://<user>:<pass>@localhost:6379/<db>
+    password: <password>
+    cluster:
+      nodes: ip1:port1,ip2:port2,ip3:port3
   expire: 60000

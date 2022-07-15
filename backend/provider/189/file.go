@@ -62,7 +62,7 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	api := API{Client: util.HttpUtil{}.NewClient()}
-	folder := api.queryMeta(f.env[f.name].(FileInfo).remoteName)
+	folder, err := api.queryMeta(f.env[f.name].(FileInfo).remoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Files {
 		fileInfos = append(fileInfos, FileInfo{
@@ -78,7 +78,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 			isDir:   true,
 		})
 	}
-	return fileInfos, nil
+	return fileInfos, err
 }
 
 func (f File) Stat() (fs.FileInfo, error) {

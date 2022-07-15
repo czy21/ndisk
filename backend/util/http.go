@@ -17,7 +17,7 @@ func (HttpUtil) NewClient() HttpUtil {
 	return HttpUtil{Client: c}
 }
 
-func (h HttpUtil) Get(url string, v interface{}) {
+func (h HttpUtil) Get(url string, v interface{}) error {
 	res, err := h.R().Get(url)
 	exception.Check(err)
 	var errMsg string
@@ -34,4 +34,5 @@ func (h HttpUtil) Get(url string, v interface{}) {
 		errMsg)
 	err = h.JSONUnmarshal(res.Body(), v)
 	exception.Check(err)
+	return err
 }

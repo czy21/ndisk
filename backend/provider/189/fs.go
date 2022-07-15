@@ -1,6 +1,8 @@
 package _189
 
 import (
+	"fmt"
+	"github.com/czy21/cloud-disk-sync/cache"
 	"github.com/czy21/cloud-disk-sync/model"
 	"github.com/czy21/cloud-disk-sync/util"
 	"golang.org/x/net/context"
@@ -30,8 +32,11 @@ func (fs FileSystem) Rename(ctx context.Context, pctx model.ProviderContext, old
 	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
 }
 func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name string) (os.FileInfo, error) {
+	cache.Client.Set(ctx, "a", 1)
+	fmt.Println(cache.Client.Get(context.Background(), "a"))
 	env := ctx.Value("env").(map[string]interface{})
 	fileInfo := FileInfo{}
+	var err error
 	if name == path.Join("/", pctx.Meta.Name) {
 		env[name] = FileInfo{isDir: true, remoteName: pctx.Meta.RemoteName}
 		fileInfo.isDir = true
@@ -44,17 +49,17 @@ func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name 
 		fileInfo.isDir = true
 		return fileInfo, nil
 	}
-	//cache.Client.Set(context.Background(), "a", 1)
-	fileInfo = getFolderId(ds, f, pctx.Meta.RemoteName, API{Client: util.HttpUtil{}.NewClient()})
+	fileInfo, err = getFolderId(ds, f, pctx.Meta.RemoteName, API{Client: util.HttpUtil{}.NewClient()})
 	env[name] = fileInfo
-	return fileInfo, nil
+	return fileInfo, err
 }
 
-func getFolderId(ds []string, fName string, folderId string, api API) FileInfo {
+func getFolderId(ds []string, fName string, folderId string, api API) (FileInfo, error) {
 	var folder FileListAO
-	fileInfo := iteratorDirs(ds, api, folderId)
+	var err error
+	fileInfo, err := iteratorDirs(ds, api, folderId)
 	if fName != "" {
-		folder = api.queryMeta(fileInfo.remoteName)
+		folder, err = api.queryMeta(fileInfo.remoteName)
 		for _, q := range folder.Files {
 			if q.Name == fName {
 				fileInfo.name = q.Name
@@ -73,14 +78,15 @@ func getFolderId(ds []string, fName string, folderId string, api API) FileInfo {
 			}
 		}
 	}
-	return fileInfo
+	return fileInfo, err
 }
 
-func iteratorDirs(ds []string, api API, folderId string) FileInfo {
+func iteratorDirs(ds []string, api API, folderId string) (FileInfo, error) {
 	var folder FileListAO
 	var fileInfo FileInfo
+	var err error
 	for _, t := range ds {
-		folder = api.queryMeta(folderId)
+		folder, err = api.queryMeta(folderId)
 		for _, q := range folder.Folders {
 			if q.Name == t {
 				fileInfo.name = q.Name
@@ -91,5 +97,5 @@ func iteratorDirs(ds []string, api API, folderId string) FileInfo {
 			}
 		}
 	}
-	return fileInfo
+	return fileInfo, err
 }
