@@ -5,7 +5,6 @@ import (
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
-	"strings"
 	"time"
 )
 
@@ -22,26 +21,10 @@ var Client Cache
 func Boot() {
 	cacheType := viper.GetString("cache.type")
 	if cacheType == "redis" {
-		redisNodes := viper.GetString("cache.redis.cluster.nodes")
-		redisUrl := viper.GetString("cache.redis.url")
-		var clusterOpt redis.ClusterOptions
-		var singleOpt, err = redis.ParseURL(redisUrl)
-		if redisNodes != "" {
-			clusterOpt = redis.ClusterOptions{
-				Addrs:    strings.Split(redisNodes, ","),
-				Password: viper.GetString("cache.redis.password"),
-			}
-			redisClient := redis.NewClusterClient(&clusterOpt)
-			err = redisClient.ForEachMaster(context.Background(), func(ctx context.Context, shard *redis.Client) error {
-				return shard.Ping(ctx).Err()
-			})
-			exception.Check(err)
-			Client = Redis{ClusterClient: redisClient}
-			return
-		}
+		url := viper.GetString("cache.redis.url")
+		var singleOpt, err = redis.ParseURL(url)
+		redisClient := redis.NewClient(singleOpt)
 		exception.Check(err)
-		Client = Redis{
-			Client: redis.NewClient(singleOpt),
-		}
+		Client = Redis{Client: redisClient}
 	}
 }

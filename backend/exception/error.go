@@ -1,7 +1,10 @@
 package exception
 
+import "log"
+
 func Check(err error) {
 	if err != nil {
+		log.Println(err)
 		panic(err)
 	}
 }
