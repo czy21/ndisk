@@ -10,7 +10,6 @@ import (
 )
 
 func Boot() {
-	gin.DefaultWriter = log.Writer()
 	if viper.GetString("log.file") != "" {
 		gin.DisableConsoleColor()
 	}

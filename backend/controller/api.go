@@ -8,11 +8,9 @@ import (
 
 func ApiEngine() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
-		Formatter: web.LogFormatter("API"),
-	}))
+	r.Use(web.LogHandler())
 	r.Use(gin.Recovery())
-	r.Use(web.ErrorHandle())
+	r.Use(web.ErrorHandler())
 	OptionController(r)
 	webdav.Controller(r)
 	return r

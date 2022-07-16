@@ -3,10 +3,11 @@ package web
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
-func LogFormatter(prefix string) func(param gin.LogFormatterParams) string {
+func LogFormatter() func(param gin.LogFormatterParams) string {
 	return func(param gin.LogFormatterParams) string {
 		var statusColor, methodColor, resetColor string
 		if param.IsOutputColor() {
@@ -18,8 +19,7 @@ func LogFormatter(prefix string) func(param gin.LogFormatterParams) string {
 		if param.Latency > time.Minute {
 			param.Latency = param.Latency.Truncate(time.Second)
 		}
-		return fmt.Sprintf("[%s] %v |%s %3d %s| %13v | %15s |%s %-7s %s %#v\n%s",
-			prefix,
+		return fmt.Sprintf("%v |%s %3d %s| %13v | %15s |%s %-7s %s %#v\n%s",
 			param.TimeStamp.Format("2006/01/02 15:04:05"),
 			statusColor, param.StatusCode, resetColor,
 			param.Latency,
@@ -29,4 +29,8 @@ func LogFormatter(prefix string) func(param gin.LogFormatterParams) string {
 			param.ErrorMessage,
 		)
 	}
+}
+
+func LogDav(fnName string, msg string) {
+	log.Debugf("[DAV] %10s %s", fnName, msg)
 }

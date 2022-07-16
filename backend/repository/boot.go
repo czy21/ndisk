@@ -4,21 +4,21 @@ import (
 	"database/sql"
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/czy21/cloud-disk-sync/model"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
 	"time"
 )
 
 var dbClient *gorm.DB
 
 func Boot() {
-	dbLogger := logger.New(log.New(log.Writer(), "[DB] ", log.LstdFlags),
+	dbLogger := logger.New(log.StandardLogger(),
 		logger.Config{
 			SlowThreshold:             time.Second,
-			LogLevel:                  logger.Info,
+			LogLevel:                  logger.Silent,
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  true,
 		})

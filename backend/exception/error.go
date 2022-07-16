@@ -1,10 +1,10 @@
 package exception
 
-import "log"
+import log "github.com/sirupsen/logrus"
 
 func Check(err error) {
 	if err != nil {
-		log.Println(err)
+		log.Error(err.Error())
 		panic(err)
 	}
 }
