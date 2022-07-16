@@ -13,7 +13,7 @@ func (t *StandardTime) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		return nil
 	}
-	nt, err := time.Parse("2006-01-02 15:04:05", strings.Trim(string(data), `"`))
+	nt, err := time.ParseInLocation("2006-01-02 15:04:05", strings.Trim(string(data), `"`), time.Local)
 	*t = StandardTime(nt)
 	return err
 }
