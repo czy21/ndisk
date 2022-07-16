@@ -1,6 +1,7 @@
 package _189
 
 import (
+	"context"
 	"github.com/czy21/cloud-disk-sync/model"
 	"io/fs"
 
@@ -36,9 +37,9 @@ func (c FileInfoProxy) Sys() any {
 }
 
 type File struct {
-	name string
-	pctx model.ProviderContext
-	env  map[string]interface{}
+	Name                   string
+	ProviderMetaRemoteName string
+	Context                context.Context
 }
 
 func (f File) Close() error {
@@ -55,7 +56,8 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	api := API{}
-	folder, err := api.queryMeta(f.env[f.name].(model.FileInfo).RemoteName)
+	fileInfo, _ := getFileInfo(f.Context, f.Name, f.ProviderMetaRemoteName)
+	folder, err := api.queryMeta(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Files {
 		fileInfos = append(fileInfos, FileInfoProxy{
@@ -79,8 +81,8 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	self := f.env[f.name].(model.FileInfo)
-	return FileInfoProxy{self}, nil
+	fileInfo, _ := getFileInfo(f.Context, f.Name, f.ProviderMetaRemoteName)
+	return FileInfoProxy{fileInfo}, nil
 }
 
 func (f File) Write(p []byte) (n int, err error) {

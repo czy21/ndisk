@@ -38,7 +38,9 @@ func (c Redis) SetObjEX(ctx context.Context, key string, value interface{}, expi
 
 func (c Redis) Get(ctx context.Context, key string) string {
 	val, err := c.Cmd.Get(ctx, key).Result()
-	exception.Check(err)
+	if err != nil && err.Error() != "redis: nil" {
+		exception.Check(err)
+	}
 	return val
 }
 func (c Redis) GetEX(ctx context.Context, key string, expiration time.Duration) string {
