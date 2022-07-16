@@ -1,2 +1,2 @@
-# cloud-disk-sync
+# ndisk
 
