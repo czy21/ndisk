@@ -1,5 +1,5 @@
-create database if not exists cloud_disk_sync default charset utf8mb4 collate utf8mb4_0900_ai_ci;
-use cloud_disk_sync;
+create database if not exists ndisk default charset utf8mb4 collate utf8mb4_0900_ai_ci;
+use ndisk;
 CREATE TABLE provider_account (
   id       int NOT NULL AUTO_INCREMENT,
   username varchar(50) NULL,
