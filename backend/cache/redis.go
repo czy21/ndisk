@@ -40,7 +40,7 @@ func (c Redis) SetObjEX(ctx context.Context, key string, value interface{}, expi
 func (c Redis) Get(ctx context.Context, key string) string {
 	val, err := c.Cmd.Get(ctx, key).Result()
 	if err == redis.Nil {
-		log.Debugf("%s does not exist", key)
+		log.Tracef("%s does not exist", key)
 	} else {
 		exception.Check(err)
 	}
@@ -49,7 +49,7 @@ func (c Redis) Get(ctx context.Context, key string) string {
 func (c Redis) GetEX(ctx context.Context, key string, expiration time.Duration) string {
 	val, err := c.Cmd.GetEx(ctx, key, expiration).Result()
 	if err == redis.Nil {
-		log.Debugf("%s does not exist", key)
+		log.Tracef("%s does not exist", key)
 	} else {
 		exception.Check(err)
 	}
