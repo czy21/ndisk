@@ -3,42 +3,36 @@ package _189
 import (
 	"github.com/czy21/cloud-disk-sync/model"
 	"io/fs"
-	"os"
+
 	"time"
 )
 
-type FileInfo struct {
-	name       string
-	size       int64
-	mode       os.FileMode
-	modTime    time.Time
-	isDir      bool
-	sys        any
-	remoteName string
+type FileInfoProxy struct {
+	model.FileInfo
 }
 
-func (c FileInfo) Name() string {
-	return c.name
+func (c FileInfoProxy) Name() string {
+	return c.FileInfo.Name
 }
 
-func (c FileInfo) Size() int64 {
-	return c.size
+func (c FileInfoProxy) Size() int64 {
+	return c.FileInfo.Size
 }
 
-func (c FileInfo) Mode() fs.FileMode {
-	return c.mode
+func (c FileInfoProxy) Mode() fs.FileMode {
+	return c.FileInfo.Mode
 }
 
-func (c FileInfo) ModTime() time.Time {
-	return c.modTime
+func (c FileInfoProxy) ModTime() time.Time {
+	return c.FileInfo.ModTime
 }
 
-func (c FileInfo) IsDir() bool {
-	return c.isDir
+func (c FileInfoProxy) IsDir() bool {
+	return c.FileInfo.IsDir
 }
 
-func (c FileInfo) Sys() any {
-	return c.sys
+func (c FileInfoProxy) Sys() any {
+	return c.FileInfo.Sys
 }
 
 type File struct {
@@ -61,28 +55,32 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	api := API{}
-	folder, err := api.queryMeta(f.env[f.name].(FileInfo).remoteName)
+	folder, err := api.queryMeta(f.env[f.name].(model.FileInfo).RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Files {
-		fileInfos = append(fileInfos, FileInfo{
-			name:    t.Name,
-			size:    t.Size,
-			modTime: time.Time(t.UpdateDate),
+		fileInfos = append(fileInfos, FileInfoProxy{
+			model.FileInfo{
+				Name:    t.Name,
+				Size:    t.Size,
+				ModTime: time.Time(t.UpdateDate),
+			},
 		})
 	}
 	for _, t := range folder.Folders {
-		fileInfos = append(fileInfos, FileInfo{
-			name:    t.Name,
-			modTime: time.Time(t.UpdateDate),
-			isDir:   true,
+		fileInfos = append(fileInfos, FileInfoProxy{
+			model.FileInfo{
+				Name:    t.Name,
+				ModTime: time.Time(t.UpdateDate),
+				IsDir:   true,
+			},
 		})
 	}
 	return fileInfos, err
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	self := f.env[f.name].(FileInfo)
-	return FileInfo{isDir: self.isDir, name: f.name, size: self.size, modTime: self.modTime}, nil
+	self := f.env[f.name].(model.FileInfo)
+	return FileInfoProxy{self}, nil
 }
 
 func (f File) Write(p []byte) (n int, err error) {

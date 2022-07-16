@@ -47,10 +47,14 @@ func (c Redis) GetEX(ctx context.Context, key string, expiration time.Duration) 
 	return val
 }
 
-func (c Redis) GetObj(ctx context.Context, key string, v interface{}) {
+func (c Redis) GetObj(ctx context.Context, key string, v interface{}) bool {
 	val := c.Get(ctx, key)
-	err := json.Unmarshal([]byte(val), v)
-	exception.Check(err)
+	if val != "" {
+		err := json.Unmarshal([]byte(val), v)
+		exception.Check(err)
+		return true
+	}
+	return false
 }
 
 func (c Redis) GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration) {
