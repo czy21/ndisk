@@ -7,7 +7,7 @@ import (
 )
 
 type UnixTime time.Time
-type StandardTime time.Time
+type StandardTime time.Time // yyyy-MM-dd HH:mm:ss
 
 func (t *StandardTime) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
