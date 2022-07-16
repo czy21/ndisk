@@ -4,8 +4,7 @@ import log "github.com/sirupsen/logrus"
 
 func Check(err error) {
 	if err != nil {
-		log.Error(err.Error())
-		panic(err)
+		log.Panic(err)
 	}
 }
 

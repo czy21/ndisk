@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/go-redis/redis/v8"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"time"
 )
@@ -38,14 +39,20 @@ func (c Redis) SetObjEX(ctx context.Context, key string, value interface{}, expi
 
 func (c Redis) Get(ctx context.Context, key string) string {
 	val, err := c.Cmd.Get(ctx, key).Result()
-	if err != nil && err.Error() != "redis: nil" {
+	if err == redis.Nil {
+		log.Debugf("%s does not exist", key)
+	} else {
 		exception.Check(err)
 	}
 	return val
 }
 func (c Redis) GetEX(ctx context.Context, key string, expiration time.Duration) string {
 	val, err := c.Cmd.GetEx(ctx, key, expiration).Result()
-	exception.Check(err)
+	if err == redis.Nil {
+		log.Debugf("%s does not exist", key)
+	} else {
+		exception.Check(err)
+	}
 	return val
 }
 
