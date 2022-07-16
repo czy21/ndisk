@@ -23,8 +23,8 @@ func Boot() {
 	if cacheType == "redis" {
 		url := viper.GetString("cache.redis.url")
 		var singleOpt, err = redis.ParseURL(url)
-		redisClient := redis.NewClient(singleOpt)
+		cmd := redis.NewClient(singleOpt)
 		exception.Check(err)
-		Client = Redis{Client: redisClient}
+		Client = Redis{Cmd: cmd}
 	}
 }

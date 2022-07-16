@@ -9,12 +9,12 @@ import (
 )
 
 type Redis struct {
-	Client *redis.Client
+	Cmd redis.Cmdable
 }
 
 func (c Redis) Set(ctx context.Context, key string, value interface{}) {
 	expiration := time.Duration(viper.GetInt64("cache.expire")) * time.Second
-	_, err := c.Client.Set(ctx, key, value, expiration).Result()
+	_, err := c.Cmd.Set(ctx, key, value, expiration).Result()
 	exception.Check(err)
 }
 
@@ -23,7 +23,7 @@ func (c Redis) SetEX(ctx context.Context, key string, value interface{}, expirat
 }
 
 func (c Redis) Get(ctx context.Context, key string) string {
-	val, err := c.Client.Get(ctx, key).Result()
+	val, err := c.Cmd.Get(ctx, key).Result()
 	exception.Check(err)
 	return val
 }
