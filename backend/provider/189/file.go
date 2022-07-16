@@ -62,18 +62,16 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	for _, t := range folder.Files {
 		fileInfos = append(fileInfos, FileInfoProxy{
 			model.FileInfo{
-				Name:    t.Name,
-				Size:    t.Size,
-				ModTime: time.Time(t.UpdateDate),
+				Name: t.Name,
+				Size: t.Size,
 			},
 		})
 	}
 	for _, t := range folder.Folders {
 		fileInfos = append(fileInfos, FileInfoProxy{
 			model.FileInfo{
-				Name:    t.Name,
-				ModTime: time.Time(t.UpdateDate),
-				IsDir:   true,
+				Name:  t.Name,
+				IsDir: true,
 			},
 		})
 	}
