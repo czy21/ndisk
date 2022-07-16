@@ -23,7 +23,7 @@ func CachePut(c *gin.Context) {
 	input := make(map[string]interface{})
 	err := c.Bind(&input)
 	exception.Check(err)
-	cache.Client.Set(context.Background(), "a", "hahaha")
+	cache.Client.SetObj(context.Background(), c.Query("key"), input)
 }
 
 func OptionController(r *gin.Engine) {
