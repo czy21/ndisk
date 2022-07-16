@@ -26,6 +26,7 @@ func Controller(r *gin.Engine) {
 	r1 := r.Group("/dav")
 	{
 		r1.Any("/*path", serveFn)
+		r1.Any("", serveFn)
 		for _, t := range constant.WebDavMethods {
 			r1.Handle(t, "/*path", serveFn)
 		}

@@ -39,21 +39,22 @@ func (c FileInfo) Sys() any {
 	return c.sys
 }
 
-type CloudFile struct{}
+type File struct {
+}
 
-func (f CloudFile) Close() error {
+func (f File) Close() error {
 	return nil
 }
 
-func (f CloudFile) Read(p []byte) (n int, err error) {
+func (f File) Read(p []byte) (n int, err error) {
 	panic("implement me")
 }
 
-func (f CloudFile) Seek(offset int64, whence int) (int64, error) {
+func (f File) Seek(offset int64, whence int) (int64, error) {
 	panic("implement me")
 }
 
-func (f CloudFile) Readdir(count int) ([]fs.FileInfo, error) {
+func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	var fileInfos []fs.FileInfo
 	for _, t := range providerMetas {
 		fileInfos = append(fileInfos,
@@ -65,10 +66,10 @@ func (f CloudFile) Readdir(count int) ([]fs.FileInfo, error) {
 	return fileInfos, nil
 }
 
-func (f CloudFile) Stat() (fs.FileInfo, error) {
+func (f File) Stat() (fs.FileInfo, error) {
 	return FileInfo{isDir: true}, nil
 }
 
-func (f CloudFile) Write(p []byte) (n int, err error) {
+func (f File) Write(p []byte) (n int, err error) {
 	panic("implement me")
 }

@@ -5,7 +5,6 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	"os"
-	"path"
 )
 
 type FileSystem struct{}
@@ -25,9 +24,9 @@ func (FileSystem) Rename(ctx context.Context, pctx model.ProviderContext, oldNam
 	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
 }
 func (FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name string) (os.FileInfo, error) {
-	d := path.Join(localDir, pctx.Meta.Name)
-	if _, err := os.Stat(d); os.IsNotExist(err) {
-		_ = os.Mkdir(d, 755)
-	}
+	//d := path.Join(localDir, pctx.Meta.Name)
+	//if _, err := os.Stat(d); os.IsNotExist(err) {
+	//	_ = os.Mkdir(d, 755)
+	//}
 	return webdav.Dir(localDir).Stat(ctx, name)
 }
