@@ -1,9 +1,5 @@
 package model
 
-type Tabler interface {
-	TableName() string
-}
-
 type PageModel struct {
 	PageIndex int   `json:"pageIndex"`
 	PageSize  int   `json:"pageSize"`
