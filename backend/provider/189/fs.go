@@ -1,10 +1,7 @@
 package _189
 
 import (
-	"fmt"
-	"github.com/czy21/cloud-disk-sync/cache"
 	"github.com/czy21/cloud-disk-sync/model"
-	"github.com/czy21/cloud-disk-sync/util"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	"os"
@@ -32,24 +29,16 @@ func (fs FileSystem) Rename(ctx context.Context, pctx model.ProviderContext, old
 	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
 }
 func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name string) (os.FileInfo, error) {
-	cache.Client.Set(ctx, "a", 1)
-	fmt.Println(cache.Client.Get(context.Background(), "a"))
-	env := ctx.Value("env").(map[string]interface{})
-	fileInfo := FileInfo{}
 	var err error
-	if name == path.Join("/", pctx.Meta.Name) {
-		env[name] = FileInfo{isDir: true, remoteName: pctx.Meta.RemoteName}
-		fileInfo.isDir = true
-		return fileInfo, nil
-	}
+	env := ctx.Value("env").(map[string]interface{})
 	d, f := path.Split(name)
 	ds := strings.Split(strings.TrimSuffix(strings.TrimPrefix(d, "/"), "/"), "/")[1:]
-	if len(ds) == 0 && f == "" {
-		env[name] = FileInfo{isDir: true, remoteName: pctx.Meta.RemoteName}
-		fileInfo.isDir = true
+	fileInfo := FileInfo{isDir: true, remoteName: pctx.Meta.RemoteName}
+	if d == "/" || (len(ds) == 0 && f == "") {
+		env[name] = fileInfo
 		return fileInfo, nil
 	}
-	fileInfo, err = getFolderId(ds, f, pctx.Meta.RemoteName, API{Client: util.HttpUtil{}.NewClient()})
+	fileInfo, err = getFolderId(ds, f, pctx.Meta.RemoteName, API{})
 	env[name] = fileInfo
 	return fileInfo, err
 }
@@ -82,9 +71,11 @@ func getFolderId(ds []string, fName string, folderId string, api API) (FileInfo,
 }
 
 func iteratorDirs(ds []string, api API, folderId string) (FileInfo, error) {
-	var folder FileListAO
-	var fileInfo FileInfo
-	var err error
+	fileInfo := FileInfo{isDir: true, remoteName: folderId}
+	var (
+		folder FileListAO
+		err    error
+	)
 	for _, t := range ds {
 		folder, err = api.queryMeta(folderId)
 		for _, q := range folder.Folders {

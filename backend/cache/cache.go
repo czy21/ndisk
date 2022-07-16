@@ -14,7 +14,9 @@ type Cache interface {
 	SetObj(ctx context.Context, key string, value interface{})
 	SetObjEX(ctx context.Context, key string, value interface{}, expiration time.Duration)
 	Get(ctx context.Context, key string) string
+	GetEX(ctx context.Context, key string, expiration time.Duration) string
 	GetObj(ctx context.Context, key string, v interface{})
+	GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration)
 	Del(ctx context.Context, key string)
 }
 

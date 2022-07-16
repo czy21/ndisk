@@ -2,7 +2,6 @@ package _189
 
 import (
 	"github.com/czy21/cloud-disk-sync/model"
-	"github.com/czy21/cloud-disk-sync/util"
 	"io/fs"
 	"os"
 	"time"
@@ -61,7 +60,7 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
-	api := API{Client: util.HttpUtil{}.NewClient()}
+	api := API{}
 	folder, err := api.queryMeta(f.env[f.name].(FileInfo).remoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Files {

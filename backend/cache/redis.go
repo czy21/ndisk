@@ -41,11 +41,21 @@ func (c Redis) Get(ctx context.Context, key string) string {
 	exception.Check(err)
 	return val
 }
+func (c Redis) GetEX(ctx context.Context, key string, expiration time.Duration) string {
+	val, err := c.Cmd.GetEx(ctx, key, expiration).Result()
+	exception.Check(err)
+	return val
+}
 
 func (c Redis) GetObj(ctx context.Context, key string, v interface{}) {
 	val := c.Get(ctx, key)
 	err := json.Unmarshal([]byte(val), v)
 	exception.Check(err)
+}
+
+func (c Redis) GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c Redis) Del(ctx context.Context, key string) {
