@@ -10,7 +10,7 @@ import (
 )
 
 func bootLog() {
-	log.SetFormatter(&log.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true, PadLevelText: true})
+	log.SetFormatter(&log.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true, PadLevelText: true, ForceColors: true})
 	confLevel := viper.GetString("log.level")
 	confFile := viper.GetString("log.file")
 	if confLevel == "debug" {

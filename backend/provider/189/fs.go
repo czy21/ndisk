@@ -34,62 +34,43 @@ func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name 
 	return FileInfoProxy{fileInfo}, err
 }
 func getFileInfo(ctx context.Context, name string, remoteName string) (model.FileInfo, error) {
-	var (
-		fileInfo model.FileInfo
-		err      error
-	)
-	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
-		return fileInfo, nil
+	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true}
+	var err error
+	if cache.Client.GetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo) {
+		return fileInfo, err
 	}
 	d, f := path.Split(name)
-	ds := strings.Split(strings.TrimSuffix(strings.TrimPrefix(d, "/"), "/"), "/")[1:]
-	fileInfo = model.FileInfo{Name: name, IsDir: true, RemoteName: remoteName}
+	ds := strings.Split(strings.Trim(d, "/"), "/")[1:]
 	if d != "/" || len(ds) > 0 || f != "" {
-		var folder FileListAO
 		api := API{}
-		fileInfo, err = iteratorDirs(ds, api, remoteName)
+		var folder FileListAO
+		for _, t := range ds {
+			folder, err = api.queryMeta(remoteName)
+			for _, q := range folder.Folders {
+				if q.Name == t {
+					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
+					remoteName = fileInfo.RemoteName
+				}
+			}
+		}
 		if f != "" {
-			folder, err = api.queryMeta(fileInfo.RemoteName)
+			folder, err = api.queryMeta(remoteName)
 			for _, q := range folder.Files {
 				if q.Name == f {
-					fileInfo.Name = q.Name
-					fileInfo.IsDir = false
-					fileInfo.Size = q.Size
-					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.Size = q.Size
+					fileInfo.IsDir = false
 				}
 			}
 			for _, q := range folder.Folders {
 				if q.Name == f {
-					fileInfo.Name = q.Name
-					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
-					fileInfo.IsDir = true
 					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 				}
 			}
 		}
 	}
-	cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), fileInfo)
-	return fileInfo, err
-}
-
-func iteratorDirs(ds []string, api API, folderId string) (model.FileInfo, error) {
-	fileInfo := model.FileInfo{IsDir: true, RemoteName: folderId}
-	var (
-		folder FileListAO
-		err    error
-	)
-	for _, t := range ds {
-		folder, err = api.queryMeta(folderId)
-		for _, q := range folder.Folders {
-			if q.Name == t {
-				fileInfo.Name = q.Name
-				fileInfo.IsDir = true
-				fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
-				fileInfo.ModTime = time.Time(q.UpdateDate)
-				folderId = fileInfo.RemoteName
-			}
-		}
-	}
+	cache.Client.SetObj(context.Background(), cache.GetFileInfoCacheKey(name), fileInfo)
 	return fileInfo, err
 }

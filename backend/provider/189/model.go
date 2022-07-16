@@ -2,6 +2,8 @@ package _189
 
 import (
 	"github.com/czy21/cloud-disk-sync/model"
+	"strconv"
+	"time"
 )
 
 type Response struct {
@@ -28,6 +30,16 @@ type FileMeta struct {
 	Name string `json:"name"`
 	Size int64  `json:"size"`
 }
+
+func (f FileMeta) MapToFileInfo() model.FileInfo {
+	return model.FileInfo{
+		IsDir:      false,
+		ModTime:    time.Time(f.UpdateDate),
+		Size:       f.Size,
+		RemoteName: strconv.FormatInt(f.Id, 10),
+	}
+}
+
 type FileListAO struct {
 	Count   int          `json:"count"`
 	Files   []FileMeta   `json:"fileList"`

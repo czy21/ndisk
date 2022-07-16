@@ -28,7 +28,7 @@ func CachePut(c *gin.Context) {
 
 func OptionController(r *gin.Engine) {
 
-	v1 := r.Group("/option")
+	v1 := r.Group("/api/option")
 	{
 		v1.POST("/query", OptionList)
 		v1.POST("/cache/put", CachePut)

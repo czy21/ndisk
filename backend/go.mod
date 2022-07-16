@@ -7,6 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.12.0
 	golang.org/x/net v0.0.0-20220708220712-1185a9018129
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
@@ -35,7 +36,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
