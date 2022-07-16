@@ -9,11 +9,11 @@ import (
 	"golang.org/x/net/webdav"
 )
 
-var providerMetas []model.ProviderMeta
+var providerMetas []model.ProviderFolderMeta
 
 func Controller(r *gin.Engine) {
 	serveFn := func(c *gin.Context) {
-		providerMetas = repository.Provider{}.SelectList()
+		providerMetas = repository.Provider{}.SelectListMeta()
 		h := webdav.Handler{
 			Prefix:     "/dav",
 			FileSystem: FileSystem{},

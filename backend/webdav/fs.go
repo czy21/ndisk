@@ -49,15 +49,15 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	return fs.Stat(ctx, p, name)
 }
 
-func getProvider(ctx context.Context, name string) (model.ProviderContext, provider.FileSystem) {
-	p := model.ProviderContext{}
+func getProvider(ctx context.Context, name string) (model.ProviderFolderMeta, provider.FileSystem) {
+	folder := model.ProviderFolderMeta{}
 	for _, t := range providerMetas {
 		if strings.HasPrefix(name, "/"+t.Name) {
-			p.Meta = t
+			folder = t
 		}
 	}
-	if fs := provider.Providers[p.Meta.Account.Kind]; fs != nil {
-		return p, fs
+	if fs := provider.Providers[folder.Account.Kind]; fs != nil {
+		return folder, fs
 	}
-	return p, local.FileSystem{}
+	return folder, local.FileSystem{}
 }

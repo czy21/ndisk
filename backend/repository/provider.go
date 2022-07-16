@@ -25,11 +25,19 @@ func (Provider) InsertOneForFolder(po model.ProviderFolderPO) {
 	dbClient.Create(&po)
 }
 
-func (Provider) SelectList() []model.ProviderMeta {
-	d := dbClient.Model(&model.ProviderMeta{})
+func (Provider) SelectList() []model.ProviderFolderBO {
+	d := dbClient.Model(&model.ProviderFolderBO{})
 	d.Preload("Account")
 	d.Where("deleted = 0 ")
-	var list []model.ProviderMeta
+	var list []model.ProviderFolderBO
 	d.Find(&list)
 	return list
+}
+
+func (p Provider) SelectListMeta() []model.ProviderFolderMeta {
+	var rets []model.ProviderFolderMeta
+	for _, t := range p.SelectList() {
+		rets = append(rets, model.ProviderFolderMeta{ProviderFolderBO: t})
+	}
+	return rets
 }

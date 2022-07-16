@@ -17,24 +17,24 @@ type FileSystem struct {
 
 const localDir = "data"
 
-func (fs FileSystem) Mkdir(ctx context.Context, pctx model.ProviderContext, name string, perm os.FileMode) error {
+func (fs FileSystem) Mkdir(ctx context.Context, folder model.ProviderFolderMeta, name string, perm os.FileMode) error {
 	return webdav.Dir(localDir).Mkdir(ctx, name, perm)
 }
-func (fs FileSystem) OpenFile(ctx context.Context, pctx model.ProviderContext, name string, flag int, perm os.FileMode) (webdav.File, error) {
-	return File{Name: name, Context: ctx, ProviderMetaRemoteName: pctx.Meta.RemoteName}, nil
+func (fs FileSystem) OpenFile(ctx context.Context, folder model.ProviderFolderMeta, name string, flag int, perm os.FileMode) (webdav.File, error) {
+	return File{Name: name, Context: ctx, ProviderFolderMeta: folder}, nil
 }
-func (fs FileSystem) RemoveAll(ctx context.Context, pctx model.ProviderContext, name string) error {
+func (fs FileSystem) RemoveAll(ctx context.Context, folder model.ProviderFolderMeta, name string) error {
 	return webdav.Dir(localDir).RemoveAll(ctx, name)
 }
-func (fs FileSystem) Rename(ctx context.Context, pctx model.ProviderContext, oldName, newName string) error {
+func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error {
 	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
 }
-func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name string) (os.FileInfo, error) {
-	fileInfo, err := getFileInfo(name, pctx.Meta.RemoteName)
+func (fs FileSystem) Stat(ctx context.Context, folder model.ProviderFolderMeta, name string) (os.FileInfo, error) {
+	fileInfo, err := getFileInfo(name, folder.RemoteName, folder)
 	return FileInfoProxy{fileInfo}, err
 }
-func getFileInfo(name string, remoteName string) (model.FileInfo, error) {
-	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true}
+func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolderMeta) (model.FileInfo, error) {
+	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true, ModTime: time.Time(*folderMeta.UpdateTime)}
 	var err error
 	if cache.Client.GetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err

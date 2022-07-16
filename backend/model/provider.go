@@ -25,19 +25,11 @@ func (ProviderFolderPO) TableName() string {
 	return "provider_folder"
 }
 
-type ProviderFolderNode struct {
-	Name             string
-	ParentName       string
-	RemoteName       string
-	ParentRemoteName string
-}
-
-type ProviderMeta struct {
+type ProviderFolderBO struct {
 	ProviderFolderPO
 	Account ProviderAccountPO `gorm:"foreignKey:Id;references:ProviderAccountId;" json:"account"`
 }
 
-type ProviderContext struct {
-	Meta ProviderMeta
-	Node ProviderFolderNode
+type ProviderFolderMeta struct {
+	ProviderFolderBO
 }

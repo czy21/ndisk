@@ -37,9 +37,9 @@ func (c FileInfoProxy) Sys() any {
 }
 
 type File struct {
-	Name                   string
-	ProviderMetaRemoteName string
-	Context                context.Context
+	Name               string
+	ProviderFolderMeta model.ProviderFolderMeta
+	Context            context.Context
 }
 
 func (f File) Close() error {
@@ -55,7 +55,7 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
-	fileInfo, _ := getFileInfo(f.Name, f.ProviderMetaRemoteName)
+	fileInfo, _ := getFileInfo(f.Name, f.ProviderFolderMeta.RemoteName, f.ProviderFolderMeta)
 	folder, err := API{}.queryMeta(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Files {
@@ -77,7 +77,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	fileInfo, _ := getFileInfo(f.Name, f.ProviderMetaRemoteName)
+	fileInfo, _ := getFileInfo(f.Name, f.ProviderFolderMeta.RemoteName, f.ProviderFolderMeta)
 	return FileInfoProxy{fileInfo}, nil
 }
 
