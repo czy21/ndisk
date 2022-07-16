@@ -30,10 +30,10 @@ func (fs FileSystem) Rename(ctx context.Context, pctx model.ProviderContext, old
 	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
 }
 func (fs FileSystem) Stat(ctx context.Context, pctx model.ProviderContext, name string) (os.FileInfo, error) {
-	fileInfo, err := getFileInfo(ctx, name, pctx.Meta.RemoteName)
+	fileInfo, err := getFileInfo(name, pctx.Meta.RemoteName)
 	return FileInfoProxy{fileInfo}, err
 }
-func getFileInfo(ctx context.Context, name string, remoteName string) (model.FileInfo, error) {
+func getFileInfo(name string, remoteName string) (model.FileInfo, error) {
 	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true}
 	var err error
 	if cache.Client.GetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo) {
@@ -71,6 +71,6 @@ func getFileInfo(ctx context.Context, name string, remoteName string) (model.Fil
 			}
 		}
 	}
-	cache.Client.SetObj(context.Background(), cache.GetFileInfoCacheKey(name), fileInfo)
+	cache.Client.SetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo)
 	return fileInfo, err
 }
