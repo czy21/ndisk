@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"context"
+	"github.com/czy21/cloud-disk-sync/cache"
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/czy21/cloud-disk-sync/model"
 	"github.com/czy21/cloud-disk-sync/service"
@@ -17,11 +19,19 @@ func OptionList(c *gin.Context) {
 
 }
 
+func CachePut(c *gin.Context) {
+	input := make(map[string]interface{})
+	err := c.Bind(&input)
+	exception.Check(err)
+	cache.Client.Set(context.Background(), "a", "hahaha")
+}
+
 func OptionController(r *gin.Engine) {
 
 	v1 := r.Group("/option")
 	{
 		v1.POST("/query", OptionList)
+		v1.POST("/cache/put", CachePut)
 	}
 
 }

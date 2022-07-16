@@ -20,26 +20,25 @@ type Cache interface {
 var Client Cache
 
 func Boot() {
-	var err error
 	cacheType := viper.GetString("cache.type")
 	if cacheType == "redis" {
 		redisNodes := viper.GetString("cache.redis.cluster.nodes")
 		redisUrl := viper.GetString("cache.redis.url")
 		var clusterOpt redis.ClusterOptions
+		var singleOpt, err = redis.ParseURL(redisUrl)
 		if redisNodes != "" {
 			clusterOpt = redis.ClusterOptions{
 				Addrs:    strings.Split(redisNodes, ","),
 				Password: viper.GetString("cache.redis.password"),
 			}
 			redisClient := redis.NewClusterClient(&clusterOpt)
-			err = redisClient.ForEachShard(context.Background(), func(ctx context.Context, shard *redis.Client) error {
+			err = redisClient.ForEachMaster(context.Background(), func(ctx context.Context, shard *redis.Client) error {
 				return shard.Ping(ctx).Err()
 			})
 			exception.Check(err)
 			Client = Redis{ClusterClient: redisClient}
 			return
 		}
-		var singleOpt, err = redis.ParseURL(redisUrl)
 		exception.Check(err)
 		Client = Redis{
 			Client: redis.NewClient(singleOpt),

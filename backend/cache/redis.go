@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/czy21/cloud-disk-sync/exception"
 	"github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"time"
 )
 
@@ -13,12 +14,13 @@ type Redis struct {
 }
 
 func (c Redis) Set(ctx context.Context, key string, value interface{}) {
+	expiration := time.Duration(viper.GetInt64("cache.expire")) * time.Second
 	if c.ClusterClient != nil {
-		_, err := c.ClusterClient.Set(ctx, key, value, time.Duration(3000)*1000).Result()
+		_, err := c.ClusterClient.Set(ctx, key, value, expiration).Result()
 		exception.Check(err)
 		return
 	}
-	c.Client.Set(ctx, key, value, time.Duration(3000)*10000)
+	c.Client.Set(ctx, key, value, expiration)
 }
 
 func (c Redis) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) {
