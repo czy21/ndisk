@@ -15,16 +15,20 @@ import (
 var dbClient *gorm.DB
 
 func Boot() {
-	dbLogger := logger.New(log.StandardLogger(),
-		logger.Config{
-			SlowThreshold:             time.Second,
-			LogLevel:                  logger.Silent,
-			IgnoreRecordNotFoundError: true,
-			Colorful:                  true,
-		})
+	dbLoggerConfig := logger.Config{
+		SlowThreshold:             time.Second,
+		LogLevel:                  logger.Silent,
+		IgnoreRecordNotFoundError: true,
+		Colorful:                  true,
+	}
+	if viper.GetString("log.level") == "debug" {
+		dbLoggerConfig.LogLevel = logger.Info
+	}
+	dbLogger := logger.New(log.StandardLogger(), dbLoggerConfig)
 	dbConnect, err := sql.Open(viper.GetString("db.driver-name"), viper.GetString("db.url"))
 	dbConnect.SetMaxIdleConns(5)
 	dbConnect.SetMaxOpenConns(10)
+	err = dbConnect.Ping()
 	exception.Check(err)
 	dbClient, err = gorm.Open(mysql.New(mysql.Config{
 		Conn: dbConnect,
