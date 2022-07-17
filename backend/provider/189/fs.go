@@ -29,7 +29,7 @@ func (fs FileSystem) RemoveAll(ctx context.Context, folder model.ProviderFolderM
 	_, f := path.Split(strings.TrimSuffix(name, "/"))
 	file, err := getFileInfo(name, folder.RemoteName, folder)
 	err = API{}.Delete(file.RemoteName, f, file.IsDir)
-	cache.Client.DelPrefix(context.Background(), cache.GetFileInfoCacheKey(name))
+	cache.Client.DelPrefix(context.Background(), strings.TrimSuffix(cache.GetFileInfoCacheKey(name), "/"))
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error {
@@ -38,7 +38,7 @@ func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta
 	if !os.IsNotExist(err) {
 		err = API{}.RenameFolder(oldResource.RemoteName, f)
 	}
-	cache.Client.DelPrefix(context.Background(), cache.GetFileInfoCacheKey(oldName))
+	cache.Client.DelPrefix(context.Background(), strings.TrimSuffix(cache.GetFileInfoCacheKey(oldName), "/"))
 	return err
 }
 func (fs FileSystem) Stat(ctx context.Context, folder model.ProviderFolderMeta, name string) (os.FileInfo, error) {
