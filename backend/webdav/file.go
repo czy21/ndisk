@@ -37,16 +37,20 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	ds, _ := os.ReadDir(viper.GetString("data.dav"))
 	for _, t := range ds {
 		if t.IsDir() {
+			var exist bool
 			for _, pm := range providerMetas {
-				if t.Name() != pm.Name {
-					fileInfos = append(fileInfos,
-						model.FileInfoProxy{
-							FileInfo: model.FileInfo{
-								Name:  t.Name(),
-								IsDir: true,
-							},
-						})
+				if t.Name() == pm.Name {
+					exist = true
 				}
+			}
+			if !exist {
+				fileInfos = append(fileInfos,
+					model.FileInfoProxy{
+						FileInfo: model.FileInfo{
+							Name:  t.Name(),
+							IsDir: true,
+						},
+					})
 			}
 		}
 	}
