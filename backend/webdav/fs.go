@@ -25,7 +25,7 @@ func (FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) erro
 func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
 	web.LogDav("OpenFile", name)
 	if name == "/" {
-		return File{}, nil
+		return File{Name: name}, nil
 	}
 	p, fs := getProvider(ctx, name)
 	return fs.OpenFile(ctx, p, name, flag, perm)

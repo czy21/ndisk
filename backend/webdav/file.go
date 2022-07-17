@@ -40,6 +40,7 @@ func (c FileInfo) Sys() any {
 }
 
 type File struct {
+	Name string
 }
 
 func (f File) Close() error {
