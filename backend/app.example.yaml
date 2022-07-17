@@ -1,5 +1,9 @@
 server:
   port: 8080
+
+data:
+  dav: data/dav
+
 db:
   driver-name: mysql
   url: [user]:[password]@tcp([host]:port)/ndisk?charset=utf8mb4&parseTime=True

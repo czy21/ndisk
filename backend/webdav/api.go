@@ -1,7 +1,6 @@
 package webdav
 
 import (
-	"context"
 	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/repository"
@@ -19,8 +18,6 @@ func Controller(r *gin.Engine) {
 			FileSystem: FileSystem{},
 			LockSystem: webdav.NewMemLS(),
 		}
-		ctx := context.WithValue(c.Request.Context(), "env", make(map[string]interface{}))
-		c.Request = c.Request.WithContext(ctx)
 		h.ServeHTTP(c.Writer, c.Request)
 	}
 	r1 := r.Group("/dav")

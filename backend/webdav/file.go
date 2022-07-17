@@ -1,43 +1,11 @@
 package webdav
 
 import (
+	"github.com/czy21/ndisk/model"
+	"github.com/spf13/viper"
 	"io/fs"
 	"os"
-	"time"
 )
-
-type FileInfo struct {
-	name    string
-	size    int64
-	mode    os.FileMode
-	modTime time.Time
-	isDir   bool
-	sys     any
-}
-
-func (c FileInfo) Name() string {
-	return c.name
-}
-
-func (c FileInfo) Size() int64 {
-	return c.size
-}
-
-func (c FileInfo) Mode() fs.FileMode {
-	return c.mode
-}
-
-func (c FileInfo) ModTime() time.Time {
-	return c.modTime
-}
-
-func (c FileInfo) IsDir() bool {
-	return c.isDir
-}
-
-func (c FileInfo) Sys() any {
-	return c.sys
-}
 
 type File struct {
 	Name string
@@ -59,16 +27,34 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	var fileInfos []fs.FileInfo
 	for _, t := range providerMetas {
 		fileInfos = append(fileInfos,
-			FileInfo{
-				isDir: true,
-				name:  t.Name,
+			model.FileInfoProxy{
+				FileInfo: model.FileInfo{
+					IsDir: true,
+					Name:  t.Name,
+				},
 			})
+	}
+	ds, _ := os.ReadDir(viper.GetString("data.dav"))
+	for _, t := range ds {
+		if t.IsDir() {
+			for _, pm := range providerMetas {
+				if t.Name() != pm.Name {
+					fileInfos = append(fileInfos,
+						model.FileInfoProxy{
+							FileInfo: model.FileInfo{
+								Name:  t.Name(),
+								IsDir: true,
+							},
+						})
+				}
+			}
+		}
 	}
 	return fileInfos, nil
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	return FileInfo{isDir: true}, nil
+	return model.FileInfoProxy{FileInfo: model.FileInfo{IsDir: true}}, nil
 }
 
 func (f File) Write(p []byte) (n int, err error) {

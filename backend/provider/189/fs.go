@@ -31,7 +31,7 @@ func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta
 }
 func (fs FileSystem) Stat(ctx context.Context, folder model.ProviderFolderMeta, name string) (os.FileInfo, error) {
 	fileInfo, err := getFileInfo(name, folder.RemoteName, folder)
-	return FileInfoProxy{fileInfo}, err
+	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
 func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolderMeta) (model.FileInfo, error) {
 	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true, ModTime: time.Time(*folderMeta.UpdateTime)}

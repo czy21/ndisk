@@ -5,10 +5,14 @@ import (
 	"github.com/czy21/ndisk/provider/local"
 )
 
-var Providers map[string]FileSystem
+var providers map[string]FileSystem
 
-func init() {
-	Providers = make(map[string]FileSystem)
-	Providers[string(Cloud189)] = _189.FileSystem{}
-	Providers[string(CloudLocal)] = local.FileSystem{}
+func Boot() {
+	providers = make(map[string]FileSystem)
+	providers[string(Cloud189)] = _189.FileSystem{}
+	providers[string(CloudLocal)] = local.NewFS()
+}
+
+func GetProviders() map[string]FileSystem {
+	return providers
 }
