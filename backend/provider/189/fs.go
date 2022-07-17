@@ -16,8 +16,6 @@ import (
 type FileSystem struct {
 }
 
-const localDir = "data"
-
 func (fs FileSystem) Mkdir(ctx context.Context, folder model.ProviderFolderMeta, name string, perm os.FileMode) error {
 	d, f := path.Split(strings.TrimSuffix(name, "/"))
 	parentFolder, _ := getFileInfo(d, folder.RemoteName, folder)
@@ -68,7 +66,7 @@ func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolder
 				}
 			}
 		}
-		if f != "" {
+		if d != "/" && f != "" {
 			folder, err = api.getFolderById(remoteName)
 			err = fs.ErrNotExist
 			for _, q := range folder.Files {

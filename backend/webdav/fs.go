@@ -34,7 +34,7 @@ func (FileSystem) RemoveAll(ctx context.Context, name string) error {
 	return fs.RemoveAll(ctx, p, name)
 }
 func (FileSystem) Rename(ctx context.Context, oldName, newName string) error {
-	web.LogDav("Rename", fmt.Sprintf("%s => %s", oldName, newName))
+	web.LogDav("Rename", fmt.Sprintf("src:%s dest:%s", oldName, newName))
 	p, fs := getProvider(ctx, newName)
 	return fs.Rename(ctx, p, oldName, newName)
 }
