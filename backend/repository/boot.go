@@ -2,8 +2,8 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/czy21/cloud-disk-sync/exception"
-	"github.com/czy21/cloud-disk-sync/model"
+	"github.com/czy21/ndisk/exception"
+	"github.com/czy21/ndisk/model"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"

@@ -3,8 +3,8 @@ package _189
 import (
 	"errors"
 	"fmt"
-	http2 "github.com/czy21/cloud-disk-sync/http"
-	"github.com/czy21/cloud-disk-sync/util"
+	http2 "github.com/czy21/ndisk/http"
+	"github.com/czy21/ndisk/util"
 )
 
 type API struct {

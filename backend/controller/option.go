@@ -2,11 +2,11 @@ package controller
 
 import (
 	"context"
-	"github.com/czy21/cloud-disk-sync/cache"
-	"github.com/czy21/cloud-disk-sync/exception"
-	"github.com/czy21/cloud-disk-sync/model"
-	"github.com/czy21/cloud-disk-sync/service"
-	"github.com/czy21/cloud-disk-sync/web"
+	"github.com/czy21/ndisk/cache"
+	"github.com/czy21/ndisk/exception"
+	"github.com/czy21/ndisk/model"
+	"github.com/czy21/ndisk/service"
+	"github.com/czy21/ndisk/web"
 	"github.com/gin-gonic/gin"
 )
 

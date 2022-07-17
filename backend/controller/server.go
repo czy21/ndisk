@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/czy21/cloud-disk-sync/web"
-	"github.com/czy21/cloud-disk-sync/webdav"
+	"github.com/czy21/ndisk/web"
+	"github.com/czy21/ndisk/webdav"
 	"github.com/gin-gonic/gin"
 )
 

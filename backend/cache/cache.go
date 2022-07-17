@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"github.com/czy21/cloud-disk-sync/exception"
+	"github.com/czy21/ndisk/exception"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 	"time"

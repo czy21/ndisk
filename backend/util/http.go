@@ -1,8 +1,8 @@
 package util
 
 import (
-	"github.com/czy21/cloud-disk-sync/exception"
-	http2 "github.com/czy21/cloud-disk-sync/http"
+	"github.com/czy21/ndisk/exception"
+	http2 "github.com/czy21/ndisk/http"
 	"github.com/go-resty/resty/v2"
 )
 

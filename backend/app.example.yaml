@@ -2,7 +2,7 @@ server:
   port: 8080
 db:
   driver-name: mysql
-  url: [user]:[password]@tcp([host]:port)/cloud_disk_sync?charset=utf8mb4&parseTime=True
+  url: [user]:[password]@tcp([host]:port)/ndisk?charset=utf8mb4&parseTime=True
 
 log:
 #  file: app.log # if removed,log in console

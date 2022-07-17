@@ -2,8 +2,8 @@ package controller
 
 import (
 	"fmt"
-	"github.com/czy21/cloud-disk-sync/constant"
-	"github.com/czy21/cloud-disk-sync/exception"
+	"github.com/czy21/ndisk/constant"
+	"github.com/czy21/ndisk/exception"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"net/http"

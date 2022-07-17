@@ -2,10 +2,10 @@ package webdav
 
 import (
 	"fmt"
-	"github.com/czy21/cloud-disk-sync/model"
-	"github.com/czy21/cloud-disk-sync/provider"
-	"github.com/czy21/cloud-disk-sync/provider/local"
-	"github.com/czy21/cloud-disk-sync/web"
+	"github.com/czy21/ndisk/model"
+	"github.com/czy21/ndisk/provider"
+	"github.com/czy21/ndisk/provider/local"
+	"github.com/czy21/ndisk/web"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 

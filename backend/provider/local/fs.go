@@ -1,7 +1,7 @@
 package local
 
 import (
-	"github.com/czy21/cloud-disk-sync/model"
+	"github.com/czy21/ndisk/model"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	"os"

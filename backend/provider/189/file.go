@@ -2,7 +2,7 @@ package _189
 
 import (
 	"context"
-	"github.com/czy21/cloud-disk-sync/model"
+	"github.com/czy21/ndisk/model"
 	"io/fs"
 
 	"time"

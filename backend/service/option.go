@@ -1,6 +1,6 @@
 package service
 
-import "github.com/czy21/cloud-disk-sync/model"
+import "github.com/czy21/ndisk/model"
 
 type Option struct {
 }

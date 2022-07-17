@@ -1,4 +1,4 @@
-module github.com/czy21/cloud-disk-sync
+module github.com/czy21/ndisk
 
 go 1.18
 

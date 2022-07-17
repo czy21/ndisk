@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"github.com/czy21/cloud-disk-sync/exception"
+	"github.com/czy21/ndisk/exception"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io"

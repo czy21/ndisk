@@ -1,7 +1,7 @@
 package _189
 
 import (
-	"github.com/czy21/cloud-disk-sync/model"
+	"github.com/czy21/ndisk/model"
 	"strconv"
 	"time"
 )

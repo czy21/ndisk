@@ -1,10 +1,10 @@
 package bootstrap
 
 import (
-	"github.com/czy21/cloud-disk-sync/cache"
-	"github.com/czy21/cloud-disk-sync/controller"
-	"github.com/czy21/cloud-disk-sync/http"
-	"github.com/czy21/cloud-disk-sync/repository"
+	"github.com/czy21/ndisk/cache"
+	"github.com/czy21/ndisk/controller"
+	"github.com/czy21/ndisk/http"
+	"github.com/czy21/ndisk/repository"
 )
 
 func Boot() {

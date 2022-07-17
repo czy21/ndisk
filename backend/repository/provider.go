@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/czy21/cloud-disk-sync/model"
+	"github.com/czy21/ndisk/model"
 )
 
 type Provider struct {

@@ -2,9 +2,9 @@ package webdav
 
 import (
 	"context"
-	"github.com/czy21/cloud-disk-sync/constant"
-	"github.com/czy21/cloud-disk-sync/model"
-	"github.com/czy21/cloud-disk-sync/repository"
+	"github.com/czy21/ndisk/constant"
+	"github.com/czy21/ndisk/model"
+	"github.com/czy21/ndisk/repository"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/webdav"
 )

@@ -1,8 +1,8 @@
 package provider
 
 import (
-	_189 "github.com/czy21/cloud-disk-sync/provider/189"
-	"github.com/czy21/cloud-disk-sync/provider/local"
+	_189 "github.com/czy21/ndisk/provider/189"
+	"github.com/czy21/ndisk/provider/local"
 )
 
 var Providers map[string]FileSystem

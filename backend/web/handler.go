@@ -2,8 +2,8 @@ package web
 
 import (
 	"fmt"
-	"github.com/czy21/cloud-disk-sync/exception"
-	"github.com/czy21/cloud-disk-sync/model"
+	"github.com/czy21/ndisk/exception"
+	"github.com/czy21/ndisk/model"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"
