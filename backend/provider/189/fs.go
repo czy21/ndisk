@@ -5,6 +5,7 @@ import (
 	"github.com/czy21/ndisk/model"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
+	"io/fs"
 	"os"
 	"path"
 	"strconv"
@@ -30,14 +31,17 @@ func (fs FileSystem) RemoveAll(ctx context.Context, folder model.ProviderFolderM
 	_, f := path.Split(strings.TrimSuffix(name, "/"))
 	file, err := getFileInfo(name, folder.RemoteName, folder)
 	err = API{}.Delete(file.RemoteName, f, file.IsDir)
-	cache.Client.Del(context.Background(), cache.GetFileInfoCacheKey(name))
-	if strings.HasSuffix(name, "/") {
-		cache.Client.Del(context.Background(), cache.GetFileInfoCacheKey(strings.TrimSuffix(name, "/")))
-	}
+	cache.Client.DelPrefix(context.Background(), cache.GetFileInfoCacheKey(name))
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error {
-	return webdav.Dir(localDir).Rename(ctx, oldName, newName)
+	oldResource, err := getFileInfo(oldName, folder.RemoteName, folder)
+	_, f := path.Split(newName)
+	if !os.IsNotExist(err) {
+		err = API{}.RenameFolder(oldResource.RemoteName, f)
+	}
+	cache.Client.DelPrefix(context.Background(), cache.GetFileInfoCacheKey(oldName))
+	return err
 }
 func (fs FileSystem) Stat(ctx context.Context, folder model.ProviderFolderMeta, name string) (os.FileInfo, error) {
 	fileInfo, err := getFileInfo(name, folder.RemoteName, folder)
@@ -66,21 +70,27 @@ func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolder
 		}
 		if f != "" {
 			folder, err = api.getFolderById(remoteName)
+			err = fs.ErrNotExist
 			for _, q := range folder.Files {
 				if q.Name == f {
 					fileInfo.ModTime = time.Time(q.UpdateDate)
 					fileInfo.Size = q.Size
 					fileInfo.IsDir = false
+					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
+					err = nil
 				}
 			}
 			for _, q := range folder.Folders {
 				if q.Name == f {
 					fileInfo.ModTime = time.Time(q.UpdateDate)
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
+					err = nil
 				}
 			}
 		}
 	}
-	cache.Client.SetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo)
+	if err == nil {
+		cache.Client.SetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo)
+	}
 	return fileInfo, err
 }

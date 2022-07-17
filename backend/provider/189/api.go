@@ -48,8 +48,8 @@ func (a API) getFolderById(folderId string) (FileListAO, error) {
 	return ret.FileListAO, err
 }
 
-func (a API) CreateFolder(parentFolderId string, name string) (FolderMetaAddRes, error) {
-	var ret FolderMetaAddRes
+func (a API) CreateFolder(parentFolderId string, name string) (FolderMetaRes, error) {
+	var ret FolderMetaRes
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	queryParam := map[string]string{
 		"noCache": "0.7362081385378736",
@@ -114,6 +114,26 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 	log.Debugf(string(res.Body()))
 	if createTaskRes.ResMsg != "成功" {
 		err = errors.New(createTaskRes.ErrorMsg)
+	}
+	return err
+}
+
+func (a API) RenameFolder(folderId string, destName string) error {
+	var (
+		err        error
+		folderMeta FolderMetaRes
+	)
+	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	formParams := map[string]string{
+		"folderId":       folderId,
+		"destFolderName": destName,
+	}
+	req.SetFormData(formParams)
+	req.SetResult(&folderMeta)
+	res, err := req.Post(fmt.Sprintf("https://cloud.189.cn/api/open/file/renameFolder.action?noCache=%s", "0.33825729434675056"))
+	log.Debugf(string(res.Body()))
+	if folderMeta.ResMsg != "成功" {
+		err = errors.New(folderMeta.ErrorMsg)
 	}
 	return err
 }

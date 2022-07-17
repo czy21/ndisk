@@ -31,7 +31,7 @@ type FileMeta struct {
 	Size int64  `json:"size"`
 }
 
-type FolderMetaAddRes struct {
+type FolderMetaRes struct {
 	Response
 	FolderMeta
 }

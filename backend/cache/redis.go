@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/czy21/ndisk/exception"
 	"github.com/go-redis/redis/v8"
 	log "github.com/sirupsen/logrus"
@@ -73,4 +74,11 @@ func (c Redis) GetObjEX(ctx context.Context, key string, v interface{}, expirati
 
 func (c Redis) Del(ctx context.Context, key string) {
 	c.Cmd.Del(ctx, key)
+}
+
+func (c Redis) DelPrefix(ctx context.Context, prefix string) {
+	iter := c.Cmd.Scan(ctx, 0, fmt.Sprintf("%s*", prefix), 0).Iterator()
+	for iter.Next(ctx) {
+		c.Del(ctx, iter.Val())
+	}
 }

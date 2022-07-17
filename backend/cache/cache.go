@@ -18,6 +18,7 @@ type Cache interface {
 	GetObj(ctx context.Context, key string, v interface{}) bool
 	GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration)
 	Del(ctx context.Context, key string)
+	DelPrefix(ctx context.Context, prefix string)
 }
 
 var Client Cache
