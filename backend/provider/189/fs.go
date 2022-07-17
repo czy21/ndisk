@@ -18,7 +18,10 @@ type FileSystem struct {
 const localDir = "data"
 
 func (fs FileSystem) Mkdir(ctx context.Context, folder model.ProviderFolderMeta, name string, perm os.FileMode) error {
-	return webdav.Dir(localDir).Mkdir(ctx, name, perm)
+	d, f := path.Split(strings.TrimSuffix(name, "/"))
+	parentFolder, _ := getFileInfo(d, folder.RemoteName, folder)
+	_, err := API{}.CreateFolder(parentFolder.RemoteName, f)
+	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, folder model.ProviderFolderMeta, name string, flag int, perm os.FileMode) (webdav.File, error) {
 	return File{Name: name, Context: ctx, ProviderFolderMeta: folder}, nil
@@ -45,7 +48,7 @@ func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolder
 		api := API{}
 		var folder FileListAO
 		for _, t := range ds {
-			folder, err = api.queryMeta(remoteName)
+			folder, err = api.getFolderById(remoteName)
 			for _, q := range folder.Folders {
 				if q.Name == t {
 					fileInfo.ModTime = time.Time(q.UpdateDate)
@@ -55,7 +58,7 @@ func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolder
 			}
 		}
 		if f != "" {
-			folder, err = api.queryMeta(remoteName)
+			folder, err = api.getFolderById(remoteName)
 			for _, q := range folder.Files {
 				if q.Name == f {
 					fileInfo.ModTime = time.Time(q.UpdateDate)

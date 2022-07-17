@@ -31,6 +31,11 @@ type FileMeta struct {
 	Size int64  `json:"size"`
 }
 
+type FolderMetaAddRes struct {
+	Response
+	FolderMeta
+}
+
 func (f FileMeta) MapToFileInfo() model.FileInfo {
 	return model.FileInfo{
 		IsDir:      false,

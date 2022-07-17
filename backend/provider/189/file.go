@@ -26,7 +26,7 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	fileInfo, _ := getFileInfo(f.Name, f.ProviderFolderMeta.RemoteName, f.ProviderFolderMeta)
-	folder, err := API{}.queryMeta(fileInfo.RemoteName)
+	folder, err := API{}.getFolderById(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Files {
 		fileInfos = append(fileInfos, model.FileInfoProxy{
