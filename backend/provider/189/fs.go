@@ -27,7 +27,14 @@ func (fs FileSystem) OpenFile(ctx context.Context, folder model.ProviderFolderMe
 	return File{Name: name, Context: ctx, ProviderFolderMeta: folder}, nil
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, folder model.ProviderFolderMeta, name string) error {
-	return webdav.Dir(localDir).RemoveAll(ctx, name)
+	_, f := path.Split(strings.TrimSuffix(name, "/"))
+	file, err := getFileInfo(name, folder.RemoteName, folder)
+	err = API{}.Delete(file.RemoteName, f, file.IsDir)
+	cache.Client.Del(context.Background(), cache.GetFileInfoCacheKey(name))
+	if strings.HasSuffix(name, "/") {
+		cache.Client.Del(context.Background(), cache.GetFileInfoCacheKey(strings.TrimSuffix(name, "/")))
+	}
+	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error {
 	return webdav.Dir(localDir).Rename(ctx, oldName, newName)

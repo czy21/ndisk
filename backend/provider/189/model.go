@@ -54,3 +54,13 @@ type FileListAORes struct {
 	Response
 	FileListAO FileListAO `json:"fileListAO"`
 }
+
+type TaskRes struct {
+	Response
+	TaskId string `json:"taskId"`
+}
+
+type FileDownloadUrlRes struct {
+	Response
+	Url string `json:"fileDownloadUrl"`
+}
