@@ -79,6 +79,8 @@ func (c Redis) Del(ctx context.Context, key string) {
 func (c Redis) DelPrefix(ctx context.Context, prefix string) {
 	iter := c.Cmd.Scan(ctx, 0, fmt.Sprintf("%s*", prefix), 0).Iterator()
 	for iter.Next(ctx) {
-		c.Del(ctx, iter.Val())
+		val := iter.Val()
+		log.Debugf("delete cache key: %s", val)
+		c.Cmd.XDel(ctx, val)
 	}
 }

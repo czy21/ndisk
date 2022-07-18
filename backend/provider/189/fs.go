@@ -26,10 +26,11 @@ func (fs FileSystem) OpenFile(ctx context.Context, folder model.ProviderFolderMe
 	return File{Name: name, Context: ctx, ProviderFolderMeta: folder}, nil
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, folder model.ProviderFolderMeta, name string) error {
-	_, f := path.Split(strings.TrimSuffix(name, "/"))
+	trimmedSuffix := strings.TrimSuffix(name, "/")
+	_, f := path.Split(trimmedSuffix)
 	file, err := getFileInfo(name, folder.RemoteName, folder)
 	err = API{}.Delete(file.RemoteName, f, file.IsDir)
-	cache.Client.DelPrefix(context.Background(), strings.TrimSuffix(cache.GetFileInfoCacheKey(name), "/"))
+	cache.Client.DelPrefix(context.Background(), cache.GetFileInfoCacheKey(trimmedSuffix))
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error {

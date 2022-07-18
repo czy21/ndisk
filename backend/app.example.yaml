@@ -17,3 +17,7 @@ cache:
   redis:
     url: redis://<user>:<pass>@localhost:6379/<db>
   expire: 60 # seconds
+
+
+cloud189:
+  cookie: ''
