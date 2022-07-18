@@ -107,16 +107,14 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 		return err
 	}
 	var taskStatus int
-	checkLimit := 0
+	i := 0
 	for {
-		if checkLimit >= 5 {
+		if taskStatus == 4 || i >= 3 {
 			break
 		}
-		if taskStatus != 4 {
-			time.Sleep(500 * time.Millisecond)
-			taskStatus = a.CheckTask(ret.TaskId, taskType)
-		}
-		checkLimit++
+		time.Sleep(500 * time.Millisecond)
+		taskStatus = a.CheckTask(ret.TaskId, taskType)
+		i++
 	}
 	return err
 }
