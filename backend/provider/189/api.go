@@ -109,7 +109,7 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 	var taskStatus int
 	i := 0
 	for {
-		if taskStatus == 4 || i >= 3 {
+		if taskStatus == 4 || i >= 2 {
 			break
 		}
 		time.Sleep(500 * time.Millisecond)
