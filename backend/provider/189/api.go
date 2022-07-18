@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"strconv"
+	"time"
 )
 
 type API struct{}
@@ -75,8 +76,8 @@ func (a API) CreateFolder(parentFolderId string, name string) (FolderMetaRes, er
 
 func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 	var (
-		err           error
-		createTaskRet TaskRes
+		err error
+		ret TaskRes
 	)
 	const taskType = "DELETE"
 	taskInfosBytes, err := json.Marshal([]map[string]string{
@@ -86,46 +87,67 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 			"isFolder": strconv.Itoa(util.BoolToInt(isFolder)),
 		},
 	})
-	createTaskQueryParams := map[string]string{
+	queryParam := map[string]string{
 		"noCache": QueryParamNoCache,
 	}
-	createTaskReq := getJsonAndTokenHeader(http2.GetClient().NewRequest())
-	createTaskFormParams := map[string]string{
+	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	formParam := map[string]string{
 		"type":      taskType,
 		"taskInfos": string(taskInfosBytes),
 	}
-	createTaskReq.SetFormData(createTaskFormParams)
-	createTaskReq.SetQueryParams(createTaskQueryParams)
-	res, err := createTaskReq.Post("https://cloud.189.cn/api/open/batch/createBatchTask.action")
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &createTaskRet)
+	req.SetFormData(formParam)
+	req.SetQueryParams(queryParam)
+	res, err := req.Post("https://cloud.189.cn/api/open/batch/createBatchTask.action")
+	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	strBody := string(res.Body())
 	log.Debugf(strBody)
-	if createTaskRet.ResMsg != ResSuccessMsg {
+	if ret.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
-		err = errors.New(createTaskRet.ErrorMsg)
+		err = errors.New(ret.ErrorMsg)
 		return err
 	}
-	commitTaskQueryParam := map[string]string{
-		"noCache": QueryParamNoCache,
-	}
-	commitTaskReq := getJsonAndTokenHeader(http2.GetClient().NewRequest())
-	commitTaskFormParams := map[string]string{
-		"taskId": createTaskRet.TaskId,
-		"type":   taskType,
-	}
-	commitTaskReq.SetQueryParams(commitTaskQueryParam)
-	commitTaskReq.SetFormData(commitTaskFormParams)
-	res, err = commitTaskReq.Post("https://cloud.189.cn/api/open/batch/checkBatchTask.action")
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &createTaskRet)
-	strBody = string(res.Body())
-	log.Debugf(strBody)
-	if createTaskRet.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(createTaskRet.ErrorMsg)
+	var taskStatus int
+	checkLimit := 0
+	for {
+		if checkLimit >= 5 {
+			break
+		}
+		if taskStatus != 4 {
+			time.Sleep(500 * time.Millisecond)
+			taskStatus = a.CheckTask(ret.TaskId, taskType)
+		}
+		checkLimit++
 	}
 	return err
 }
-
+func (a API) CheckTask(taskId string, kind string) int {
+	var (
+		err error
+		ret TaskRes
+	)
+	queryParam := map[string]string{
+		"noCache": QueryParamNoCache,
+	}
+	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	formParam := map[string]string{
+		"taskId": taskId,
+		"type":   kind,
+	}
+	req.SetQueryParams(queryParam)
+	req.SetFormData(formParam)
+	res, err := req.Post("https://cloud.189.cn/api/open/batch/checkBatchTask.action")
+	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
+	strBody := string(res.Body())
+	log.Debugf(strBody)
+	if ret.ResMsg != ResSuccessMsg {
+		log.Error(strBody)
+		err = errors.New(ret.ErrorMsg)
+	}
+	if err != nil {
+		log.Error(err)
+	}
+	return ret.TaskStatus
+}
 func (a API) RenameFolder(folderId string, destName string) error {
 	var (
 		err           error

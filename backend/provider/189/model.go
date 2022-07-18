@@ -57,7 +57,8 @@ type FileListAORes struct {
 
 type TaskRes struct {
 	Response
-	TaskId string `json:"taskId"`
+	TaskId     string `json:"taskId"`
+	TaskStatus int    `json:"taskStatus"`
 }
 
 type FileDownloadUrlRes struct {

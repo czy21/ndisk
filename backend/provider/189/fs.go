@@ -18,7 +18,7 @@ type FileSystem struct {
 
 func (fs FileSystem) Mkdir(ctx context.Context, folder model.ProviderFolderMeta, name string, perm os.FileMode) error {
 	d, f := path.Split(strings.TrimSuffix(name, "/"))
-	parentFolder, _ := getFileInfo(d, folder.RemoteName, folder)
+	parentFolder, _ := getFileInfo(ctx, d, folder.RemoteName, folder)
 	_, err := API{}.CreateFolder(parentFolder.RemoteName, f)
 	return err
 }
@@ -27,29 +27,30 @@ func (fs FileSystem) OpenFile(ctx context.Context, folder model.ProviderFolderMe
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, folder model.ProviderFolderMeta, name string) error {
 	trimmedSuffix := strings.TrimSuffix(name, "/")
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(trimmedSuffix))
 	_, f := path.Split(trimmedSuffix)
-	file, err := getFileInfo(name, folder.RemoteName, folder)
+	file, err := getFileInfo(ctx, name, folder.RemoteName, folder)
 	err = API{}.Delete(file.RemoteName, f, file.IsDir)
-	cache.Client.DelPrefix(context.Background(), cache.GetFileInfoCacheKey(trimmedSuffix))
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(trimmedSuffix))
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error {
-	oldResource, err := getFileInfo(oldName, folder.RemoteName, folder)
+	oldResource, err := getFileInfo(ctx, oldName, folder.RemoteName, folder)
 	_, f := path.Split(newName)
 	if !os.IsNotExist(err) {
 		err = API{}.RenameFolder(oldResource.RemoteName, f)
 	}
-	cache.Client.DelPrefix(context.Background(), strings.TrimSuffix(cache.GetFileInfoCacheKey(oldName), "/"))
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(strings.TrimSuffix(oldName, "/")))
 	return err
 }
 func (fs FileSystem) Stat(ctx context.Context, folder model.ProviderFolderMeta, name string) (os.FileInfo, error) {
-	fileInfo, err := getFileInfo(name, folder.RemoteName, folder)
+	fileInfo, err := getFileInfo(ctx, name, folder.RemoteName, folder)
 	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
-func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolderMeta) (model.FileInfo, error) {
+func getFileInfo(ctx context.Context, name string, remoteName string, folderMeta model.ProviderFolderMeta) (model.FileInfo, error) {
 	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true, ModTime: time.Time(*folderMeta.UpdateTime)}
 	var err error
-	if cache.Client.GetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo) {
+	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
 	}
 	d, f := path.Split(name)
@@ -89,7 +90,7 @@ func getFileInfo(name string, remoteName string, folderMeta model.ProviderFolder
 		}
 	}
 	if err == nil {
-		cache.Client.SetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo)
+		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}
 	return fileInfo, err
 }
