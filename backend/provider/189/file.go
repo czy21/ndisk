@@ -58,5 +58,6 @@ func (f File) Stat() (fs.FileInfo, error) {
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-	panic("implement me")
+
+	panic("aa")
 }

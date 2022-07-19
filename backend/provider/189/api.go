@@ -42,7 +42,7 @@ func (a API) getFolderById(folderId string) (FileListAO, error) {
 	req.SetQueryParams(params)
 	res, err := req.Get(fmt.Sprintf("https://cloud.189.cn/api/open/file/listFiles.action"))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := string(res.Body())
+	strBody := res.String()
 	log.Debugf(strBody)
 	if ret.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
@@ -65,7 +65,7 @@ func (a API) CreateFolder(parentFolderId string, name string) (FolderMetaRes, er
 	req.SetFormData(formData)
 	res, err := req.Post("https://cloud.189.cn/api/open/file/createFolder.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := string(res.Body())
+	strBody := res.String()
 	log.Debugf(strBody)
 	if ret.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
@@ -99,7 +99,7 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 	req.SetQueryParams(queryParam)
 	res, err := req.Post("https://cloud.189.cn/api/open/batch/createBatchTask.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := string(res.Body())
+	strBody := res.String()
 	log.Debugf(strBody)
 	if ret.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
@@ -135,7 +135,7 @@ func (a API) CheckTask(taskId string, kind string) int {
 	req.SetFormData(formParam)
 	res, err := req.Post("https://cloud.189.cn/api/open/batch/checkBatchTask.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := string(res.Body())
+	strBody := res.String()
 	log.Debugf(strBody)
 	if ret.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
@@ -159,7 +159,7 @@ func (a API) RenameFolder(folderId string, destName string) error {
 	req.SetFormData(formParams)
 	res, err := req.Post(fmt.Sprintf("https://cloud.189.cn/api/open/file/renameFolder.action?noCache=%s", QueryParamNoCache))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &folderMetaRes)
-	strBody := string(res.Body())
+	strBody := res.String()
 	log.Debugf(strBody)
 	if folderMetaRes.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
@@ -182,11 +182,27 @@ func (a API) getDownloadFileUrl(fileId string) (string, error) {
 	getDownloadUrlReq.SetResult(&ret)
 	res, err := getDownloadUrlReq.Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := string(res.Body())
+	strBody := res.String()
 	log.Debugf(strBody)
 	if ret.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
 		err = errors.New(ret.ErrorMsg)
 	}
 	return ret.Url, err
+}
+
+func (a API) getRSAKey() (RSAKeyRes, error) {
+	var (
+		err error
+		ret RSAKeyRes
+	)
+	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	res, err := req.Get(fmt.Sprintf("https://cloud.189.cn/api/security/generateRsaKey.action?noCache=%s", QueryParamNoCache))
+	strBody := res.String()
+	log.Debugf(strBody)
+	if ret.ResMsg != ResSuccessMsg {
+		log.Error(strBody)
+		err = errors.New(ret.ErrorMsg)
+	}
+	return ret, err
 }

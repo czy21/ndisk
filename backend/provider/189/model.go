@@ -65,3 +65,11 @@ type FileDownloadUrlRes struct {
 	Response
 	Url string `json:"fileDownloadUrl"`
 }
+
+type RSAKeyRes struct {
+	Response
+	Expire  int64  `json:"expire"`
+	PKId    string `json:"pkId"`
+	PubKey  string `json:"publicKey"`
+	Version string `json:"ver"`
+}
