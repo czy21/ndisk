@@ -11,7 +11,8 @@ const StandardFormat = "2006-01-02 15:04:05"
 type LocalTime time.Time
 
 func (t *LocalTime) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + time.Time(*t).Format(StandardFormat) + `"`), nil
+	val := time.Time(*t).Format(StandardFormat)
+	return []byte(`"` + val + `"`), nil
 }
 
 func (t *LocalTime) UnmarshalJSON(data []byte) error {
@@ -19,7 +20,7 @@ func (t *LocalTime) UnmarshalJSON(data []byte) error {
 	if value == "" || value == "null" {
 		return nil
 	}
-	s, err := time.ParseInLocation(StandardFormat, value, time.UTC)
+	s, err := time.Parse(StandardFormat, value)
 	if err != nil {
 		return err
 	}
