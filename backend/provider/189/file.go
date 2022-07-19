@@ -2,6 +2,7 @@ package _189
 
 import (
 	"context"
+	"github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
 	"io/fs"
 )
@@ -17,11 +18,16 @@ func (f File) Close() error {
 }
 
 func (f File) Read(p []byte) (n int, err error) {
-	panic("implement me")
+	fileInfo, err := getFileInfo(f.Context, f.Name, f.File)
+	url, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
+	req := http.GetClient().NewRequest()
+	res, err := req.Get(url)
+	return copy(p, res.Body()), err
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
-	panic("implement me")
+	fileInfo, err := getFileInfo(f.Context, f.Name, f.File)
+	return fileInfo.Size, err
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {

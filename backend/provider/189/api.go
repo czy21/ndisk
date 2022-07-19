@@ -168,10 +168,10 @@ func (a API) RenameFolder(folderId string, destName string) error {
 	return err
 }
 
-func (a API) DownloadFile(fileId string) error {
+func (a API) getDownloadFileUrl(fileId string) (string, error) {
 	var (
-		err                error
-		fileDownloadUrlRes FileDownloadUrlRes
+		err error
+		ret FileDownloadUrlRes
 	)
 	getDownloadUrlParams := map[string]string{
 		"noCache": QueryParamNoCache,
@@ -179,14 +179,14 @@ func (a API) DownloadFile(fileId string) error {
 	}
 	getDownloadUrlReq := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	getDownloadUrlReq.SetQueryParams(getDownloadUrlParams)
-	getDownloadUrlReq.SetResult(&fileDownloadUrlRes)
+	getDownloadUrlReq.SetResult(&ret)
 	res, err := getDownloadUrlReq.Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &fileDownloadUrlRes)
+	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	strBody := string(res.Body())
 	log.Debugf(strBody)
-	if fileDownloadUrlRes.ResMsg != ResSuccessMsg {
+	if ret.ResMsg != ResSuccessMsg {
 		log.Error(strBody)
-		err = errors.New(fileDownloadUrlRes.ErrorMsg)
+		err = errors.New(ret.ErrorMsg)
 	}
-	return err
+	return ret.Url, err
 }
