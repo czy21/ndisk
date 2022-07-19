@@ -33,3 +33,9 @@ type ProviderFolderBO struct {
 type ProviderFolderMeta struct {
 	ProviderFolderBO
 }
+
+type ProviderFile struct {
+	OldPath        string
+	NewPath        string
+	ProviderFolder ProviderFolderMeta
+}

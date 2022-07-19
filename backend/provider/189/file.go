@@ -7,9 +7,9 @@ import (
 )
 
 type File struct {
-	Name               string
-	ProviderFolderMeta model.ProviderFolderMeta
-	Context            context.Context
+	Name    string
+	File    model.ProviderFile
+	Context context.Context
 }
 
 func (f File) Close() error {
@@ -25,7 +25,7 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
-	fileInfo, _ := getFileInfo(f.Context, f.Name, f.ProviderFolderMeta.RemoteName, f.ProviderFolderMeta)
+	fileInfo, _ := getFileInfo(f.Context, f.Name, f.File)
 	folder, err := API{}.getFolderById(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Files {
@@ -47,7 +47,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	fileInfo, _ := getFileInfo(f.Context, f.Name, f.ProviderFolderMeta.RemoteName, f.ProviderFolderMeta)
+	fileInfo, _ := getFileInfo(f.Context, f.Name, f.File)
 	return model.FileInfoProxy{FileInfo: fileInfo}, nil
 }
 

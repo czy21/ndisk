@@ -17,45 +17,47 @@ type FileSystem struct{}
 
 func (FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
 	web.LogDav("Mkdir", name)
-	p, fs := getProvider(ctx, name)
-	return fs.Mkdir(ctx, name, perm, p, strings.TrimSuffix(name, "/"))
+	p, fs := getProvider(name, "")
+	return fs.Mkdir(ctx, name, perm, p)
 }
 func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
 	web.LogDav("OpenFile", name)
 	if name == "/" {
 		return File{Name: name}, nil
 	}
-	p, fs := getProvider(ctx, name)
-	return fs.OpenFile(ctx, name, flag, perm, p, strings.TrimSuffix(name, "/"))
+	p, fs := getProvider(name, "")
+	return fs.OpenFile(ctx, name, flag, perm, p)
 }
 func (FileSystem) RemoveAll(ctx context.Context, name string) error {
 	web.LogDav("RemoveAll", name)
-	p, fs := getProvider(ctx, name)
-	return fs.RemoveAll(ctx, name, p, strings.TrimSuffix(name, "/"))
+	p, fs := getProvider(name, "")
+	return fs.RemoveAll(ctx, name, p)
 }
 func (FileSystem) Rename(ctx context.Context, oldName, newName string) error {
 	web.LogDav("Rename", fmt.Sprintf("src:%s dest:%s", oldName, newName))
-	p, fs := getProvider(ctx, newName)
-	return fs.Rename(ctx, oldName, newName, p, strings.TrimSuffix(oldName, "/"), strings.TrimSuffix(newName, "/"))
+	p, fs := getProvider(newName, oldName)
+	return fs.Rename(ctx, oldName, newName, p)
 }
 func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	web.LogDav("Stat", name)
 	if name == "/" {
 		return model.FileInfoProxy{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
-	p, fs := getProvider(ctx, name)
-	return fs.Stat(ctx, name, p, strings.TrimSuffix(name, "/"))
+	p, fs := getProvider(name, "")
+	return fs.Stat(ctx, name, p)
 }
 
-func getProvider(ctx context.Context, name string) (model.ProviderFolderMeta, provider.FileSystem) {
-	folder := model.ProviderFolderMeta{}
+func getProvider(name string, oldName string) (model.ProviderFile, provider.FileSystem) {
+	file := model.ProviderFile{}
 	for _, t := range providerMetas {
 		if strings.HasPrefix(name, "/"+t.Name) {
-			folder = t
+			file.ProviderFolder = t
 		}
 	}
-	if fs := provider.GetProviders()[folder.Account.Kind]; fs != nil {
-		return folder, fs
+	file.OldPath = strings.TrimSuffix(oldName, "/")
+	file.NewPath = strings.TrimSuffix(name, "/")
+	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
+		return file, fs
 	}
-	return folder, local.NewFS()
+	return file, local.NewFS()
 }
