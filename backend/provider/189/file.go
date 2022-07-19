@@ -22,7 +22,7 @@ func (f File) Read(p []byte) (n int, err error) {
 	url, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
 	req := http.GetClient().NewRequest()
 	res, err := req.Get(url)
-	return copy(p, res.Body()), err
+	return copy(p, res.Body()), nil
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
