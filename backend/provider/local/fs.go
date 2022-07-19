@@ -18,19 +18,19 @@ func NewFS() FileSystem {
 	return FileSystem{Dir: viper.GetString("data.dav")}
 }
 
-func (fs FileSystem) Mkdir(ctx context.Context, folder model.ProviderFolderMeta, name string, perm os.FileMode) error {
+func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, folder model.ProviderFolderMeta, filePath string) error {
 	return webdav.Dir(fs.Dir).Mkdir(ctx, name, perm)
 }
-func (fs FileSystem) OpenFile(ctx context.Context, folder model.ProviderFolderMeta, name string, flag int, perm os.FileMode) (webdav.File, error) {
+func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, folder model.ProviderFolderMeta, filePath string) (webdav.File, error) {
 	return webdav.Dir(fs.Dir).OpenFile(ctx, name, flag, perm)
 }
-func (fs FileSystem) RemoveAll(ctx context.Context, folder model.ProviderFolderMeta, name string) error {
+func (fs FileSystem) RemoveAll(ctx context.Context, name string, folder model.ProviderFolderMeta, filePath string) error {
 	return webdav.Dir(fs.Dir).RemoveAll(ctx, name)
 }
-func (fs FileSystem) Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error {
+func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, folder model.ProviderFolderMeta, oldFilePath string, newFilePath string) error {
 	return webdav.Dir(fs.Dir).Rename(ctx, oldName, newName)
 }
-func (fs FileSystem) Stat(ctx context.Context, folder model.ProviderFolderMeta, name string) (os.FileInfo, error) {
+func (fs FileSystem) Stat(ctx context.Context, name string, folder model.ProviderFolderMeta, filePath string) (os.FileInfo, error) {
 	d := path.Join(fs.Dir, folder.Name)
 	if _, err := os.Stat(d); os.IsNotExist(err) {
 		err = os.MkdirAll(d, os.ModePerm)
