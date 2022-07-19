@@ -8,22 +8,22 @@ import (
 
 const StandardFormat = "2006-01-02 15:04:05"
 
-type StandardTime time.Time
+type LocalTime time.Time
 
-func (t *StandardTime) MarshalJSON() ([]byte, error) {
+func (t *LocalTime) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + time.Time(*t).Format(StandardFormat) + `"`), nil
 }
 
-func (t *StandardTime) UnmarshalJSON(data []byte) error {
+func (t *LocalTime) UnmarshalJSON(data []byte) error {
 	value := strings.Trim(string(data), `"`)
 	if value == "" || value == "null" {
 		return nil
 	}
-	s, err := time.Parse(StandardFormat, value)
+	s, err := time.ParseInLocation(StandardFormat, value, time.Local)
 	if err != nil {
 		return err
 	}
-	*t = StandardTime(s)
+	*t = LocalTime(s)
 	return nil
 }
 

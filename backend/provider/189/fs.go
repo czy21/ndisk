@@ -1,6 +1,7 @@
 package _189
 
 import (
+	"fmt"
 	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
 	"golang.org/x/net/context"
@@ -61,7 +62,7 @@ func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (mod
 			folder, err = api.getFolderById(remoteName)
 			for _, q := range folder.Folders {
 				if q.Name == t {
-					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.ModTime = time.Time(q.UpdateDate).UTC()
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					remoteName = fileInfo.RemoteName
 				}
@@ -72,7 +73,7 @@ func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (mod
 			err = fs.ErrNotExist
 			for _, q := range folder.Files {
 				if q.Name == f {
-					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.ModTime = time.Time(q.UpdateDate).UTC()
 					fileInfo.Size = q.Size
 					fileInfo.IsDir = false
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
@@ -81,7 +82,9 @@ func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (mod
 			}
 			for _, q := range folder.Folders {
 				if q.Name == f {
-					fileInfo.ModTime = time.Time(q.UpdateDate)
+					t1 := q.UpdateDate
+					fmt.Println(t1)
+					fileInfo.ModTime = time.Time(q.UpdateDate).UTC()
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					err = nil
 				}

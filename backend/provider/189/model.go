@@ -13,9 +13,9 @@ type Response struct {
 }
 
 type BaseTrackModel[TID any] struct {
-	Id         TID                `json:"id"`
-	CreateDate model.StandardTime `json:"createDate"`
-	UpdateDate model.StandardTime `json:"lastOpTime"`
+	Id         TID             `json:"id"`
+	CreateDate model.LocalTime `json:"createDate"`
+	UpdateDate model.LocalTime `json:"lastOpTime"`
 }
 
 type FolderMeta struct {
