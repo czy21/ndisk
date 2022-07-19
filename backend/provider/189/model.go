@@ -3,7 +3,6 @@ package _189
 import (
 	"github.com/czy21/ndisk/model"
 	"strconv"
-	"time"
 )
 
 type Response struct {
@@ -39,7 +38,7 @@ type FolderMetaRes struct {
 func (f FileMeta) MapToFileInfo() model.FileInfo {
 	return model.FileInfo{
 		IsDir:      false,
-		ModTime:    time.Time(f.UpdateDate),
+		ModTime:    f.UpdateDate,
 		Size:       f.Size,
 		RemoteName: strconv.FormatInt(f.Id, 10),
 	}

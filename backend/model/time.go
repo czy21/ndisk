@@ -8,20 +8,23 @@ import (
 
 const StandardFormat = "2006-01-02 15:04:05"
 
-// StandardTime yyyy-MM-dd HH:mm:ss
 type StandardTime time.Time
 
-func (t StandardTime) MarshalJSON() ([]byte, error) {
-	return []byte(time.Time(t).Format(StandardFormat)), nil
+func (t *StandardTime) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + time.Time(*t).Format(StandardFormat) + `"`), nil
 }
 
 func (t *StandardTime) UnmarshalJSON(data []byte) error {
-	if string(data) == "null" {
+	value := strings.Trim(string(data), `"`)
+	if value == "" || value == "null" {
 		return nil
 	}
-	nt, err := time.ParseInLocation(StandardFormat, strings.Trim(string(data), `"`), time.Local)
-	*t = StandardTime(nt)
-	return err
+	s, err := time.ParseInLocation(StandardFormat, value, time.Local)
+	if err != nil {
+		return err
+	}
+	*t = StandardTime(s)
+	return nil
 }
 
 // UnixTime unix timestamp

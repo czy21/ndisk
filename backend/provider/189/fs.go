@@ -10,7 +10,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type FileSystem struct {
@@ -47,7 +46,7 @@ func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderF
 }
 func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	remoteName := file.ProviderFolder.RemoteName
-	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true, ModTime: time.Time(*file.ProviderFolder.UpdateTime)}
+	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 	var err error
 	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
@@ -61,7 +60,7 @@ func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (mod
 			folder, err = api.getFolderById(remoteName)
 			for _, q := range folder.Folders {
 				if q.Name == t {
-					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.ModTime = q.UpdateDate
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					remoteName = fileInfo.RemoteName
 				}
@@ -72,7 +71,7 @@ func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (mod
 			err = fs.ErrNotExist
 			for _, q := range folder.Files {
 				if q.Name == f {
-					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.ModTime = q.UpdateDate
 					fileInfo.Size = q.Size
 					fileInfo.IsDir = false
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
@@ -81,7 +80,7 @@ func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (mod
 			}
 			for _, q := range folder.Folders {
 				if q.Name == f {
-					fileInfo.ModTime = time.Time(q.UpdateDate)
+					fileInfo.ModTime = q.UpdateDate
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					err = nil
 				}
