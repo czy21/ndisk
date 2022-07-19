@@ -1,13 +1,13 @@
 package controller
 
 import (
-	"context"
-	"github.com/czy21/ndisk/cache"
+	"fmt"
 	"github.com/czy21/ndisk/exception"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/service"
 	"github.com/czy21/ndisk/web"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 func OptionList(c *gin.Context) {
@@ -20,10 +20,11 @@ func OptionList(c *gin.Context) {
 }
 
 func CachePut(c *gin.Context) {
-	input := make(map[string]interface{})
-	err := c.Bind(&input)
-	exception.Check(err)
-	cache.Client.SetObj(context.Background(), c.Query("key"), input)
+	//input := make(map[string]interface{})
+	//err := c.Bind(&input)
+	//exception.Check(err)
+	fmt.Println(time.Now())
+	//cache.Client.SetObj(context.Background(), c.Query("key"), input)
 }
 
 func OptionController(r *gin.Engine) {
