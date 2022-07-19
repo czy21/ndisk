@@ -8,9 +8,9 @@ import (
 )
 
 type FileSystem interface {
-	Mkdir(ctx context.Context, folder model.ProviderFolderMeta, name string, perm os.FileMode) error
-	OpenFile(ctx context.Context, folder model.ProviderFolderMeta, name string, flag int, perm os.FileMode) (webdav.File, error)
-	RemoveAll(ctx context.Context, folder model.ProviderFolderMeta, name string) error
-	Rename(ctx context.Context, folder model.ProviderFolderMeta, oldName, newName string) error
-	Stat(ctx context.Context, folder model.ProviderFolderMeta, name string) (os.FileInfo, error)
+	Mkdir(ctx context.Context, name string, perm os.FileMode, folder model.ProviderFolderMeta, filePath string) error
+	OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, folder model.ProviderFolderMeta, filePath string) (webdav.File, error)
+	RemoveAll(ctx context.Context, name string, folder model.ProviderFolderMeta, filePath string) error
+	Rename(ctx context.Context, oldName, newName string, folder model.ProviderFolderMeta, oldFilePath string, newFilePath string) error
+	Stat(ctx context.Context, name string, folder model.ProviderFolderMeta, filePath string) (os.FileInfo, error)
 }
