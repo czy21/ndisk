@@ -2,7 +2,6 @@ package _189
 
 import (
 	"github.com/czy21/ndisk/model"
-	"strconv"
 )
 
 type Response struct {
@@ -33,15 +32,6 @@ type FileMeta struct {
 type FolderMetaRes struct {
 	Response
 	FolderMeta
-}
-
-func (f FileMeta) MapToFileInfo() model.FileInfo {
-	return model.FileInfo{
-		IsDir:      false,
-		ModTime:    f.UpdateDate,
-		Size:       f.Size,
-		RemoteName: strconv.FormatInt(f.Id, 10),
-	}
 }
 
 type FileListAO struct {

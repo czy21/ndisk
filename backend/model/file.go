@@ -7,13 +7,13 @@ import (
 )
 
 type FileInfo struct {
-	Name       string       `json:"name"`
-	Size       int64        `json:"size"`
-	Mode       os.FileMode  `json:"mode"`
-	ModTime    StandardTime `json:"modTime"`
-	IsDir      bool         `json:"isDir"`
-	Sys        any          `json:"sys"`
-	RemoteName string       `json:"remoteName"`
+	Name       string      `json:"name"`
+	Size       int64       `json:"size"`
+	Mode       os.FileMode `json:"mode"`
+	ModTime    time.Time   `json:"modTime"`
+	IsDir      bool        `json:"isDir"`
+	Sys        any         `json:"sys"`
+	RemoteName string      `json:"remoteName"`
 }
 
 type FileInfoProxy struct {
@@ -33,7 +33,7 @@ func (c FileInfoProxy) Mode() fs.FileMode {
 }
 
 func (c FileInfoProxy) ModTime() time.Time {
-	return time.Time(c.FileInfo.ModTime)
+	return c.FileInfo.ModTime
 }
 
 func (c FileInfoProxy) IsDir() bool {

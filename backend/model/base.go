@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type PageModel struct {
 	PageIndex int   `json:"pageIndex"`
 	PageSize  int   `json:"pageSize"`
@@ -16,10 +18,10 @@ type BaseEntity[TID any] struct {
 }
 
 type TrackEntity struct {
-	CreateTime *StandardTime `gorm:"column:create_time;default:null" json:"createTime"`
-	CreateUser int64         `gorm:"column:create_user" json:"createUser"`
-	UpdateTime *StandardTime `gorm:"column:update_time;default:null" json:"updateTime"`
-	UpdateUser int64         `gorm:"column:update_user" json:"updateUser"`
+	CreateTime *time.Time `gorm:"column:create_time;default:null" json:"createTime"`
+	CreateUser int64      `gorm:"column:create_user" json:"createUser"`
+	UpdateTime *time.Time `gorm:"column:update_time;default:null" json:"updateTime"`
+	UpdateUser int64      `gorm:"column:update_user" json:"updateUser"`
 }
 
 type BaseQuery[TID any] struct {
