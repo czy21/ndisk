@@ -1,13 +1,13 @@
-import * as React from 'react';
-import ReactDOM from 'react-dom';
-import CssBaseline from '@mui/material/CssBaseline';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
 import App from './App';
 
-ReactDOM.render(
-  <React.Fragment>
-    {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-    <CssBaseline />
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
+  <React.StrictMode>
     <App />
-  </React.Fragment>,
-  document.getElementById('root'),
+  </React.StrictMode>
 );
