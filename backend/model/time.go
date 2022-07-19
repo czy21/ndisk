@@ -19,7 +19,7 @@ func (t *LocalTime) UnmarshalJSON(data []byte) error {
 	if value == "" || value == "null" {
 		return nil
 	}
-	s, err := time.Parse(StandardFormat, value)
+	s, err := time.ParseInLocation(StandardFormat, value, time.Local)
 	if err != nil {
 		return err
 	}
