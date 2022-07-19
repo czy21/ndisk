@@ -1,7 +1,6 @@
 package _189
 
 import (
-	"fmt"
 	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
 	"golang.org/x/net/context"
@@ -82,7 +81,6 @@ func getFileInfo(ctx context.Context, name string, file model.ProviderFile) (mod
 			}
 			for _, q := range folder.Folders {
 				if q.Name == f {
-					fmt.Printf("now: %s name: %s updateDate: %s utced: %s", time.Now(), name, time.Time(q.UpdateDate), time.Time(q.UpdateDate).UTC())
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					err = nil
