@@ -6,6 +6,7 @@ import (
 	"github.com/czy21/ndisk/repository"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/webdav"
+	"strings"
 )
 
 var providerMetas []model.ProviderFolderMeta
@@ -20,10 +21,7 @@ func Controller(r *gin.Engine) {
 			LockSystem: webdav.NewMemLS(),
 		}
 		if c.Request.Method == "GET" {
-			c.Request.Method = "HEAD"
-			h.ServeHTTP(c.Writer, c.Request)
-
-			c.Request.Method = "GET"
+			DownloadFile(c.Writer, c.Request, strings.TrimPrefix(c.Request.URL.Path, davPrefix))
 		} else {
 			h.ServeHTTP(c.Writer, c.Request)
 		}

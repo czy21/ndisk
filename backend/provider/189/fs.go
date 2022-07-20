@@ -8,6 +8,8 @@ import (
 	"golang.org/x/net/webdav"
 	fs1 "io/fs"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -21,8 +23,21 @@ type FileSystem struct {
 func (fs FileSystem) DownloadFile(ctx context.Context, name string, file model.ProviderFile, w http.ResponseWriter, r *http.Request) {
 	var err error
 	fileInfo, err := FileSystem{}.GetFileInfo(ctx, name, file)
-	url, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
-	http.Redirect(w, r, url, 302)
+	downloadURL, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
+	urlObj, err := url.Parse(downloadURL)
+	proxy := httputil.NewSingleHostReverseProxy(urlObj)
+	proxy.Director = func(request *http.Request) {
+		request.URL.Host = urlObj.Host
+		request.URL.Scheme = urlObj.Scheme
+		request.URL.Path = urlObj.Path
+		request.URL.RawQuery = urlObj.RawQuery
+		request.Host = urlObj.Host
+	}
+	proxy.ModifyResponse = func(response *http.Response) error {
+		response.Header.Add("Access-Control-Allow-Origin", "*")
+		return nil
+	}
+	proxy.ServeHTTP(w, r)
 	if err != nil {
 		log.Error(err)
 	}
