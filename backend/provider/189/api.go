@@ -9,6 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"math"
 	"strconv"
 	"time"
 )
@@ -205,4 +206,10 @@ func (a API) getRSAKey() (RSAKeyRes, error) {
 		err = errors.New(ret.ErrorMsg)
 	}
 	return ret, err
+}
+
+func (a API) Upload(parentFolderId string, fileName string, fileSize, bytes []byte) {
+	const sliceSize uint64 = 10485760
+	slices := math.Max(1, math.Ceil(float64(len(bytes))/float64(sliceSize)))
+	fmt.Println(slices)
 }

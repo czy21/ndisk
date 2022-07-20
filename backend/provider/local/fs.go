@@ -6,12 +6,18 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
+	"net/http"
 	"os"
 	"path"
 )
 
 type FileSystem struct {
 	Dir string
+}
+
+func (fs FileSystem) DownloadFile(ctx context.Context, name string, file model.ProviderFile, w http.ResponseWriter, r *http.Request) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewFS() FileSystem {
@@ -37,4 +43,8 @@ func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderF
 		exception.Check(err)
 	}
 	return webdav.Dir(fs.Dir).Stat(ctx, name)
+}
+
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
+	return model.FileInfo{}, nil
 }

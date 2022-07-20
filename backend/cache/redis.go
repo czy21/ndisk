@@ -84,3 +84,7 @@ func (c Redis) DelPrefix(ctx context.Context, prefix string) {
 		c.Del(ctx, k)
 	}
 }
+
+func (c Redis) IncrBy(ctx context.Context, key string, value int64) {
+	c.Cmd.IncrBy(ctx, key, value)
+}

@@ -13,8 +13,9 @@ var providerMetas []model.ProviderFolderMeta
 func Controller(r *gin.Engine) {
 	serveFn := func(c *gin.Context) {
 		providerMetas = repository.Provider{}.SelectListMeta()
+		davPrefix := "/dav"
 		h := webdav.Handler{
-			Prefix:     "/dav",
+			Prefix:     davPrefix,
 			FileSystem: FileSystem{},
 			LockSystem: webdav.NewMemLS(),
 		}

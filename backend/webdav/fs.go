@@ -8,6 +8,7 @@ import (
 	"github.com/czy21/ndisk/web"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
+	"net/http"
 
 	"os"
 	"strings"
@@ -60,4 +61,16 @@ func getProvider(name string, oldName string) (model.ProviderFile, provider.File
 		return file, fs
 	}
 	return file, local.NewFS()
+}
+
+func GetFileInfo(ctx context.Context, name string) (model.FileInfo, error) {
+	p, fs := getProvider(name, "")
+	return fs.GetFileInfo(ctx, name, p)
+}
+
+func DownloadFile(w http.ResponseWriter, r *http.Request, name string) {
+	ctx := r.Context()
+	p, fs := getProvider(name, "")
+	fs.DownloadFile(ctx, name, p, w, r)
+
 }
