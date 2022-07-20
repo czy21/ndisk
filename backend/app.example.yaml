@@ -6,7 +6,7 @@ data:
 
 db:
   driver-name: mysql
-  url: [user]:[password]@tcp([host]:port)/ndisk?charset=utf8mb4&parseTime=True&loc=Local
+  url: [user]:[password]@tcp([host]:port)/ndisk?charset=utf8mb4&parseTime=True&loc=UTC
 
 log:
 #  file: app.log # if removed,log in console
