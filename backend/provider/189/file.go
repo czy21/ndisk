@@ -2,8 +2,6 @@ package _189
 
 import (
 	"context"
-	"fmt"
-	"github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
 	"io/fs"
 )
@@ -20,32 +18,11 @@ func (f File) Close() error {
 }
 
 func (f File) Read(p []byte) (n int, err error) {
-	chunkSize := len(p)
-	var prepIndex int64
-	var postIndex int64
-	if val := f.Extra["downloadSize"]; val != nil {
-		v := val.(int64)
-		prepIndex = v
-		v += int64(chunkSize)
-		postIndex = v
-		f.Extra["downloadSize"] = v
-	} else {
-		postIndex = int64(chunkSize)
-		f.Extra["downloadSize"] = int64(chunkSize)
-	}
-	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	url, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
-	req := http.GetClient().NewRequest()
-	req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", prepIndex, postIndex))
-	res, err := req.Get(url)
-	chunkSize = copy(p, res.Body())
-	fmt.Println(chunkSize)
-	return chunkSize, nil
+	panic("implement me")
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
-	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	return fileInfo.Size, err
+	panic("implement me")
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
@@ -76,6 +53,5 @@ func (f File) Stat() (fs.FileInfo, error) {
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-
 	panic("aa")
 }

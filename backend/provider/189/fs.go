@@ -8,8 +8,6 @@ import (
 	"golang.org/x/net/webdav"
 	fs1 "io/fs"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -24,20 +22,21 @@ func (fs FileSystem) DownloadFile(ctx context.Context, name string, file model.P
 	var err error
 	fileInfo, err := FileSystem{}.GetFileInfo(ctx, name, file)
 	downloadURL, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
-	urlObj, err := url.Parse(downloadURL)
-	proxy := httputil.NewSingleHostReverseProxy(urlObj)
-	proxy.Director = func(request *http.Request) {
-		request.URL.Host = urlObj.Host
-		request.URL.Scheme = urlObj.Scheme
-		request.URL.Path = urlObj.Path
-		request.URL.RawQuery = urlObj.RawQuery
-		request.Host = urlObj.Host
-	}
-	proxy.ModifyResponse = func(response *http.Response) error {
-		response.Header.Add("Access-Control-Allow-Origin", "*")
-		return nil
-	}
-	proxy.ServeHTTP(w, r)
+	http.Redirect(w, r, downloadURL, 302)
+	//urlObj, err := url.Parse(downloadURL)
+	//proxy := httputil.NewSingleHostReverseProxy(urlObj)
+	//proxy.Director = func(request *http.Request) {
+	//	request.Host = urlObj.Host
+	//	request.URL.Host = urlObj.Host
+	//	request.URL.Scheme = urlObj.Scheme
+	//	request.URL.Path = urlObj.Path
+	//	request.URL.RawQuery = urlObj.RawQuery
+	//}
+	//proxy.ModifyResponse = func(response *http.Response) error {
+	//	response.Header.Add("Access-Control-Allow-Origin", "*")
+	//	return nil
+	//}
+	//proxy.ServeHTTP(w, r)
 	if err != nil {
 		log.Error(err)
 	}
