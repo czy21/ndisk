@@ -19,7 +19,14 @@ func Controller(r *gin.Engine) {
 			FileSystem: FileSystem{},
 			LockSystem: webdav.NewMemLS(),
 		}
-		h.ServeHTTP(c.Writer, c.Request)
+		if c.Request.Method == "GET" {
+			c.Request.Method = "HEAD"
+			h.ServeHTTP(c.Writer, c.Request)
+
+			c.Request.Method = "GET"
+		} else {
+			h.ServeHTTP(c.Writer, c.Request)
+		}
 	}
 	r1 := r.Group("/dav")
 	{
