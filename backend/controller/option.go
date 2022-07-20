@@ -20,11 +20,11 @@ func OptionList(c *gin.Context) {
 }
 
 func CachePut(c *gin.Context) {
-	//input := make(map[string]interface{})
-	//err := c.Bind(&input)
-	//exception.Check(err)
+	t1 := time.Now()
+	fmt.Println(fmt.Sprintf("t1: %s", t1))
+	t2, _ := time.Parse(model.StandardFormat, "2022-07-19 12:00:00")
+	fmt.Println(fmt.Sprintf("t2: %s", t2.Add(-8*time.Hour)))
 	fmt.Println(time.Now())
-	//cache.Client.SetObj(context.Background(), c.Query("key"), input)
 }
 
 func OptionController(r *gin.Engine) {
