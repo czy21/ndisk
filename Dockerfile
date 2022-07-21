@@ -1,6 +1,5 @@
-FROM debian:bullseye-slim
+FROM buildpack-deps:bullseye-scm
 
-#COPY ./web/build/ /app/dist/
 COPY ./backend/build/ /app/
 
 RUN chmod +x /app/ndisk
