@@ -31,7 +31,7 @@ func Controller(r *gin.Engine) {
 				return
 			}
 		}
-		h.ServeHTTP(c.Writer, c.Request)
+		h.ServeHTTP(Writer{c.Writer}, c.Request)
 	}
 	r1 := r.Group(davPrefix)
 	{

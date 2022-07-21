@@ -6,7 +6,6 @@ import (
 	"github.com/czy21/ndisk/model"
 	"io"
 	"io/fs"
-	"strconv"
 )
 
 type File struct {
@@ -66,9 +65,19 @@ func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	//req := http.GetClient().NewRequest()
 	//res, err := req.Get(url)
 	//c, err := r.Read(res.Body())
-	data := make([]byte, 100)
-	c, err := r.Read(data)
-	fmt.Printf(strconv.Itoa(c))
-	fmt.Printf(string(data))
-	return 0, err
+	size := 1024 * 1024 * 10
+	buf := make([]byte, size)
+	written := int64(0)
+	for {
+		nr, _ := r.Read(buf)
+		//fmt.Println(string(buf))
+		if nr > 0 {
+			a := buf[0:nr]
+			written += int64(len(a))
+		} else {
+			break
+		}
+	}
+	fmt.Println(written)
+	return written, err
 }
