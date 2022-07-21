@@ -1,4 +1,4 @@
-FROM golang:1.18.4-bullseye
+FROM alpine:3.16
 
 #COPY ./web/build/ /app/dist/
 COPY ./backend/build/ /app/
