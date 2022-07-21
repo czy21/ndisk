@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM golang:1.18.4-alpine
 
 #COPY ./web/build/ /app/dist/
 COPY ./backend/build/ /app/
