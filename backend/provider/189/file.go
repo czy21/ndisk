@@ -58,6 +58,7 @@ func (f File) Write(p []byte) (n int, err error) {
 	panic("aa")
 }
 
+// ReadFrom upload to remote
 func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	size := 1024 * 1024 * 10
 	buf := make([]byte, size)

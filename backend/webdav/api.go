@@ -26,7 +26,7 @@ func Controller(r *gin.Engine) {
 				log.Errorf("%s %s", request.RequestURI, err)
 			}
 		}
-		h.ServeHTTP(c.Writer, c.Request)
+		h.ServeHTTP(Writer{c.Writer}, c.Request)
 	}
 	r1 := r.Group(davPrefix)
 	{
