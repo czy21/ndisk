@@ -52,7 +52,7 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 	req.SetQueryParams(params)
 	res, err := req.Get(fmt.Sprintf("https://cloud.189.cn/api/open/file/listFiles.action"))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("getFolderById", res.String(), ret.Response, err)
+	logRes("GetFolderById", res.String(), ret.Response, err)
 	return ret.FileListAO, err
 }
 
