@@ -60,11 +60,6 @@ func (f File) Write(p []byte) (n int, err error) {
 }
 
 func (f File) ReadFrom(r io.Reader) (n int64, err error) {
-	//fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	//url, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
-	//req := http.GetClient().NewRequest()
-	//res, err := req.Get(url)
-	//c, err := r.Read(res.Body())
 	size := 1024 * 1024 * 10
 	buf := make([]byte, size)
 	for {

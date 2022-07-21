@@ -1,6 +1,7 @@
 package webdav
 
 import (
+	"context"
 	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/local"
@@ -31,6 +32,7 @@ func Controller(r *gin.Engine) {
 				return
 			}
 		}
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "Request", c.Request))
 		h.ServeHTTP(Writer{c.Writer}, c.Request)
 	}
 	r1 := r.Group(davPrefix)
