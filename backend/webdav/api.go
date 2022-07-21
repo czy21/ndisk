@@ -22,6 +22,7 @@ func Controller(r *gin.Engine) {
 			FileSystem: FileSystem{},
 			LockSystem: webdav.NewMemLS(),
 		}
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "Request", c.Request))
 		if c.Request.Method == "GET" {
 			_, fs := getProvider(strings.TrimPrefix(c.Request.URL.Path, davPrefix), "")
 			switch fs.(type) {
@@ -32,8 +33,7 @@ func Controller(r *gin.Engine) {
 				return
 			}
 		}
-		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "Request", c.Request))
-		h.ServeHTTP(Writer{c.Writer}, c.Request)
+		h.ServeHTTP(c.Writer, c.Request)
 	}
 	r1 := r.Group(davPrefix)
 	{
