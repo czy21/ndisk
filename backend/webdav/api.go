@@ -3,6 +3,7 @@ package webdav
 import (
 	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
+	"github.com/czy21/ndisk/provider/local"
 	"github.com/czy21/ndisk/repository"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/webdav"
@@ -21,10 +22,16 @@ func Controller(r *gin.Engine) {
 			LockSystem: webdav.NewMemLS(),
 		}
 		if c.Request.Method == "GET" {
-			DownloadFile(c.Writer, c.Request, strings.TrimPrefix(c.Request.URL.Path, davPrefix))
-		} else {
-			h.ServeHTTP(c.Writer, c.Request)
+			_, fs := getProvider(strings.TrimPrefix(c.Request.URL.Path, davPrefix), "")
+			switch fs.(type) {
+			case local.FileSystem:
+				break
+			default:
+				DownloadFile(c.Writer, c.Request, strings.TrimPrefix(c.Request.URL.Path, davPrefix))
+				return
+			}
 		}
+		h.ServeHTTP(c.Writer, c.Request)
 	}
 	r1 := r.Group(davPrefix)
 	{
