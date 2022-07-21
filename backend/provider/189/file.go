@@ -2,8 +2,11 @@ package _189
 
 import (
 	"context"
+	"fmt"
 	"github.com/czy21/ndisk/model"
+	"io"
 	"io/fs"
+	"strconv"
 )
 
 type File struct {
@@ -22,7 +25,8 @@ func (f File) Read(p []byte) (n int, err error) {
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
-	panic("implement me")
+	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	return fileInfo.Size, err
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
@@ -54,4 +58,17 @@ func (f File) Stat() (fs.FileInfo, error) {
 
 func (f File) Write(p []byte) (n int, err error) {
 	panic("aa")
+}
+
+func (f File) ReadFrom(r io.Reader) (n int64, err error) {
+	//fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	//url, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
+	//req := http.GetClient().NewRequest()
+	//res, err := req.Get(url)
+	//c, err := r.Read(res.Body())
+	data := make([]byte, 100)
+	c, err := r.Read(data)
+	fmt.Printf(strconv.Itoa(c))
+	fmt.Printf(string(data))
+	return 0, err
 }
