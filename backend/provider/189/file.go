@@ -3,6 +3,7 @@ package _189
 import (
 	"context"
 	"github.com/czy21/ndisk/model"
+	log "github.com/sirupsen/logrus"
 	"io/fs"
 )
 
@@ -43,6 +44,9 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				Name: t.Name,
 			},
 		})
+	}
+	if err != nil {
+		log.Errorf("Readdir %s", err)
 	}
 	return fileInfos, err
 }
