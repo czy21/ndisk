@@ -22,12 +22,21 @@ func getJsonAndTokenHeader(req *resty.Request) *resty.Request {
 	return req
 }
 
+func logRes(funcName string, strBody string, ret Response, err error) {
+	fmtMsg := fmt.Sprintf("%s %s", funcName, strBody)
+	log.Debugf(fmtMsg)
+	if ret.ResMsg != ResSuccessMsg {
+		log.Error(fmtMsg)
+		err = errors.New(ret.ErrorMsg)
+	}
+}
+
 func getTokenHeader(req *resty.Request) *resty.Request {
 	req.SetHeader("cookie", viper.GetString("cloud189.cookie"))
 	return req
 }
 
-func (a API) getFolderById(folderId string) (FileListAO, error) {
+func (a API) GetFolderById(folderId string) (FileListAO, error) {
 	var ret FileListAORes
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	params := map[string]string{
@@ -43,12 +52,7 @@ func (a API) getFolderById(folderId string) (FileListAO, error) {
 	req.SetQueryParams(params)
 	res, err := req.Get(fmt.Sprintf("https://cloud.189.cn/api/open/file/listFiles.action"))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := res.String()
-	log.Debugf(strBody)
-	if ret.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(ret.ErrorMsg)
-	}
+	logRes("getFolderById", res.String(), ret.Response, err)
 	return ret.FileListAO, err
 }
 
@@ -66,12 +70,7 @@ func (a API) CreateFolder(parentFolderId string, name string) (FolderMetaRes, er
 	req.SetFormData(formData)
 	res, err := req.Post("https://cloud.189.cn/api/open/file/createFolder.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := res.String()
-	log.Debugf(strBody)
-	if ret.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(ret.ErrorMsg)
-	}
+	logRes("CreateFolder", res.String(), ret.Response, err)
 	return ret, err
 }
 
@@ -100,11 +99,8 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 	req.SetQueryParams(queryParam)
 	res, err := req.Post("https://cloud.189.cn/api/open/batch/createBatchTask.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := res.String()
-	log.Debugf(strBody)
-	if ret.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(ret.ErrorMsg)
+	logRes("Delete", res.String(), ret.Response, err)
+	if err != nil {
 		return err
 	}
 	var taskStatus int
@@ -136,21 +132,13 @@ func (a API) CheckTask(taskId string, kind string) int {
 	req.SetFormData(formParam)
 	res, err := req.Post("https://cloud.189.cn/api/open/batch/checkBatchTask.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := res.String()
-	log.Debugf(strBody)
-	if ret.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(ret.ErrorMsg)
-	}
-	if err != nil {
-		log.Error(err)
-	}
+	logRes("CheckTask", res.String(), ret.Response, err)
 	return ret.TaskStatus
 }
 func (a API) RenameFolder(folderId string, destName string) error {
 	var (
-		err           error
-		folderMetaRes FolderMetaRes
+		err error
+		ret FolderMetaRes
 	)
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	formParams := map[string]string{
@@ -159,13 +147,8 @@ func (a API) RenameFolder(folderId string, destName string) error {
 	}
 	req.SetFormData(formParams)
 	res, err := req.Post(fmt.Sprintf("https://cloud.189.cn/api/open/file/renameFolder.action?noCache=%s", QueryParamNoCache))
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &folderMetaRes)
-	strBody := res.String()
-	log.Debugf(strBody)
-	if folderMetaRes.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(folderMetaRes.ErrorMsg)
-	}
+	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
+	logRes("RenameFolder", res.String(), ret.Response, err)
 	return err
 }
 
@@ -183,28 +166,18 @@ func (a API) getDownloadFileUrl(fileId string) (string, error) {
 	getDownloadUrlReq.SetResult(&ret)
 	res, err := getDownloadUrlReq.Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	strBody := res.String()
-	log.Debugf(strBody)
-	if ret.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(ret.ErrorMsg)
-	}
+	logRes("getDownloadFileUrl", res.String(), ret.Response, err)
 	return ret.Url, err
 }
 
-func (a API) getRSAKey() (RSAKeyRes, error) {
+func (a API) GetRSAKey() (RSAKeyRes, error) {
 	var (
 		err error
 		ret RSAKeyRes
 	)
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	res, err := req.Get(fmt.Sprintf("https://cloud.189.cn/api/security/generateRsaKey.action?noCache=%s", QueryParamNoCache))
-	strBody := res.String()
-	log.Debugf(strBody)
-	if ret.ResMsg != ResSuccessMsg {
-		log.Error(strBody)
-		err = errors.New(ret.ErrorMsg)
-	}
+	logRes("GetRSAKey", res.String(), ret.Response, err)
 	return ret, err
 }
 

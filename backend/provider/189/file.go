@@ -3,7 +3,6 @@ package _189
 import (
 	"context"
 	"github.com/czy21/ndisk/model"
-	log "github.com/sirupsen/logrus"
 	"io/fs"
 )
 
@@ -28,7 +27,7 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	fileInfo, _ := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	folder, err := API{}.getFolderById(fileInfo.RemoteName)
+	folder, err := API{}.GetFolderById(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Folders {
 		fileInfos = append(fileInfos, model.FileInfoProxy{
@@ -44,9 +43,6 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				Name: t.Name,
 			},
 		})
-	}
-	if err != nil {
-		log.Errorf("Readdir %s", err)
 	}
 	return fileInfos, err
 }
