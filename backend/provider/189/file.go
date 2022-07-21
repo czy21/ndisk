@@ -29,18 +29,18 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	fileInfo, _ := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	folder, err := API{}.getFolderById(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
-	for _, t := range folder.Files {
-		fileInfos = append(fileInfos, model.FileInfoProxy{
-			FileInfo: model.FileInfo{
-				Name: t.Name,
-			},
-		})
-	}
 	for _, t := range folder.Folders {
 		fileInfos = append(fileInfos, model.FileInfoProxy{
 			FileInfo: model.FileInfo{
 				Name:  t.Name,
 				IsDir: true,
+			},
+		})
+	}
+	for _, t := range folder.Files {
+		fileInfos = append(fileInfos, model.FileInfoProxy{
+			FileInfo: model.FileInfo{
+				Name: t.Name,
 			},
 		})
 	}
