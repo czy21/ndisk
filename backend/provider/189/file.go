@@ -48,8 +48,8 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	fileInfo, _ := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	return model.FileInfoProxy{FileInfo: fileInfo}, nil
+	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
 
 func (f File) Write(p []byte) (n int, err error) {
