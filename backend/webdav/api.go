@@ -1,14 +1,13 @@
 package webdav
 
 import (
-	"context"
 	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
-	"github.com/czy21/ndisk/provider/local"
 	"github.com/czy21/ndisk/repository"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/webdav"
-	"strings"
+	"net/http"
 )
 
 var providerMetas []model.ProviderFolderMeta
@@ -22,15 +21,9 @@ func Controller(r *gin.Engine) {
 			FileSystem: FileSystem{},
 			LockSystem: webdav.NewMemLS(),
 		}
-		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "Request", c.Request))
-		if c.Request.Method == "GET" {
-			_, fs := getProvider(strings.TrimPrefix(c.Request.URL.Path, davPrefix), "")
-			switch fs.(type) {
-			case local.FileSystem:
-				break
-			default:
-				DownloadFile(c.Writer, c.Request, strings.TrimPrefix(c.Request.URL.Path, davPrefix))
-				return
+		h.Logger = func(request *http.Request, err error) {
+			if err != nil {
+				log.Errorf("%s %s", request.RequestURI, err)
 			}
 		}
 		h.ServeHTTP(c.Writer, c.Request)

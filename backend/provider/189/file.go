@@ -12,7 +12,6 @@ type File struct {
 	Name    string
 	File    model.ProviderFile
 	Context context.Context
-	Extra   map[string]interface{}
 }
 
 func (f File) Close() error {
