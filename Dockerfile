@@ -1,4 +1,4 @@
-FROM golang:1.18.4-alpine
+FROM debian:bullseye-slim
 
 #COPY ./web/build/ /app/dist/
 COPY ./backend/build/ /app/
