@@ -67,17 +67,14 @@ func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	//c, err := r.Read(res.Body())
 	size := 1024 * 1024 * 10
 	buf := make([]byte, size)
-	written := int64(0)
 	for {
 		nr, _ := r.Read(buf)
-		//fmt.Println(string(buf))
-		if nr > 0 {
-			a := buf[0:nr]
-			written += int64(len(a))
-		} else {
+		if nr <= 0 {
 			break
 		}
+		a := buf[0:nr]
+		n += int64(len(a))
 	}
-	fmt.Println(written)
-	return written, err
+	fmt.Println(n)
+	return n, err
 }
