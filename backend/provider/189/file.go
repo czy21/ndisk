@@ -18,7 +18,7 @@ func (f File) Close() error {
 }
 
 func (f File) Read(p []byte) (n int, err error) {
-	panic("implement me")
+	return 0, nil
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {

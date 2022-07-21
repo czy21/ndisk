@@ -12,9 +12,9 @@ import (
 var providerMetas []model.ProviderFolderMeta
 
 func Controller(r *gin.Engine) {
+	davPrefix := "/dav"
 	serveFn := func(c *gin.Context) {
 		providerMetas = repository.Provider{}.SelectListMeta()
-		davPrefix := "/dav"
 		h := webdav.Handler{
 			Prefix:     davPrefix,
 			FileSystem: FileSystem{},
@@ -26,7 +26,7 @@ func Controller(r *gin.Engine) {
 			h.ServeHTTP(c.Writer, c.Request)
 		}
 	}
-	r1 := r.Group("/dav")
+	r1 := r.Group(davPrefix)
 	{
 		r1.Any("/*path", serveFn)
 		r1.Any("", serveFn)
