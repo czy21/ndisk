@@ -105,9 +105,14 @@ func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 
 // Downloader download from remote
 type Downloader struct {
+	File model.ProviderFile
 	http.ResponseWriter
 }
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
-	return io.CopyBuffer(d.ResponseWriter, r, make([]byte, 1024*1024*8))
+	var gf int
+	if gf = d.File.ProviderFolder.Account.GetBuf; gf < 8 || gf > 64 {
+		gf = 8
+	}
+	return io.CopyBuffer(d.ResponseWriter, r, make([]byte, 1024*1024*gf))
 }

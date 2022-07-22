@@ -7,6 +7,8 @@ type ProviderAccountPO struct {
 	Password string `gorm:"column:password" json:"password"`
 	Token    string `gorm:"column:token" json:"token"`
 	Kind     string `gorm:"column:kind" json:"kind"`
+	PutBuf   int    `gorm:"column:put_buf" json:"putBuf"`
+	GetBuf   int    `gorm:"column:get_buf" json:"getBuf"`
 }
 
 func (ProviderAccountPO) TableName() string {

@@ -96,5 +96,5 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 }
 
 func (fs FileSystem) HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request) {
-	*w = Downloader{ResponseWriter: *w}
+	*w = Downloader{ResponseWriter: *w, File: file}
 }

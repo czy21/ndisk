@@ -6,6 +6,8 @@ CREATE TABLE provider_account (
   password varchar(50) NULL,
   token    varchar(50) NULL,
   kind     varchar(50) NOT NULL,
+  put_buf           int NULL,
+  get_buf           int NULL,
   create_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   create_user int NULL,
   update_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -14,9 +16,9 @@ CREATE TABLE provider_account (
   PRIMARY KEY (`id`)
 );
 CREATE TABLE provider_folder (
- id int NOT NULL AUTO_INCREMENT,
- name        varchar(50) NOT NULL,
- remote_name varchar(50) NULL,
+ id                int NOT NULL AUTO_INCREMENT,
+ name              varchar(50) NOT NULL,
+ remote_name       varchar(50) NULL,
  provider_account_id int NOT NULL,
  create_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
  create_user int NULL,
