@@ -10,6 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"math"
+	"math/rand"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -181,8 +183,36 @@ func (a API) GetRSAKey() (RSAKeyRes, error) {
 	return ret, err
 }
 
+func uploadRequest(queryParam map[string]string) {
+	rand.Seed(time.Now().UnixNano())
+	randomFn := func(v string) string {
+		reg := regexp.MustCompilePOSIX("[xy]")
+		data := reg.ReplaceAllFunc([]byte(v), func(msg []byte) []byte {
+			var i int64
+			t := int64(16*rand.Float32()) | 0
+			if msg[0] == 120 {
+				i = t
+			} else {
+				i = 3&t | 8
+			}
+			return []byte(strconv.FormatInt(i, 16))
+		})
+		return string(data)
+	}
+	r := randomFn("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
+	l := randomFn("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
+	l = l[0 : 16+int(16*rand.Float32())|0]
+	//c := time.Now().UnixMilli()
+	var u []string
+	for k, v := range queryParam {
+		u = append(u, k+"="+v)
+	}
+	//f := strings.Join(u, "&")
+	
+}
+
 func (a API) Upload(parentFolderId string, fileName string, fileSize, bytes []byte) {
-	const sliceSize uint64 = 10485760
-	slices := math.Max(1, math.Ceil(float64(len(bytes))/float64(sliceSize)))
+	const chunkSize uint64 = 10485760
+	slices := math.Max(1, math.Ceil(float64(len(bytes))/float64(chunkSize)))
 	fmt.Println(slices)
 }

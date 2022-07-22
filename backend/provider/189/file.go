@@ -5,6 +5,7 @@ import (
 	"fmt"
 	http2 "github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
+	"github.com/czy21/ndisk/util"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/fs"
@@ -88,13 +89,6 @@ func (f File) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func copyBuffer(dst io.Writer, src io.Reader, bf int) (n int64, err error) {
-	if bf < 8 || bf > 64 {
-		bf = 8
-	}
-	return io.CopyBuffer(dst, src, make([]byte, 1024*1024*bf))
-}
-
 // Uploader upload to remote
 type Uploader struct {
 	File model.ProviderFile
@@ -102,7 +96,7 @@ type Uploader struct {
 }
 
 func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
-	return copyBuffer(w, u.ReadCloser, u.File.ProviderFolder.Account.PutBuf)
+	return util.CopyBuffer(w, u.ReadCloser, u.File.ProviderFolder.Account.PutBuf)
 }
 
 // Downloader download from remote
@@ -112,5 +106,5 @@ type Downloader struct {
 }
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
-	return copyBuffer(d.ResponseWriter, r, d.File.ProviderFolder.Account.GetBuf)
+	return util.CopyBuffer(d.ResponseWriter, r, d.File.ProviderFolder.Account.GetBuf)
 }
