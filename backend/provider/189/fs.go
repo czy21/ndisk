@@ -24,7 +24,7 @@ func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, f
 	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
-	return File{Name: name, Context: ctx, File: file}, nil
+	return File{Name: name, Context: ctx, File: file, Extra: make(map[string]interface{})}, nil
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.ProviderFile) error {
 	_, fName := path.Split(file.NewPath)
@@ -96,5 +96,5 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 }
 
 func (fs FileSystem) HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request) {
-	*w = ResponseWriter{*w}
+	*w = Downloader{ResponseWriter: *w, Name: name, File: file, Request: r}
 }

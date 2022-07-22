@@ -152,7 +152,7 @@ func (a API) RenameFolder(folderId string, destName string) error {
 	return err
 }
 
-func (a API) getDownloadFileUrl(fileId string) (string, error) {
+func (a API) GetDownloadFileUrl(fileId string) (string, error) {
 	var (
 		err error
 		ret FileDownloadUrlRes
@@ -166,7 +166,7 @@ func (a API) getDownloadFileUrl(fileId string) (string, error) {
 	getDownloadUrlReq.SetResult(&ret)
 	res, err := getDownloadUrlReq.Get(fmt.Sprintf("%s/open/file/getFileDownloadUrl.action", ApiUrl))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("getDownloadFileUrl", res.String(), ret.Response, err)
+	logRes("GetDownloadFileUrl", res.String(), ret.Response, err)
 	return ret.Url, err
 }
 
