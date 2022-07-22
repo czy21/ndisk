@@ -199,7 +199,7 @@ func uploadRequest(queryParam map[string]string) {
 		})
 		return string(data)
 	}
-	r := randomFn("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
+	//r := randomFn("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
 	l := randomFn("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
 	l = l[0 : 16+int(16*rand.Float32())|0]
 	//c := time.Now().UnixMilli()
@@ -208,7 +208,7 @@ func uploadRequest(queryParam map[string]string) {
 		u = append(u, k+"="+v)
 	}
 	//f := strings.Join(u, "&")
-	
+
 }
 
 func (a API) Upload(parentFolderId string, fileName string, fileSize, bytes []byte) {
