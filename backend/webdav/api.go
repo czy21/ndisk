@@ -8,9 +8,18 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/webdav"
 	"net/http"
+	"strings"
 )
 
 var providerMetas []model.ProviderFolderMeta
+
+func getDavLogger() func(request *http.Request, err error) {
+	return func(request *http.Request, err error) {
+		if err != nil {
+			log.Errorf("%s %s", request.RequestURI, err)
+		}
+	}
+}
 
 func Controller(r *gin.Engine) {
 	davPrefix := "/dav"
@@ -21,12 +30,13 @@ func Controller(r *gin.Engine) {
 			FileSystem: FileSystem{},
 			LockSystem: webdav.NewMemLS(),
 		}
-		h.Logger = func(request *http.Request, err error) {
-			if err != nil {
-				log.Errorf("%s %s", request.RequestURI, err)
-			}
+		h.Logger = getDavLogger()
+		var writer http.ResponseWriter = c.Writer
+		var request = c.Request
+		if c.Request.Method == "GET" {
+			HandleHttp(strings.TrimPrefix(c.Request.URL.Path, davPrefix), &writer, request)
 		}
-		h.ServeHTTP(Writer{c.Writer}, c.Request)
+		h.ServeHTTP(writer, request)
 	}
 	r1 := r.Group(davPrefix)
 	{

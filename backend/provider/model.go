@@ -15,5 +15,5 @@ type FileSystem interface {
 	Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error
 	Stat(ctx context.Context, name string, file model.ProviderFile) (os.FileInfo, error)
 	GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error)
-	DownloadFile(ctx context.Context, name string, file model.ProviderFile, w http.ResponseWriter, r *http.Request)
+	HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request)
 }

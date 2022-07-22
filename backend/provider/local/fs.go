@@ -15,11 +15,6 @@ type FileSystem struct {
 	Dir string
 }
 
-func (fs FileSystem) DownloadFile(ctx context.Context, name string, file model.ProviderFile, w http.ResponseWriter, r *http.Request) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewFS() FileSystem {
 	return FileSystem{Dir: viper.GetString("data.dav")}
 }
@@ -47,4 +42,8 @@ func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderF
 
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return model.FileInfo{}, nil
+}
+
+func (fs FileSystem) HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request) {
+
 }

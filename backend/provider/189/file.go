@@ -6,6 +6,7 @@ import (
 	"github.com/czy21/ndisk/model"
 	"io"
 	"io/fs"
+	"net/http"
 )
 
 type File struct {
@@ -19,7 +20,7 @@ func (f File) Close() error {
 }
 
 func (f File) Read(p []byte) (n int, err error) {
-	return 0, nil
+	return n, nil
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
@@ -72,4 +73,12 @@ func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	}
 	fmt.Println(n)
 	return n, err
+}
+
+type ResponseWriter struct {
+	http.ResponseWriter
+}
+
+func (w ResponseWriter) ReadFrom(r io.Reader) (n int64, err error) {
+	return 0, nil
 }

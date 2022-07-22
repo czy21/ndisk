@@ -63,14 +63,9 @@ func getProvider(name string, oldName string) (model.ProviderFile, provider.File
 	return file, local.NewFS()
 }
 
-func GetFileInfo(ctx context.Context, name string) (model.FileInfo, error) {
-	p, fs := getProvider(name, "")
-	return fs.GetFileInfo(ctx, name, p)
-}
-
-func DownloadFile(w http.ResponseWriter, r *http.Request, name string) {
+func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	p, fs := getProvider(name, "")
-	fs.DownloadFile(ctx, name, p, w, r)
+	fs.HandleHttp(ctx, name, p, w, r)
 
 }

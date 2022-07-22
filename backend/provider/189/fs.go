@@ -3,7 +3,6 @@ package _189
 import (
 	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	fs1 "io/fs"
@@ -16,30 +15,6 @@ import (
 )
 
 type FileSystem struct {
-}
-
-func (fs FileSystem) DownloadFile(ctx context.Context, name string, file model.ProviderFile, w http.ResponseWriter, r *http.Request) {
-	var err error
-	fileInfo, err := FileSystem{}.GetFileInfo(ctx, name, file)
-	downloadURL, err := API{}.getDownloadFileUrl(fileInfo.RemoteName)
-	http.Redirect(w, r, downloadURL, 302)
-	//urlObj, err := url.Parse(downloadURL)
-	//proxy := httputil.NewSingleHostReverseProxy(urlObj)
-	//proxy.Director = func(request *http.Request) {
-	//	request.Host = urlObj.Host
-	//	request.URL.Host = urlObj.Host
-	//	request.URL.Scheme = urlObj.Scheme
-	//	request.URL.Path = urlObj.Path
-	//	request.URL.RawQuery = urlObj.RawQuery
-	//}
-	//proxy.ModifyResponse = func(response *http.Response) error {
-	//	response.Header.Add("Access-Control-Allow-Origin", "*")
-	//	return nil
-	//}
-	//proxy.ServeHTTP(w, r)
-	if err != nil {
-		log.Error(err)
-	}
 }
 
 func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) error {
@@ -118,4 +93,8 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}
 	return fileInfo, err
+}
+
+func (fs FileSystem) HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request) {
+	*w = ResponseWriter{*w}
 }
