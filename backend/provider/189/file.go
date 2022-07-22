@@ -31,14 +31,21 @@ func (f File) Read(b []byte) (n int, err error) {
 		chunkIndex += v
 	}
 	f.Extra["chunkIndex"] = chunkIndex
-	log.Debugf("%s startIndex: %d chunkIndex: %d", f.Name, startIndex, chunkIndex)
+	//log.Debugf("%s startIndex: %d chunkIndex: %d", f.Name, startIndex, chunkIndex)
+	dFunc := func(dUrl string) (int, error) {
+		req := http2.GetClient().NewRequest()
+		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", startIndex, chunkIndex))
+		res, err := req.Get(dUrl)
+		return copy(b, res.Body()), err
+	}
+	if dUrl := f.Extra["dUrl"]; dUrl != nil {
+		return dFunc(dUrl.(string))
+	}
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	fileInfoVO, err := API{}.GetFileInfoById(fileInfo.RemoteName)
 	if !fileInfo.IsDir && fileInfoVO.FileDownloadUrl != "" {
-		req := http2.GetClient().NewRequest()
-		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", startIndex, chunkIndex))
-		res, err := req.Get(fileInfoVO.FileDownloadUrl)
-		return copy(b, res.Body()), err
+		f.Extra["dUrl"] = fileInfoVO.FileDownloadUrl
+		return dFunc(fileInfoVO.FileDownloadUrl)
 	}
 	log.Error(err)
 	return len(b), err
@@ -102,5 +109,5 @@ type Downloader struct {
 }
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
-	return io.CopyBuffer(d.ResponseWriter, r, make([]byte, 1024*1024*4))
+	return io.CopyBuffer(d.ResponseWriter, r, make([]byte, 1024*1024*8))
 }
