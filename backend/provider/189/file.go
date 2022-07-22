@@ -39,10 +39,13 @@ func (f File) Read(p []byte) (n int, err error) {
 	}
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	url, err := API{}.GetDownloadFileUrl(fileInfo.RemoteName)
-	req := http2.GetClient().NewRequest()
-	req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", startIndex, endIndex))
-	res, err := req.Get(url)
-	return copy(p, res.Body()), nil
+	if url != "" {
+		req := http2.GetClient().NewRequest()
+		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", startIndex, endIndex))
+		res, err := req.Get(url)
+		return copy(p, res.Body()), err
+	}
+	return 0, err
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
@@ -76,6 +79,10 @@ func (f File) Stat() (fs.FileInfo, error) {
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
+
+//func (f File) ContentType(ctx context.Context) (string, error) {
+//	return "", nil
+//}
 
 func (f File) Write(p []byte) (n int, err error) {
 	panic("aa")
