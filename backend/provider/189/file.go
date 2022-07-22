@@ -84,8 +84,15 @@ func (f File) Stat() (fs.FileInfo, error) {
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-	
+
 	return len(p), nil
+}
+
+func copyBuffer(dst io.Writer, src io.Reader, bf int) (n int64, err error) {
+	if bf < 8 || bf > 64 {
+		bf = 8
+	}
+	return io.CopyBuffer(dst, src, make([]byte, 1024*1024*bf))
 }
 
 // Uploader upload to remote
@@ -95,11 +102,7 @@ type Uploader struct {
 }
 
 func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
-	var pf int
-	if pf = u.File.ProviderFolder.Account.PutBuf; pf < 8 || pf > 64 {
-		pf = 8
-	}
-	return io.CopyBuffer(w, u.ReadCloser, make([]byte, 1024*1024*pf))
+	return copyBuffer(w, u.ReadCloser, u.File.ProviderFolder.Account.PutBuf)
 }
 
 // Downloader download from remote
@@ -109,9 +112,5 @@ type Downloader struct {
 }
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
-	var gf int
-	if gf = d.File.ProviderFolder.Account.GetBuf; gf < 8 || gf > 64 {
-		gf = 8
-	}
-	return io.CopyBuffer(d.ResponseWriter, r, make([]byte, 1024*1024*gf))
+	return copyBuffer(d.ResponseWriter, r, d.File.ProviderFolder.Account.GetBuf)
 }
