@@ -96,5 +96,10 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 }
 
 func (fs FileSystem) HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request) {
-	*w = Downloader{ResponseWriter: *w, File: file}
+	if r.Method == "GET" {
+		*w = Downloader{File: file, ResponseWriter: *w}
+	}
+	if r.Method == "PUT" {
+		r.Body = Uploader{File: file, ReadCloser: r.Body}
+	}
 }

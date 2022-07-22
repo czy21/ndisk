@@ -84,23 +84,22 @@ func (f File) Stat() (fs.FileInfo, error) {
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-	panic("aa")
+	
+	return len(p), nil
 }
 
-// ReadFrom upload to remote
-func (f File) ReadFrom(r io.Reader) (n int64, err error) {
-	size := 1024 * 1024 * 4
-	buf := make([]byte, size)
-	for {
-		nr, _ := r.Read(buf)
-		if nr <= 0 {
-			break
-		}
-		a := buf[0:nr]
-		n += int64(len(a))
+// Uploader upload to remote
+type Uploader struct {
+	File model.ProviderFile
+	io.ReadCloser
+}
+
+func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
+	var pf int
+	if pf = u.File.ProviderFolder.Account.PutBuf; pf < 8 || pf > 64 {
+		pf = 8
 	}
-	fmt.Println(n)
-	return n, err
+	return io.CopyBuffer(w, u.ReadCloser, make([]byte, 1024*1024*pf))
 }
 
 // Downloader download from remote

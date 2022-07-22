@@ -33,9 +33,7 @@ func Controller(r *gin.Engine) {
 		h.Logger = getDavLogger()
 		var writer http.ResponseWriter = c.Writer
 		var request = c.Request
-		if c.Request.Method == "GET" {
-			HandleHttp(strings.TrimPrefix(c.Request.URL.Path, davPrefix), &writer, request)
-		}
+		HandleHttp(strings.TrimPrefix(c.Request.URL.Path, davPrefix), &writer, request)
 		h.ServeHTTP(writer, request)
 	}
 	r1 := r.Group(davPrefix)
