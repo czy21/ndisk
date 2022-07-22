@@ -16,7 +16,7 @@ var providerMetas []model.ProviderFolderMeta
 func getDavLogger() func(request *http.Request, err error) {
 	return func(request *http.Request, err error) {
 		if err != nil {
-			log.Errorf("%s %s", request.RequestURI, err)
+			log.Debugf("%s %s", request.RequestURI, err)
 		}
 	}
 }
