@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/czy21/ndisk/exception"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/service"
@@ -19,12 +18,17 @@ func OptionList(c *gin.Context) {
 
 }
 
+type TestVO struct {
+	T model.UnixTime `json:"t"`
+}
+
 func CachePut(c *gin.Context) {
-	t1 := time.Now()
-	fmt.Println(fmt.Sprintf("t1: %s", t1))
-	t2, _ := time.Parse(model.StandardFormat, "2022-07-19 12:00:00")
-	fmt.Println(fmt.Sprintf("t2: %s", t2.Add(-8*time.Hour)))
-	fmt.Println(time.Now())
+	var input TestVO
+	_ = c.Bind(&input)
+	web.Context{Context: c}.OK(model.ResponseModel{Data: map[string]interface{}{
+		"t": time.Now(),
+		"i": input.T,
+	}}.Build())
 }
 
 func OptionController(r *gin.Engine) {

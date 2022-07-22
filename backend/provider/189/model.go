@@ -2,7 +2,6 @@ package _189
 
 import (
 	"github.com/czy21/ndisk/model"
-	"time"
 )
 
 type ResponseVO struct {
@@ -51,7 +50,7 @@ type TaskRes struct {
 }
 
 type FileInfoVO struct {
-	BaseTrackModel[int64, model.LocalTime, time.Time]
+	BaseTrackModel[int64, model.LocalTime, model.UnixTime]
 	MediaType       int    `json:"mediaType"`
 	FileDownloadUrl string `json:"fileDownloadUrl"`
 	Size            int64  `json:"size"`
