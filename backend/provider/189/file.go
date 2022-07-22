@@ -38,11 +38,11 @@ func (f File) Read(p []byte) (n int, err error) {
 		f.Extra["downloadSize"] = int64(chunkSize)
 	}
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	url, err := API{}.GetDownloadFileUrl(fileInfo.RemoteName)
-	if url != "" {
+	fileInfoVO, err := API{}.GetFileInfoById(fileInfo.RemoteName)
+	if !fileInfo.IsDir && fileInfoVO.FileDownloadUrl != "" {
 		req := http2.GetClient().NewRequest()
 		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", startIndex, endIndex))
-		res, err := req.Get(url)
+		res, err := req.Get(fileInfoVO.FileDownloadUrl)
 		return copy(p, res.Body()), err
 	}
 	return 0, err

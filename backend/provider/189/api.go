@@ -22,7 +22,7 @@ func getJsonAndTokenHeader(req *resty.Request) *resty.Request {
 	return req
 }
 
-func logRes(funcName string, strBody string, ret Response, err error) {
+func logRes(funcName string, strBody string, ret ResponseVO, err error) {
 	fmtMsg := fmt.Sprintf("%s %s", funcName, strBody)
 	log.Debugf(fmtMsg)
 	if ret.ResMsg != ResSuccessMsg {
@@ -52,12 +52,12 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 	req.SetQueryParams(params)
 	res, err := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("GetFolderById", res.String(), ret.Response, err)
+	logRes("GetFolderById", res.String(), ret.ResponseVO, err)
 	return ret.FileListAO, err
 }
 
-func (a API) CreateFolder(parentFolderId string, name string) (FolderMetaRes, error) {
-	var ret FolderMetaRes
+func (a API) CreateFolder(parentFolderId string, name string) (FolderRes, error) {
+	var ret FolderRes
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	queryParam := map[string]string{
 		"noCache": QueryParamNoCache,
@@ -70,7 +70,7 @@ func (a API) CreateFolder(parentFolderId string, name string) (FolderMetaRes, er
 	req.SetFormData(formData)
 	res, err := req.Post(fmt.Sprintf("%s/open/file/createFolder.action", ApiUrl))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("CreateFolder", res.String(), ret.Response, err)
+	logRes("CreateFolder", res.String(), ret.ResponseVO, err)
 	return ret, err
 }
 
@@ -99,7 +99,7 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 	req.SetQueryParams(queryParam)
 	res, err := req.Post(fmt.Sprintf("%s/open/batch/createBatchTask.action", ApiUrl))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("Delete", res.String(), ret.Response, err)
+	logRes("Delete", res.String(), ret.ResponseVO, err)
 	if err != nil {
 		return err
 	}
@@ -132,13 +132,13 @@ func (a API) CheckTask(taskId string, kind string) int {
 	req.SetFormData(formParam)
 	res, err := req.Post(fmt.Sprintf("%s/open/batch/checkBatchTask.action", ApiUrl))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("CheckTask", res.String(), ret.Response, err)
+	logRes("CheckTask", res.String(), ret.ResponseVO, err)
 	return ret.TaskStatus
 }
 func (a API) RenameFolder(folderId string, destName string) error {
 	var (
 		err error
-		ret FolderMetaRes
+		ret FolderRes
 	)
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	formParams := map[string]string{
@@ -148,26 +148,26 @@ func (a API) RenameFolder(folderId string, destName string) error {
 	req.SetFormData(formParams)
 	res, err := req.Post(fmt.Sprintf("%s/open/file/renameFolder.action?noCache=%s", ApiUrl, QueryParamNoCache))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("RenameFolder", res.String(), ret.Response, err)
+	logRes("RenameFolder", res.String(), ret.ResponseVO, err)
 	return err
 }
 
-func (a API) GetDownloadFileUrl(fileId string) (string, error) {
+func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 	var (
 		err error
-		ret FileDownloadUrlRes
+		ret FileInfoVORes
 	)
-	getDownloadUrlParams := map[string]string{
+	queryParam := map[string]string{
 		"noCache": QueryParamNoCache,
 		"fileId":  fileId,
 	}
-	getDownloadUrlReq := getJsonAndTokenHeader(http2.GetClient().NewRequest())
-	getDownloadUrlReq.SetQueryParams(getDownloadUrlParams)
-	getDownloadUrlReq.SetResult(&ret)
-	res, err := getDownloadUrlReq.Get(fmt.Sprintf("%s/open/file/getFileDownloadUrl.action", ApiUrl))
+	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	req.SetQueryParams(queryParam)
+	req.SetResult(&ret)
+	res, err := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
 	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
-	logRes("GetDownloadFileUrl", res.String(), ret.Response, err)
-	return ret.Url, err
+	logRes("GetFileInfoById", res.String(), ret.ResponseVO, err)
+	return ret.FileInfoVO, err
 }
 
 func (a API) GetRSAKey() (RSAKeyRes, error) {
@@ -177,7 +177,7 @@ func (a API) GetRSAKey() (RSAKeyRes, error) {
 	)
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
 	res, err := req.Get(fmt.Sprintf("%s/security/generateRsaKey.action?noCache=%s", ApiUrl, QueryParamNoCache))
-	logRes("GetRSAKey", res.String(), ret.Response, err)
+	logRes("GetRSAKey", res.String(), ret.ResponseVO, err)
 	return ret, err
 }
 
