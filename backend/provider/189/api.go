@@ -251,6 +251,7 @@ func (a API) CommitFile(fileId string, fileMd5 string, sliceMd5 string) (err err
 			"fileMd5":      fileMd5,
 			"sliceMd5":     sliceMd5,
 			"lazyCheck":    "1",
+			"opertype":     "3",
 		}, &ret)
 	return err
 }
