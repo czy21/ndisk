@@ -41,8 +41,8 @@ func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
 	return n, err
 }
 
-func GetChunk(name string, fileSize int64, chunkSize int64, extra map[string]interface{}) (int, int, int64, int64) {
-	var chunks int
+func GetChunk(name string, fileSize int64, chunkSize int64, extra map[string]interface{}) (int64, int, int64, int64) {
+	var chunks int64
 	chunkI := 0
 	rangeL := int64(0)
 	rangeR := chunkSize
@@ -55,9 +55,9 @@ func GetChunk(name string, fileSize int64, chunkSize int64, extra map[string]int
 		rangeR += v
 	}
 	if extra["chunks"] == nil {
-		chunks = int(math.Max(1, math.Ceil(float64(fileSize))/float64(chunkSize)))
+		chunks = int64(math.Ceil(float64(fileSize)) / float64(chunkSize))
 	} else {
-		chunks = extra["chunks"].(int)
+		chunks = extra["chunks"].(int64)
 	}
 	extra["chunks"] = chunks
 	extra["chunkI"] = chunkI
