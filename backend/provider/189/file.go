@@ -49,7 +49,10 @@ func (f File) Read(b []byte) (n int, err error) {
 	}
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	fileInfoVO, err := API{}.GetFileInfoById(fileInfo.RemoteName)
-	if !fileInfo.IsDir && fileInfoVO.FileDownloadUrl != "" {
+	if err != nil {
+		return 0, err
+	}
+	if !fileInfo.IsDir {
 		f.Extra["dUrl"] = fileInfoVO.FileDownloadUrl
 		return dFunc(fileInfoVO.FileDownloadUrl)
 	}
@@ -118,22 +121,21 @@ func uploadChunk(uploadFileId string, md5s []string, md5Sum hash.Hash, data []by
 
 func (f File) Write(p []byte) (n int, err error) {
 	fileSize := f.Extra[ContentLength].(int64)
+	chunkSize := int64(len(p))
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
-	chunkSize := int64(len(p))
 	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, chunkSize, f.Extra)
 	// CreateFile
 	var fileId string
 	if f.Extra[UploadFileId] != nil {
 		fileId = f.Extra[UploadFileId].(string)
 	} else {
-		res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize, chunkSize)
-		if res.UploadFileId != "" {
-			fileId = res.UploadFileId
-			f.Extra[UploadFileId] = res.UploadFileId
-		} else {
-			return 0, err
+		res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize)
+		if err != nil {
+			return 0, nil
 		}
+		fileId = res.UploadFileId
+		f.Extra[UploadFileId] = res.UploadFileId
 	}
 	// UploadFile
 	var md5Sum hash.Hash
@@ -156,7 +158,7 @@ func (f File) Write(p []byte) (n int, err error) {
 		fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
 		err = API{}.CommitFile(fileId, fileMd5, fileMd5)
 	}
-	return len(p), err
+	return int(chunkSize), err
 }
 
 // Uploader upload to remote
