@@ -34,7 +34,7 @@ func Controller(r *gin.Engine) {
 		h.Logger = getDavLogger()
 		var writer http.ResponseWriter = c.Writer
 		var request = c.Request
-		ctx := context.WithValue(request.Context(), "ContentLength", request.ContentLength)
+		ctx := context.WithValue(request.Context(), "contentLength", request.ContentLength)
 		request = request.WithContext(ctx)
 		HandleHttp(strings.TrimPrefix(c.Request.URL.Path, davPrefix), &writer, request)
 		h.ServeHTTP(writer, request)

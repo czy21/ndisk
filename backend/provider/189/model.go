@@ -91,3 +91,13 @@ type ResponseDataVO[TData any] struct {
 	Code string `json:"code"`
 	Data TData  `json:"data"`
 }
+
+type UploadPartVO struct {
+	RequestURL    string `json:"requestURL"`
+	RequestHeader string `json:"requestHeader"`
+}
+
+type UploadUrlVORes struct {
+	Code       string                  `json:"code"`
+	UploadUrls map[string]UploadPartVO `json:"uploadUrls"`
+}

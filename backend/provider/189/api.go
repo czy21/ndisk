@@ -194,11 +194,8 @@ func (a API) GetUserBriefInfo() UserBriefInfoVO {
 	return ret.UserBriefInfoVO
 }
 
-func (a API) UploadRequest(uri string, queryParam map[string]string) (InitUploadVO, error) {
-	var (
-		err error
-		ret ResponseDataVO[InitUploadVO]
-	)
+func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}) error {
+	var err error
 	rand.Seed(time.Now().UnixNano())
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	r := random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
@@ -213,7 +210,7 @@ func (a API) UploadRequest(uri string, queryParam map[string]string) (InitUpload
 	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, uri, c, encryptParam), l)
 	rsaRes, err := a.GetRSAKey()
 	if err != nil {
-		return ret.Data, err
+		return err
 	}
 	b := rsaEncode([]byte(l), rsaRes.PubKey)
 	req := http2.GetClient().NewRequest().
@@ -225,14 +222,15 @@ func (a API) UploadRequest(uri string, queryParam map[string]string) (InitUpload
 		SetHeader("EncryptionText", b).
 		SetHeader("PkId", rsaRes.PKId).
 		SetQueryParam("params", encryptParam).
-		SetResult(&ret)
+		SetResult(resVO)
 	res, err := req.Get("https://upload.cloud.189.cn" + uri)
 	log.Debug(res.String())
-	return ret.Data, err
+	return err
 }
 
 func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64) (InitUploadVO, error) {
-	res, err := a.UploadRequest(
+	var initUploadVO ResponseDataVO[InitUploadVO]
+	err := a.UploadRequest(
 		"/person/initMultiUpload",
 		map[string]string{
 			"parentFolderId": parentFolderId,
@@ -240,6 +238,6 @@ func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64) (Init
 			"fileSize":       strconv.FormatInt(fileSize, 10),
 			"sliceSize":      strconv.FormatInt(1024*1024*10, 10),
 			"lazyCheck":      "1",
-		})
-	return res, err
+		}, &initUploadVO)
+	return initUploadVO.Data, err
 }
