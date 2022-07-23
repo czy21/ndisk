@@ -68,3 +68,26 @@ type RSAKeyRes struct {
 	PubKey  string `json:"publicKey"`
 	Version string `json:"ver"`
 }
+
+type UserBriefInfoVO struct {
+	EncryptAccount string `json:"encryptAccount"`
+	UserAccount    string `json:"userAccount"`
+	SessionKey     string `json:"sessionKey"`
+}
+
+type UserBriefInfoVORes struct {
+	ResponseVO
+	UserBriefInfoVO
+}
+
+type InitUploadVO struct {
+	FileDataExists int    `json:"fileDataExists"`
+	UploadFileId   string `json:"uploadFileId"`
+	UploadHost     string `json:"uploadHost"`
+	UploadType     int    `json:"uploadType"`
+}
+
+type ResponseDataVO[TData any] struct {
+	Code string `json:"code"`
+	Data TData  `json:"data"`
+}

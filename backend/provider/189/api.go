@@ -1,6 +1,11 @@
 package _189
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +18,7 @@ import (
 	"math/rand"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -183,32 +189,91 @@ func (a API) GetRSAKey() (RSAKeyRes, error) {
 	return ret, err
 }
 
-func uploadRequest(queryParam map[string]string) {
-	rand.Seed(time.Now().UnixNano())
-	randomFn := func(v string) string {
-		reg := regexp.MustCompilePOSIX("[xy]")
-		data := reg.ReplaceAllFunc([]byte(v), func(msg []byte) []byte {
-			var i int64
-			t := int64(16*rand.Float32()) | 0
-			if msg[0] == 120 {
-				i = t
-			} else {
-				i = 3&t | 8
-			}
-			return []byte(strconv.FormatInt(i, 16))
-		})
-		return string(data)
+func hmacSha1(data string, secret string) string {
+	h := hmac.New(sha1.New, []byte(secret))
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
+}
+func aesEncrypt(data, key []byte) string {
+	block, _ := aes.NewCipher(key)
+	if block == nil {
+		return hex.EncodeToString([]byte{})
 	}
-	//r := randomFn("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
-	l := randomFn("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
+	data = pkcs7Padding(data, block.BlockSize())
+	decrypted := make([]byte, len(data))
+	size := block.BlockSize()
+	for bs, be := 0, size; bs < len(data); bs, be = bs+size, be+size {
+		block.Encrypt(decrypted[bs:be], data[bs:be])
+	}
+	return hex.EncodeToString(decrypted)
+}
+
+func pkcs7Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
+}
+
+func random(v string) string {
+	reg := regexp.MustCompilePOSIX("[xy]")
+	data := reg.ReplaceAllFunc([]byte(v), func(msg []byte) []byte {
+		var i int64
+		t := int64(16*rand.Float32()) | 0
+		if msg[0] == 120 {
+			i = t
+		} else {
+			i = 3&t | 8
+		}
+		return []byte(strconv.FormatInt(i, 16))
+	})
+	return string(data)
+}
+
+func (a API) GetUserBriefInfo() UserBriefInfoVO {
+	var (
+		err error
+		ret UserBriefInfoVORes
+	)
+	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	res, err := req.Get(fmt.Sprintf("%s/portal/v2/getUserBriefInfo.action?noCache=%s", ApiUrl, QueryParamNoCache))
+	logRes("GetUserBriefInfo", res.String(), ret.ResponseVO, err)
+	return ret.UserBriefInfoVO
+}
+
+func (a API) UploadRequest(uri string, queryParam map[string]string) (InitUploadVO, error) {
+	var (
+		err error
+		ret ResponseDataVO[InitUploadVO]
+	)
+
+	rand.Seed(time.Now().UnixNano())
+	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	r := random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
+	l := random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")
 	l = l[0 : 16+int(16*rand.Float32())|0]
-	//c := time.Now().UnixMilli()
 	var u []string
 	for k, v := range queryParam {
 		u = append(u, k+"="+v)
 	}
-	//f := strings.Join(u, "&")
-
+	sessionKey := a.GetUserBriefInfo().SessionKey
+	encryptParam := aesEncrypt([]byte(strings.Join(u, "&")), []byte(l[0:16]))
+	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, uri, c, encryptParam), l)
+	rsa, err := a.GetRSAKey()
+	if err != nil {
+		return ret.Data, err
+	}
+	req := http2.GetClient().NewRequest().
+		SetHeader("accept", "application/json;charset=UTF-8").
+		SetHeader("SessionKey", sessionKey).
+		SetHeader("Signature", signature).
+		SetHeader("X-Request-Date", c).
+		SetHeader("X-Request-ID", r).
+		SetHeader("EncryptionText", "").
+		SetHeader("PkId", rsa.PKId)
+	req.SetQueryParam("param", encryptParam)
+	req.SetResult(&ret)
+	_, err = req.Get("https://upload.cloud.189.cn" + uri)
+	return ret.Data, err
 }
 
 func (a API) Upload(parentFolderId string, fileName string, fileSize, bytes []byte) {
