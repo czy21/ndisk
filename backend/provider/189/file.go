@@ -162,6 +162,7 @@ func (f File) Write(p []byte) (n int, err error) {
 			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
 		}
 		err = API{}.CommitFile(fileId, fileMd5, sliceMd5)
+		return int(chunkSize), io.EOF
 	}
 	return int(chunkSize), err
 }

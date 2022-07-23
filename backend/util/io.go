@@ -19,6 +19,9 @@ func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
 				}
 			}
 			n += int64(nw)
+			if ew == io.EOF {
+				break
+			}
 			if ew != nil {
 				err = ew
 				break
