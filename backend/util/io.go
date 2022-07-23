@@ -56,8 +56,10 @@ func GetChunk(name string, fileSize int64, chunkSize int64, extra map[string]int
 	}
 	if extra["chunks"] == nil {
 		chunks = int(math.Max(1, math.Ceil(float64(fileSize))/float64(chunkSize)))
-		extra["chunks"] = chunks
+	} else {
+		chunks = extra["chunks"].(int)
 	}
+	extra["chunks"] = chunks
 	extra["chunkI"] = chunkI
 	extra["rangeR"] = rangeR
 	extra["chunks"] = chunks

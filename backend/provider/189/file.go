@@ -117,9 +117,9 @@ func uploadChunk(uploadFileId string, data []byte, index int) ([]byte, error) {
 	return md5Bytes, err
 }
 
-func (f File) Write(p []byte) (n int, err error) {
+func (f File) Write(b []byte) (n int, err error) {
 	fileSize := f.Context.Value(ContentLength).(int64)
-	chunkSize := int64(len(p))
+	chunkSize := int64(len(b))
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
 	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, fileSize, chunkSize, f.Extra)
@@ -136,8 +136,8 @@ func (f File) Write(p []byte) (n int, err error) {
 		f.Extra[UploadFileId] = fileId
 	}
 	// UploadFile
-	var md5Sum hash.Hash
 	var md5s []string
+	var md5Sum hash.Hash
 	if f.Extra[UploadMd5s] != nil {
 		md5s = f.Extra[UploadMd5s].([]string)
 		md5Sum = f.Extra[UploadMd5Sum].(hash.Hash)
@@ -145,18 +145,21 @@ func (f File) Write(p []byte) (n int, err error) {
 		md5s = make([]string, 0)
 		md5Sum = md5.New()
 	}
-	chunkMd5Bytes, err := uploadChunk(fileId, p, chunkIndex+1)
+	chunkMd5Bytes, err := uploadChunk(fileId, b, chunkIndex+1)
 	if err != nil {
 		return 0, err
 	}
 	md5Hex := hex.EncodeToString(chunkMd5Bytes)
+	log.Debugf("chunk md5: %s", md5Hex)
 	md5s = append(md5s, strings.ToUpper(md5Hex))
-	md5Sum.Write(chunkMd5Bytes)
+	md5Sum.Write(b)
 	f.Extra[UploadMd5s] = md5s
 	f.Extra[UploadMd5Sum] = md5Sum
+
 	// CommitFile
 	if fileSize == rangeR {
 		fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
+		log.Debugf("file md5: %s", fileMd5)
 		sliceMd5 := fileMd5
 		if fileSize > chunkSize {
 			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
