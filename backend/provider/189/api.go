@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/czy21/ndisk/cache"
 	http2 "github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/util"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/net/context"
 	"math/rand"
 	"net/url"
 	"strconv"
@@ -171,14 +173,20 @@ func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 }
 
 func (a API) GetRSAKey() (RSAKeyRes, error) {
+	const rsaCacheKey = "e:rsa:189"
 	var (
 		err error
 		ret RSAKeyRes
 	)
 	req := getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetResult(&ret)
-	res, err := req.Get(fmt.Sprintf("%s/security/generateRsaKey.action?noCache=%s", ApiUrl, QueryParamNoCache))
-	logRes("GetRSAKey", res.String(), ret.ResponseVO, err)
+	cache.Client.GetObj(context.Background(), rsaCacheKey, &ret)
+	if ret.PKId == "" {
+		res, err := req.Get(fmt.Sprintf("%s/security/generateRsaKey.action?noCache=%s", ApiUrl, QueryParamNoCache))
+		logRes("GetRSAKey", res.String(), ret.ResponseVO, err)
+		expire := time.Time(ret.Expire).Sub(time.Now())
+		cache.Client.SetObjEX(context.Background(), rsaCacheKey, ret, expire)
+	}
 	return ret, err
 }
 

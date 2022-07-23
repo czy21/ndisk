@@ -37,7 +37,8 @@ func (f File) Close() error {
 }
 
 func (f File) Read(b []byte) (n int, err error) {
-	_, _, rangeL, rangeR := util.GetChunk(f.Name, int64(len(b)), f.Extra)
+	fileSize := f.Context.Value(ContentLength).(int64)
+	_, _, rangeL, rangeR := util.GetChunk(f.Name, fileSize, int64(len(b)), f.Extra)
 	dFunc := func(dUrl string) (int, error) {
 		req := http2.GetClient().NewRequest()
 		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeL, rangeR))
@@ -87,15 +88,12 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	return fileInfos, err
 }
 
-func uploadChunk(uploadFileId string, md5s []string, md5Sum hash.Hash, data []byte, index int) error {
+func uploadChunk(uploadFileId string, data []byte, index int) ([]byte, error) {
 	var md5Bytes []byte
 	dMd5 := md5.New()
 	dMd5.Write(data)
 	md5Bytes = dMd5.Sum(nil)
-	md5Hex := hex.EncodeToString(md5Bytes)
 	md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
-	md5s = append(md5s, strings.ToUpper(md5Hex))
-	md5Sum.Write(data)
 	var uploadUrlsRes UploadUrlVORes
 	err := API{}.UploadRequest("/person/getMultiUploadUrls",
 		map[string]string{
@@ -103,7 +101,7 @@ func uploadChunk(uploadFileId string, md5s []string, md5Sum hash.Hash, data []by
 			"uploadFileId": uploadFileId,
 		}, &uploadUrlsRes)
 	if err != nil {
-		return err
+		return md5Bytes, err
 	}
 	uploadData := uploadUrlsRes.UploadUrls[fmt.Sprintf("partNumber_%d", index)]
 	log.Debug(uploadData)
@@ -116,15 +114,15 @@ func uploadChunk(uploadFileId string, md5s []string, md5Sum hash.Hash, data []by
 	}
 	uRes, err := uReq.Put(uploadData.RequestURL)
 	log.Debug(uRes)
-	return err
+	return md5Bytes, err
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-	fileSize := f.Extra[ContentLength].(int64)
+	fileSize := f.Context.Value(ContentLength).(int64)
 	chunkSize := int64(len(p))
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
-	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, chunkSize, f.Extra)
+	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, fileSize, chunkSize, f.Extra)
 	// CreateFile
 	var fileId string
 	if f.Extra[UploadFileId] != nil {
@@ -135,28 +133,35 @@ func (f File) Write(p []byte) (n int, err error) {
 			return 0, nil
 		}
 		fileId = res.UploadFileId
-		f.Extra[UploadFileId] = res.UploadFileId
+		f.Extra[UploadFileId] = fileId
 	}
 	// UploadFile
 	var md5Sum hash.Hash
 	var md5s []string
-	if f.Extra[UploadMd5s] == nil {
-		md5s = make([]string, 0)
-		md5Sum = md5.New()
-		f.Extra[UploadMd5s] = md5s
-		f.Extra[UploadMd5Sum] = md5Sum
-	} else {
+	if f.Extra[UploadMd5s] != nil {
 		md5s = f.Extra[UploadMd5s].([]string)
 		md5Sum = f.Extra[UploadMd5Sum].(hash.Hash)
+	} else {
+		md5s = make([]string, 0)
+		md5Sum = md5.New()
 	}
-	err = uploadChunk(fileId, md5s, md5Sum, p, chunkIndex+1)
+	chunkMd5Bytes, err := uploadChunk(fileId, p, chunkIndex+1)
 	if err != nil {
 		return 0, err
 	}
+	md5Hex := hex.EncodeToString(chunkMd5Bytes)
+	md5s = append(md5s, strings.ToUpper(md5Hex))
+	md5Sum.Write(chunkMd5Bytes)
+	f.Extra[UploadMd5s] = md5s
+	f.Extra[UploadMd5Sum] = md5Sum
 	// CommitFile
 	if fileSize == rangeR {
 		fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
-		err = API{}.CommitFile(fileId, fileMd5, fileMd5)
+		sliceMd5 := fileMd5
+		if fileSize > chunkSize {
+			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
+		}
+		err = API{}.CommitFile(fileId, fileMd5, sliceMd5)
 	}
 	return int(chunkSize), err
 }

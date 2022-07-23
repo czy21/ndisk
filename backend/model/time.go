@@ -32,7 +32,7 @@ func (t *LocalTime) UnmarshalJSON(data []byte) error {
 type UnixTime time.Time
 
 func (t UnixTime) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%d", time.Time(t).Unix())), nil
+	return []byte(fmt.Sprintf("%d", time.Time(t).UnixMilli())), nil
 }
 
 func (t *UnixTime) UnmarshalJSON(data []byte) error {

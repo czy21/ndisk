@@ -63,10 +63,10 @@ type FileInfoVORes struct {
 
 type RSAKeyRes struct {
 	ResponseVO
-	Expire  int64  `json:"expire"`
-	PKId    string `json:"pkId"`
-	PubKey  string `json:"pubKey"`
-	Version string `json:"ver"`
+	Expire  model.UnixTime `json:"expire"`
+	PKId    string         `json:"pkId"`
+	PubKey  string         `json:"pubKey"`
+	Version string         `json:"ver"`
 }
 
 type UserBriefInfoVO struct {

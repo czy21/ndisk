@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/czy21/ndisk/exception"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/service"
@@ -25,6 +26,11 @@ type TestVO struct {
 func CachePut(c *gin.Context) {
 	var input TestVO
 	_ = c.Bind(&input)
+
+	fmt.Println(time.Time(input.T).Sub(time.UnixMilli(1658577600000)))
+	fmt.Println(time.Time(input.T))
+	fmt.Println(time.Time(input.T).UTC())
+
 	web.Context{Context: c}.OK(model.ResponseModel{Data: map[string]interface{}{
 		"t": time.Now(),
 		"i": input.T,
