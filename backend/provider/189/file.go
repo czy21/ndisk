@@ -36,7 +36,7 @@ func (f File) Close() error {
 }
 
 func (f File) Read(b []byte) (n int, err error) {
-	_, rangeL, rangeR := getChunk(f.Name, int64(len(b)), f.Extra)
+	_, _, rangeL, rangeR := util.GetChunk(f.Name, int64(len(b)), f.Extra)
 	dFunc := func(dUrl string) (int, error) {
 		req := http2.GetClient().NewRequest()
 		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeL, rangeR))
@@ -117,12 +117,10 @@ func chunkUpload(uploadFileId string, md5s []string, md5Sum hash.Hash, data []by
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-	_, _, _ = getChunk(f.Name, int64(len(p)), f.Extra)
-	//chunkSize := int64(len(p))
+	_, _, _, _ = util.GetChunk(f.Name, int64(len(p)), f.Extra)
 	//d, fName := path.Split(f.Name)
 	//fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
-	//fileSize := f.Context.Value("contentLength").(int64)
-	//slices := int(math.Max(1, math.Ceil(float64(chunkSize))/float64(fileSize)))
+
 	//var uploadFileId string
 	//md5s := make([]string, 0)
 	//md5Sum := md5.New()
@@ -137,24 +135,6 @@ func (f File) Write(p []byte) (n int, err error) {
 	//	f.Extra["uploadFileId"] = res.UploadFileId
 	//}
 	return len(p), nil
-}
-
-func getChunk(name string, chunkSize int64, extra map[string]interface{}) (int, int64, int64) {
-	chunkI := 0
-	rangeL := int64(0)
-	rangeR := chunkSize
-	if extra["chunkI"] != nil {
-		chunkI = extra["chunkI"].(int) + 1
-	}
-	if val := extra["rangeR"]; val != nil {
-		v := val.(int64)
-		rangeL = v
-		rangeR += v
-	}
-	extra["chunkI"] = chunkI
-	extra["rangeR"] = rangeR
-	log.Debugf("%s chunkI: %d chunkS: %d rangeL: %d rangeR: %d", name, chunkI, chunkSize, rangeL, rangeR)
-	return chunkI, rangeL, rangeR
 }
 
 // Uploader upload to remote

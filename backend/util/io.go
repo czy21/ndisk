@@ -2,7 +2,9 @@ package util
 
 import (
 	"errors"
+	log "github.com/sirupsen/logrus"
 	"io"
+	"math"
 )
 
 func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
@@ -34,4 +36,27 @@ func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
 		}
 	}
 	return n, err
+}
+
+func GetChunk(name string, chunkSize int64, extra map[string]interface{}) (int, int, int64, int64) {
+	var chunks int
+	chunkI := 0
+	rangeL := int64(0)
+	rangeR := chunkSize
+	if extra["chunkI"] != nil {
+		chunkI = extra["chunkI"].(int) + 1
+	}
+	if extra["rangeR"] != nil {
+		v := extra["rangeR"].(int64)
+		rangeL = v
+		rangeR += v
+	}
+	if extra["chunks"] == nil {
+		chunks = int(math.Max(1, math.Ceil(float64(chunkSize))/float64(extra["contentLength"].(int64))))
+	}
+	extra["chunkI"] = chunkI
+	extra["rangeR"] = rangeR
+	extra["chunks"] = chunks
+	log.Debugf("%s chunks: %d chunkSize: %d chunkI: %d rangeL: %d rangeR: %d", name, chunks, chunkSize, chunkI, rangeL, rangeR)
+	return chunks, chunkI, rangeL, rangeR
 }
