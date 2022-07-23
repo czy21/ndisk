@@ -231,14 +231,14 @@ func (a API) UploadRequest(uri string, queryParam map[string]string) (InitUpload
 	return ret.Data, err
 }
 
-func (a API) CreateUpload(parentFolderId, fileName string, fileSize, sliceSize int64) (InitUploadVO, error) {
+func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64) (InitUploadVO, error) {
 	res, err := a.UploadRequest(
 		"/person/initMultiUpload",
 		map[string]string{
 			"parentFolderId": parentFolderId,
 			"fileName":       url.QueryEscape(fileName),
 			"fileSize":       strconv.FormatInt(fileSize, 10),
-			"sliceSize":      strconv.FormatInt(sliceSize, 10),
+			"sliceSize":      strconv.FormatInt(1024*1024*10, 10),
 			"lazyCheck":      "1",
 		})
 	return res, err

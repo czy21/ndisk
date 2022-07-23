@@ -2,6 +2,9 @@ package _189
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	http2 "github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
@@ -9,7 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/fs"
+	"math"
 	"net/http"
+	"path"
+	"strings"
 )
 
 type File struct {
@@ -17,6 +23,11 @@ type File struct {
 	File    model.ProviderFile
 	Context context.Context
 	Extra   map[string]interface{}
+}
+
+func (f File) Stat() (fs.FileInfo, error) {
+	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
 
 func (f File) Close() error {
@@ -79,23 +90,34 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	return fileInfos, err
 }
 
-func (f File) Stat() (fs.FileInfo, error) {
-	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	return model.FileInfoProxy{FileInfo: fileInfo}, err
-}
-
 func (f File) Write(p []byte) (n int, err error) {
 	chunkSize := int64(len(p))
-	fmt.Println(chunkSize)
-	//d, fName := path.Split(f.Name)
-	//fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
-	//fileSize := f.Context.Value("ContentLength").(int64)
-	//slices := math.Max(1, math.Ceil(float64(chunkSize))/float64(fileSize))
-	//fmt.Println(slices)
-	//if uploadFileId := f.Extra["uploadFileId"]; uploadFileId != nil {
-	//	fmt.Println(uploadFileId)
-	//	return len(p), nil
-	//}
+	d, fName := path.Split(f.Name)
+	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
+	fileSize := f.Context.Value("ContentLength").(int64)
+	slices := int(math.Max(1, math.Ceil(float64(chunkSize))/float64(fileSize)))
+	var uploadFileId string
+	md5s := make([]string, 0)
+	md5Sum := md5.New()
+	uploadFn := func() {
+		var i int
+		for i = 0; i < slices; i++ {
+			var md5Bytes []byte
+			dMd5 := md5.New()
+			dMd5.Write(p)
+			md5Bytes = dMd5.Sum(nil)
+			md5Hex := hex.EncodeToString(md5Bytes)
+			md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
+			md5s = append(md5s, strings.ToUpper(md5Hex))
+			md5Sum.Write(p)
+			
+		}
+	}
+	if f.Extra["uploadFileId"] != nil {
+		uploadFileId = f.Extra["uploadFileId"].(string)
+
+		return len(p), nil
+	}
 	//res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize, chunkSize)
 	//if res.UploadFileId != "" {
 	//	f.Extra["uploadFileId"] = res.UploadFileId
