@@ -65,7 +65,7 @@ type RSAKeyRes struct {
 	ResponseVO
 	Expire  int64  `json:"expire"`
 	PKId    string `json:"pkId"`
-	PubKey  string `json:"publicKey"`
+	PubKey  string `json:"pubKey"`
 	Version string `json:"ver"`
 }
 

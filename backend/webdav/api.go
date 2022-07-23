@@ -1,6 +1,7 @@
 package webdav
 
 import (
+	"context"
 	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/repository"
@@ -33,6 +34,8 @@ func Controller(r *gin.Engine) {
 		h.Logger = getDavLogger()
 		var writer http.ResponseWriter = c.Writer
 		var request = c.Request
+		ctx := context.WithValue(request.Context(), "ContentLength", request.ContentLength)
+		request = request.WithContext(ctx)
 		HandleHttp(strings.TrimPrefix(c.Request.URL.Path, davPrefix), &writer, request)
 		h.ServeHTTP(writer, request)
 	}

@@ -85,7 +85,21 @@ func (f File) Stat() (fs.FileInfo, error) {
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-
+	chunkSize := int64(len(p))
+	fmt.Println(chunkSize)
+	//d, fName := path.Split(f.Name)
+	//fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
+	//fileSize := f.Context.Value("ContentLength").(int64)
+	//slices := math.Max(1, math.Ceil(float64(chunkSize))/float64(fileSize))
+	//fmt.Println(slices)
+	//if uploadFileId := f.Extra["uploadFileId"]; uploadFileId != nil {
+	//	fmt.Println(uploadFileId)
+	//	return len(p), nil
+	//}
+	//res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize, chunkSize)
+	//if res.UploadFileId != "" {
+	//	f.Extra["uploadFileId"] = res.UploadFileId
+	//}
 	return len(p), nil
 }
 
@@ -96,7 +110,7 @@ type Uploader struct {
 }
 
 func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
-	return util.CopyBuffer(w, u.ReadCloser, u.File.ProviderFolder.Account.PutBuf)
+	return util.CopyBuffer(w, u.ReadCloser, 10)
 }
 
 // Downloader download from remote

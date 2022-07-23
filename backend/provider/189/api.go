@@ -4,9 +4,14 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/hmac"
+	rand2 "crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	http2 "github.com/czy21/ndisk/http"
@@ -14,13 +19,16 @@ import (
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"math"
 	"math/rand"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+var b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+var BI_RM = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 type API struct{}
 
@@ -58,8 +66,8 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 		"descending": "true",
 	}
 	req.SetQueryParams(params)
+	req.SetResult(&ret)
 	res, err := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	logRes("GetFolderById", res.String(), ret.ResponseVO, err)
 	return ret.FileListAO, err
 }
@@ -76,8 +84,8 @@ func (a API) CreateFolder(parentFolderId string, name string) (FolderRes, error)
 	}
 	req.SetQueryParams(queryParam)
 	req.SetFormData(formData)
+	req.SetResult(&ret)
 	res, err := req.Post(fmt.Sprintf("%s/open/file/createFolder.action", ApiUrl))
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	logRes("CreateFolder", res.String(), ret.ResponseVO, err)
 	return ret, err
 }
@@ -105,8 +113,8 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) error {
 	}
 	req.SetFormData(formParam)
 	req.SetQueryParams(queryParam)
+	req.SetResult(&ret)
 	res, err := req.Post(fmt.Sprintf("%s/open/batch/createBatchTask.action", ApiUrl))
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	logRes("Delete", res.String(), ret.ResponseVO, err)
 	if err != nil {
 		return err
@@ -138,8 +146,8 @@ func (a API) CheckTask(taskId string, kind string) int {
 	}
 	req.SetQueryParams(queryParam)
 	req.SetFormData(formParam)
+	req.SetResult(&ret)
 	res, err := req.Post(fmt.Sprintf("%s/open/batch/checkBatchTask.action", ApiUrl))
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	logRes("CheckTask", res.String(), ret.ResponseVO, err)
 	return ret.TaskStatus
 }
@@ -154,8 +162,8 @@ func (a API) RenameFolder(folderId string, destName string) error {
 		"destFolderName": destName,
 	}
 	req.SetFormData(formParams)
+	req.SetResult(&ret)
 	res, err := req.Post(fmt.Sprintf("%s/open/file/renameFolder.action?noCache=%s", ApiUrl, QueryParamNoCache))
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	logRes("RenameFolder", res.String(), ret.ResponseVO, err)
 	return err
 }
@@ -173,7 +181,6 @@ func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 	req.SetQueryParams(queryParam)
 	req.SetResult(&ret)
 	res, err := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
-	err = http2.GetClient().JSONUnmarshal(res.Body(), &ret)
 	logRes("GetFileInfoById", res.String(), ret.ResponseVO, err)
 	return ret.FileInfoVO, err
 }
@@ -184,6 +191,7 @@ func (a API) GetRSAKey() (RSAKeyRes, error) {
 		ret RSAKeyRes
 	)
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	req.SetResult(&ret)
 	res, err := req.Get(fmt.Sprintf("%s/security/generateRsaKey.action?noCache=%s", ApiUrl, QueryParamNoCache))
 	logRes("GetRSAKey", res.String(), ret.ResponseVO, err)
 	return ret, err
@@ -228,6 +236,57 @@ func random(v string) string {
 	})
 	return string(data)
 }
+func int2char(a int) string {
+	return strings.Split(BI_RM, "")[a]
+}
+func b64tohex(a string) string {
+	d := ""
+	e := 0
+	c := 0
+	for i := 0; i < len(a); i++ {
+		m := strings.Split(a, "")[i]
+		if m != "=" {
+			v := strings.Index(b64map, m)
+			if 0 == e {
+				e = 1
+				d += int2char(v >> 2)
+				c = 3 & v
+			} else if 1 == e {
+				e = 2
+				d += int2char(c<<2 | v>>4)
+				c = 15 & v
+			} else if 2 == e {
+				e = 3
+				d += int2char(c)
+				d += int2char(v >> 2)
+				c = 3 & v
+			} else {
+				e = 0
+				d += int2char(c<<2 | v>>4)
+				d += int2char(15 & v)
+			}
+		}
+	}
+	if e == 1 {
+		d += int2char(c << 2)
+	}
+	return d
+}
+func rsaEncode(origData []byte, j_rsakey string, hex bool) string {
+	publicKey := []byte("-----BEGIN PUBLIC KEY-----\n" + j_rsakey + "\n-----END PUBLIC KEY-----")
+	block, _ := pem.Decode(publicKey)
+	pubInterface, _ := x509.ParsePKIXPublicKey(block.Bytes)
+	pub := pubInterface.(*rsa.PublicKey)
+	b, err := rsa.EncryptPKCS1v15(rand2.Reader, pub, origData)
+	if err != nil {
+		log.Errorf("err: %s", err.Error())
+	}
+	res := base64.StdEncoding.EncodeToString(b)
+	if hex {
+		return b64tohex(res)
+	}
+	return res
+}
 
 func (a API) GetUserBriefInfo() UserBriefInfoVO {
 	var (
@@ -235,6 +294,7 @@ func (a API) GetUserBriefInfo() UserBriefInfoVO {
 		ret UserBriefInfoVORes
 	)
 	req := getJsonAndTokenHeader(http2.GetClient().NewRequest())
+	req.SetResult(&ret)
 	res, err := req.Get(fmt.Sprintf("%s/portal/v2/getUserBriefInfo.action?noCache=%s", ApiUrl, QueryParamNoCache))
 	logRes("GetUserBriefInfo", res.String(), ret.ResponseVO, err)
 	return ret.UserBriefInfoVO
@@ -245,7 +305,6 @@ func (a API) UploadRequest(uri string, queryParam map[string]string) (InitUpload
 		err error
 		ret ResponseDataVO[InitUploadVO]
 	)
-
 	rand.Seed(time.Now().UnixNano())
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	r := random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
@@ -258,26 +317,35 @@ func (a API) UploadRequest(uri string, queryParam map[string]string) (InitUpload
 	sessionKey := a.GetUserBriefInfo().SessionKey
 	encryptParam := aesEncrypt([]byte(strings.Join(u, "&")), []byte(l[0:16]))
 	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, uri, c, encryptParam), l)
-	rsa, err := a.GetRSAKey()
+	rsaRes, err := a.GetRSAKey()
 	if err != nil {
 		return ret.Data, err
 	}
+	b := rsaEncode([]byte(l), rsaRes.PubKey, false)
 	req := http2.GetClient().NewRequest().
 		SetHeader("accept", "application/json;charset=UTF-8").
 		SetHeader("SessionKey", sessionKey).
 		SetHeader("Signature", signature).
 		SetHeader("X-Request-Date", c).
 		SetHeader("X-Request-ID", r).
-		SetHeader("EncryptionText", "").
-		SetHeader("PkId", rsa.PKId)
-	req.SetQueryParam("param", encryptParam)
+		SetHeader("EncryptionText", b).
+		SetHeader("PkId", rsaRes.PKId)
+	req.SetQueryParam("params", encryptParam)
 	req.SetResult(&ret)
-	_, err = req.Get("https://upload.cloud.189.cn" + uri)
+	res, err := req.Get("https://upload.cloud.189.cn" + uri)
+	log.Debug(res.String())
 	return ret.Data, err
 }
 
-func (a API) Upload(parentFolderId string, fileName string, fileSize, bytes []byte) {
-	const chunkSize uint64 = 10485760
-	slices := math.Max(1, math.Ceil(float64(len(bytes))/float64(chunkSize)))
-	fmt.Println(slices)
+func (a API) CreateUpload(parentFolderId, fileName string, fileSize, sliceSize int64) (InitUploadVO, error) {
+	res, err := a.UploadRequest(
+		"/person/initMultiUpload",
+		map[string]string{
+			"parentFolderId": parentFolderId,
+			"fileName":       url.QueryEscape(fileName),
+			"fileSize":       strconv.FormatInt(fileSize, 10),
+			"sliceSize":      strconv.FormatInt(sliceSize, 10),
+			"lazyCheck":      "1",
+		})
+	return res, err
 }
