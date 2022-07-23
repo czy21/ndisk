@@ -36,18 +36,10 @@ func (f File) Close() error {
 }
 
 func (f File) Read(b []byte) (n int, err error) {
-	startIndex := int64(0)
-	chunkIndex := int64(len(b))
-	if val := f.Extra["chunkIndex"]; val != nil {
-		v := val.(int64)
-		startIndex = v
-		chunkIndex += v
-	}
-	f.Extra["chunkIndex"] = chunkIndex
-	//log.Debugf("%s startIndex: %d chunkIndex: %d", f.Name, startIndex, chunkIndex)
+	_, rangeL, rangeR := getChunk(f.Name, int64(len(b)), f.Extra)
 	dFunc := func(dUrl string) (int, error) {
 		req := http2.GetClient().NewRequest()
-		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", startIndex, chunkIndex))
+		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeL, rangeR))
 		res, err := req.Get(dUrl)
 		return copy(b, res.Body()), err
 	}
@@ -125,21 +117,7 @@ func chunkUpload(uploadFileId string, md5s []string, md5Sum hash.Hash, data []by
 }
 
 func (f File) Write(p []byte) (n int, err error) {
-	var sliceIndex int
-	var finishedSize int64
-	if f.Extra["sliceIndex"] != nil {
-		sliceIndex = f.Extra["sliceIndex"].(int) + 1
-	} else {
-		sliceIndex = 0
-	}
-	if f.Extra["finishedSize"] != nil {
-		finishedSize = f.Extra["finishedSize"].(int64) + int64(len(p))
-	} else {
-		finishedSize = int64(len(p))
-	}
-	f.Extra["sliceIndex"] = sliceIndex
-	f.Extra["finishedSize"] = finishedSize
-	log.Debug(sliceIndex, len(p), finishedSize)
+	_, _, _ = getChunk(f.Name, int64(len(p)), f.Extra)
 	//chunkSize := int64(len(p))
 	//d, fName := path.Split(f.Name)
 	//fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
@@ -159,6 +137,24 @@ func (f File) Write(p []byte) (n int, err error) {
 	//	f.Extra["uploadFileId"] = res.UploadFileId
 	//}
 	return len(p), nil
+}
+
+func getChunk(name string, chunkSize int64, extra map[string]interface{}) (int, int64, int64) {
+	chunkI := 0
+	rangeL := int64(0)
+	rangeR := chunkSize
+	if extra["chunkI"] != nil {
+		chunkI = extra["chunkI"].(int) + 1
+	}
+	if val := extra["rangeR"]; val != nil {
+		v := val.(int64)
+		rangeL = v
+		rangeR += v
+	}
+	extra["chunkI"] = chunkI
+	extra["rangeR"] = rangeR
+	log.Debugf("%s chunkI: %d chunkS: %d rangeL: %d rangeR: %d", name, chunkI, chunkSize, rangeL, rangeR)
+	return chunkI, rangeL, rangeR
 }
 
 // Uploader upload to remote
