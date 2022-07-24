@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"github.com/czy21/ndisk/constant"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -68,6 +69,18 @@ func GetChunk(name string, fileSize int64, chunkLen int64, extra map[string]inte
 	extra[constant.HttpExtraChunkI] = chunkI
 	extra[constant.HttpExtraRangeE] = rangeE
 	extra[constant.HttpExtraChunks] = chunks
-	log.Infof("%s chunks: %d chunkL: %d chunkI: %d rangeS: %d rangeE: %d", name, chunks, chunkLen, chunkI, rangeS, rangeE)
+	chunkArr := []interface{}{
+		constant.HttpExtraFileSize, fileSize,
+		constant.HttpExtraChunks, chunks,
+		constant.HttpExtraChunkL, chunkLen,
+		constant.HttpExtraChunkI, chunkI,
+		constant.HttpExtraRangeS, rangeS,
+		constant.HttpExtraRangeE, rangeE,
+	}
+	var chunkLog string
+	for i := 0; i < len(chunkArr)/2; i++ {
+		chunkLog += fmt.Sprintf(" %s: %d", chunkArr[i*2], chunkArr[i*2+1])
+	}
+	log.Infof("%s %s", name, chunkLog)
 	return chunks, chunkI, rangeS, rangeE
 }
