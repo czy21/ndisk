@@ -164,7 +164,7 @@ type Downloader struct {
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
 	l := limitBuf(d.File.ProviderFolder.Account.GetBuf)
-	return io.CopyBuffer(d.ResponseWriter, r, make([]byte, 1024*1024*l))
+	return util.CopyN(d.ResponseWriter, r, make([]byte, 1024*1024*l))
 }
 
 func limitBuf(val int) int {
