@@ -11,7 +11,7 @@ import (
 func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
 	for {
 		nr, er := io.ReadFull(src, buf)
-		if nr > 0 || er == io.EOF {
+		if nr >= 0 {
 			nw, ew := dst.Write(buf[0:nr])
 			if nw < 0 || nr < nw {
 				nw = 0
