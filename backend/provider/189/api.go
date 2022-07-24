@@ -1,6 +1,9 @@
 package _189
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -259,7 +262,37 @@ func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileM
 	})
 	return initUploadVO.Data, err
 }
-
+func (a API) UploadChunk(fileId string, data []byte, index int) ([]byte, error) {
+	md5Obj := md5.New()
+	md5Obj.Write(data)
+	md5Bytes := md5Obj.Sum(nil)
+	md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
+	if len(data) == 0 {
+		return md5Bytes, nil
+	}
+	var uploadUrlsRes UploadUrlVORes
+	err := API{}.UploadRequest("/person/getMultiUploadUrls",
+		map[string]string{
+			"partInfo":     fmt.Sprintf("%d-%s", index, md5Base64),
+			"uploadFileId": fileId,
+		}, &uploadUrlsRes, func() bool {
+			return uploadUrlsRes.Code != SuccessCode
+		})
+	if err != nil {
+		return md5Bytes, err
+	}
+	uploadData := uploadUrlsRes.UploadUrls[fmt.Sprintf("partNumber_%d", index)]
+	uploadHeader, _ := url.PathUnescape(uploadData.RequestHeader)
+	uploadHeaders := strings.Split(uploadHeader, "&")
+	uReq := http2.GetClient().NewRequest().SetBody(bytes.NewReader(data))
+	for _, t := range uploadHeaders {
+		i := strings.Index(t, "=")
+		uReq.Header.Set(t[0:i], t[i+1:])
+	}
+	uRes, err := uReq.Put(uploadData.RequestURL)
+	log.Debugf("fileId: %s request: %s response: %s", fileId, uploadData, uRes)
+	return md5Bytes, err
+}
 func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 string) (err error) {
 	var ret ResponseDataVO[any, CommitFileVO]
 	lazyCheck := 1

@@ -1,10 +1,8 @@
 package _189
 
 import (
-	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"github.com/czy21/ndisk/constant"
@@ -16,7 +14,6 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
-	"net/url"
 	"path"
 	"strings"
 )
@@ -89,39 +86,8 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	return fileInfos, err
 }
 
-func uploadChunk(fileId string, data []byte, index int) ([]byte, error) {
-	md5Obj := md5.New()
-	md5Obj.Write(data)
-	md5Bytes := md5Obj.Sum(nil)
-	md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
-	if len(data) == 0 {
-		return md5Bytes, nil
-	}
-	var uploadUrlsRes UploadUrlVORes
-	err := API{}.UploadRequest("/person/getMultiUploadUrls",
-		map[string]string{
-			"partInfo":     fmt.Sprintf("%d-%s", index, md5Base64),
-			"uploadFileId": fileId,
-		}, &uploadUrlsRes, func() bool {
-			return uploadUrlsRes.Code != SuccessCode
-		})
-	if err != nil {
-		return md5Bytes, err
-	}
-	uploadData := uploadUrlsRes.UploadUrls[fmt.Sprintf("partNumber_%d", index)]
-	uploadHeader, _ := url.PathUnescape(uploadData.RequestHeader)
-	uploadHeaders := strings.Split(uploadHeader, "&")
-	uReq := http2.GetClient().NewRequest().SetBody(bytes.NewReader(data))
-	for _, t := range uploadHeaders {
-		i := strings.Index(t, "=")
-		uReq.Header.Set(t[0:i], t[i+1:])
-	}
-	uRes, err := uReq.Put(uploadData.RequestURL)
-	log.Debugf("fileId: %s request: %s response: %s", fileId, uploadData, uRes)
-	return md5Bytes, err
-}
-
 func (f File) Write(b []byte) (n int, err error) {
+	api := API{}
 	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
 	fileSize := extra[constant.HttpExtraFileSize].(int64)
 	chunkLen := int64(len(b))
@@ -147,14 +113,14 @@ func (f File) Write(b []byte) (n int, err error) {
 			md5Sum.Write(b)
 			fileMd5 = hex.EncodeToString(md5Sum.Sum(nil))
 		}
-		res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize, fileMd5)
+		res, err := api.CreateUpload(fileInfo.RemoteName, fName, fileSize, fileMd5)
 		if err != nil {
 			return 0, nil
 		}
 		fileId = res.UploadFileId
 		extra[constant.HttpExtraFileId] = fileId
 	}
-	chunkMd5Bytes, err := uploadChunk(fileId, b, chunkIndex+1)
+	chunkMd5Bytes, err := api.UploadChunk(fileId, b, chunkIndex+1)
 	if err != nil {
 		return 0, err
 	}
@@ -171,7 +137,7 @@ func (f File) Write(b []byte) (n int, err error) {
 		if fileSize > chunkLen {
 			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
 		}
-		err = API{}.CommitFile(fileId, fileSize, fileMd5, sliceMd5)
+		err = api.CommitFile(fileId, fileSize, fileMd5, sliceMd5)
 		return int(chunkLen), io.EOF
 	}
 	return int(chunkLen), err
