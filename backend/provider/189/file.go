@@ -9,7 +9,6 @@ import (
 	http2 "github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/util"
-	log "github.com/sirupsen/logrus"
 	"hash"
 	"io"
 	"io/fs"
@@ -40,7 +39,10 @@ func (f File) Read(b []byte) (n int, err error) {
 	dFunc := func(dUrl string) (int, error) {
 		req := http2.GetClient().NewRequest()
 		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeL, rangeR))
-		res, err := req.Get(dUrl)
+		res, _ := req.Get(dUrl)
+		if fileSize == 0 || fileSize == rangeR {
+			err = io.EOF
+		}
 		return copy(b, res.Body()), err
 	}
 	if dUrl := extra[constant.HttpExtraDownloadUrl]; dUrl != nil {
@@ -55,7 +57,6 @@ func (f File) Read(b []byte) (n int, err error) {
 		extra[constant.HttpExtraDownloadUrl] = fileInfoVO.FileDownloadUrl
 		return dFunc(fileInfoVO.FileDownloadUrl)
 	}
-	log.Error(err)
 	return len(b), err
 }
 

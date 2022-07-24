@@ -68,6 +68,6 @@ func GetChunk(name string, fileSize int64, chunkLen int64, extra map[string]inte
 	extra[constant.HttpExtraChunkI] = chunkI
 	extra[constant.HttpExtraRangeE] = rangeE
 	extra[constant.HttpExtraChunks] = chunks
-	log.Debugf("%s chunks: %d chunkL: %d chunkI: %d rangeS: %d rangeE: %d", name, chunks, chunkLen, chunkI, rangeS, rangeE)
+	log.Infof("%s chunks: %d chunkL: %d chunkI: %d rangeS: %d rangeE: %d", name, chunks, chunkLen, chunkI, rangeS, rangeE)
 	return chunks, chunkI, rangeS, rangeE
 }
