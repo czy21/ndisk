@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"github.com/czy21/ndisk/constant"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math"
@@ -41,28 +42,28 @@ func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
 	return n, err
 }
 
-func GetChunk(name string, fileSize int64, chunkSize int64, extra map[string]interface{}) (int64, int, int64, int64) {
+func GetChunk(name string, fileSize int64, chunkLen int64, extra map[string]interface{}) (int64, int, int64, int64) {
 	var chunks int64
 	chunkI := 0
-	rangeL := int64(0)
-	rangeR := chunkSize
-	if extra["chunkI"] != nil {
-		chunkI = extra["chunkI"].(int) + 1
+	rangeS := int64(0)
+	rangeE := chunkLen
+	if extra[constant.HttpExtraChunkI] != nil {
+		chunkI = extra[constant.HttpExtraChunkI].(int) + 1
 	}
-	if extra["rangeR"] != nil {
-		v := extra["rangeR"].(int64)
-		rangeL = v
-		rangeR += v
+	if extra[constant.HttpExtraRangeE] != nil {
+		v := extra[constant.HttpExtraRangeE].(int64)
+		rangeS = v
+		rangeE += v
 	}
-	if extra["chunks"] == nil {
-		chunks = int64(math.Ceil(float64(fileSize)) / float64(chunkSize))
+	if extra[constant.HttpExtraChunks] == nil {
+		chunks = int64(math.Ceil(float64(fileSize)) / float64(chunkLen))
 	} else {
-		chunks = extra["chunks"].(int64)
+		chunks = extra[constant.HttpExtraChunks].(int64)
 	}
-	extra["chunks"] = chunks
-	extra["chunkI"] = chunkI
-	extra["rangeR"] = rangeR
-	extra["chunks"] = chunks
-	log.Debugf("%s chunks: %d chunkSize: %d chunkI: %d rangeL: %d rangeR: %d", name, chunks, chunkSize, chunkI, rangeL, rangeR)
-	return chunks, chunkI, rangeL, rangeR
+	extra[constant.HttpExtraChunks] = chunks
+	extra[constant.HttpExtraChunkI] = chunkI
+	extra[constant.HttpExtraRangeE] = rangeE
+	extra[constant.HttpExtraChunks] = chunks
+	log.Debugf("%s chunks: %d chunkL: %d chunkI: %d rangeS: %d rangeE: %d", name, chunks, chunkLen, chunkI, rangeS, rangeE)
+	return chunks, chunkI, rangeS, rangeE
 }

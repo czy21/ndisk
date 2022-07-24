@@ -35,10 +35,10 @@ func Controller(r *gin.Engine) {
 		var writer http.ResponseWriter = c.Writer
 		var request = c.Request
 		extra := map[string]interface{}{
-			"fileSize": request.ContentLength | 0,
-			"method":   request.Method,
+			constant.HttpExtraFileSize: request.ContentLength | 0,
+			constant.HttpExtraMethod:   request.Method,
 		}
-		ctx := context.WithValue(request.Context(), "extra", extra)
+		ctx := context.WithValue(request.Context(), constant.HttpExtra, extra)
 		request = request.WithContext(ctx)
 		HandleHttp(strings.TrimPrefix(c.Request.URL.Path, davPrefix), &writer, request)
 		h.ServeHTTP(writer, request)

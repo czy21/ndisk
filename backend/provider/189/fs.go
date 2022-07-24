@@ -2,6 +2,7 @@ package _189
 
 import (
 	"github.com/czy21/ndisk/cache"
+	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
@@ -92,14 +93,19 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 	if err == nil {
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}
+	//TODO haha
+	if err == fs1.ErrNotExist {
+		err = nil
+	}
 	return fileInfo, err
 }
 
 func (fs FileSystem) HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
+	extra := ctx.Value(constant.HttpExtra).(map[string]interface{})
+	if extra[constant.HttpExtraMethod] == http.MethodGet {
 		*w = Downloader{File: file, ResponseWriter: *w}
 	}
-	if r.Method == "PUT" {
+	if extra[constant.HttpExtraMethod] == http.MethodPut {
 		r.Body = Uploader{File: file, ReadCloser: r.Body}
 	}
 }

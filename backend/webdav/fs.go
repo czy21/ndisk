@@ -8,7 +8,6 @@ import (
 	"github.com/czy21/ndisk/web"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
-	fs1 "io/fs"
 	"net/http"
 
 	"os"
@@ -46,13 +45,7 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 		return model.FileInfoProxy{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	p, fs := getProvider(name, "")
-	f, err := fs.Stat(ctx, name, p)
-	if ctx.Value("method") == http.MethodPut {
-		if err == fs1.ErrNotExist {
-			err = nil
-		}
-	}
-	return f, err
+	return fs.Stat(ctx, name, p)
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, provider.FileSystem) {
