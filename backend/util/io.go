@@ -11,7 +11,7 @@ import (
 func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
 	for {
 		nr, er := io.ReadFull(src, buf)
-		if nr > 0 {
+		if nr > 0 || er == io.EOF {
 			nw, ew := dst.Write(buf[0:nr])
 			if nw < 0 || nr < nw {
 				nw = 0
@@ -42,8 +42,8 @@ func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
 	return n, err
 }
 
-func GetChunk(name string, fileSize int64, chunkLen int64, extra map[string]interface{}) (int64, int, int64, int64) {
-	var chunks int64
+func GetChunk(name string, fileSize int64, chunkLen int64, extra map[string]interface{}) (int, int, int64, int64) {
+	var chunks int
 	chunkI := 0
 	rangeS := int64(0)
 	rangeE := chunkLen
@@ -56,9 +56,13 @@ func GetChunk(name string, fileSize int64, chunkLen int64, extra map[string]inte
 		rangeE += v
 	}
 	if extra[constant.HttpExtraChunks] == nil {
-		chunks = int64(math.Ceil(float64(fileSize)) / float64(chunkLen))
+		if chunkLen == 0 {
+			chunks = 1
+		} else {
+			chunks = int(math.Max(1, math.Ceil(float64(fileSize))/float64(chunkLen)))
+		}
 	} else {
-		chunks = extra[constant.HttpExtraChunks].(int64)
+		chunks = extra[constant.HttpExtraChunks].(int)
 	}
 	extra[constant.HttpExtraChunks] = chunks
 	extra[constant.HttpExtraChunkI] = chunkI

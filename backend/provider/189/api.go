@@ -236,29 +236,40 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 	return err
 }
 
-func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64) (InitUploadVO, error) {
+func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileMd5 string, sliceMd5 string, chunks int) (InitUploadVO, error) {
 	var initUploadVO ResponseDataVO[InitUploadVO]
-	err := a.UploadRequest(
-		"/person/initMultiUpload",
-		map[string]string{
-			"parentFolderId": parentFolderId,
-			"fileName":       url.QueryEscape(fileName),
-			"fileSize":       strconv.FormatInt(fileSize, 10),
-			"sliceSize":      strconv.FormatInt(1024*1024*10, 10),
-			"lazyCheck":      "1",
-		}, &initUploadVO)
+	var lazyCheck int
+	if chunks > 1 {
+		lazyCheck = 1
+	}
+	queryParam := map[string]string{
+		"parentFolderId": parentFolderId,
+		"fileName":       url.QueryEscape(fileName),
+		"fileSize":       strconv.FormatInt(fileSize, 10),
+		"sliceSize":      strconv.FormatInt(1024*1024*10, 10),
+		"lazyCheck":      fmt.Sprintf("%d", lazyCheck),
+	}
+	if fileMd5 != "" {
+		queryParam["fileMd5"] = fileMd5
+		queryParam["sliceMd5"] = sliceMd5
+	}
+	err := a.UploadRequest("/person/initMultiUpload", queryParam, &initUploadVO)
 	return initUploadVO.Data, err
 }
 
-func (a API) CommitFile(fileId string, fileMd5 string, sliceMd5 string) (err error) {
+func (a API) CommitFile(fileId string, fileMd5 string, sliceMd5 string, chunks int) (err error) {
 	var ret map[string]interface{}
+	var lazyCheck int
+	if chunks > 1 {
+		lazyCheck = 1
+	}
 	err = a.UploadRequest(
 		"/person/commitMultiUploadFile",
 		map[string]string{
 			"uploadFileId": fileId,
 			"fileMd5":      fileMd5,
 			"sliceMd5":     sliceMd5,
-			"lazyCheck":    "1",
+			"lazyCheck":    fmt.Sprintf("%d", lazyCheck),
 			"opertype":     "3",
 		}, &ret)
 	return err

@@ -93,10 +93,6 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 	if err == nil {
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}
-	//TODO haha
-	if err == fs1.ErrNotExist {
-		err = nil
-	}
 	return fileInfo, err
 }
 
