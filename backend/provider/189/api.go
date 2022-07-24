@@ -28,7 +28,6 @@ func getRequestWithJsonAndToken(req *resty.Request) *resty.Request {
 
 func logRes(funcName string, strBody string, ret ResponseVO, err error) {
 	fmtMsg := fmt.Sprintf("%s %s", funcName, strBody)
-	log.Debugf(fmtMsg)
 	if ret.ResMsg != ResSuccessMsg {
 		log.Error(fmtMsg)
 		err = errors.New(ret.ErrorMsg)
