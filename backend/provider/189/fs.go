@@ -44,6 +44,11 @@ func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file m
 }
 func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderFile) (os.FileInfo, error) {
 	fileInfo, err := fs.GetFileInfo(ctx, name, file)
+	if ctx.Value("method") == http.MethodPut {
+		if err == fs1.ErrNotExist {
+			err = nil
+		}
+	}
 	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
@@ -88,10 +93,6 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 				}
 			}
 		}
-	}
-	if err == fs1.ErrNotExist {
-		err = nil
-		return model.FileInfo{}, err
 	}
 	if err == nil {
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)

@@ -35,6 +35,7 @@ func Controller(r *gin.Engine) {
 		var writer http.ResponseWriter = c.Writer
 		var request = c.Request
 		ctx := context.WithValue(request.Context(), "contentLength", request.ContentLength|0)
+		ctx = context.WithValue(request.Context(), "method", request.Method)
 		request = request.WithContext(ctx)
 		HandleHttp(strings.TrimPrefix(c.Request.URL.Path, davPrefix), &writer, request)
 		h.ServeHTTP(writer, request)
