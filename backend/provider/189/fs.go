@@ -70,21 +70,21 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		}
 		if d != "/" && f != "" {
 			folder, err = api.GetFolderById(remoteName)
-			//err = fs1.ErrNotExist
+			err = fs1.ErrNotExist
 			for _, q := range folder.Files {
 				if q.Name == f {
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 					fileInfo.Size = q.Size
 					fileInfo.IsDir = false
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
-					//err = nil
+					err = nil
 				}
 			}
 			for _, q := range folder.Folders {
 				if q.Name == f {
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
-					//err = nil
+					err = nil
 				}
 			}
 		}
