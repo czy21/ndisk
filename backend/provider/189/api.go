@@ -238,7 +238,7 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 	return err
 }
 
-func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileMd5, sliceMd5 string) (InitUploadVO, error) {
+func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileMd5 string) (InitUploadVO, error) {
 	var initUploadVO ResponseDataVO[InitUploadVO, any]
 	lazyCheck := 1
 	if fileSize == 0 {
@@ -253,7 +253,7 @@ func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileM
 	}
 	if fileMd5 != "" {
 		queryParam["fileMd5"] = fileMd5
-		queryParam["sliceMd5"] = sliceMd5
+		queryParam["sliceMd5"] = fileMd5
 	}
 	err := a.UploadRequest("/person/initMultiUpload", queryParam, &initUploadVO, func() bool {
 		return initUploadVO.Code != SuccessCode

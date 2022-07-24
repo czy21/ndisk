@@ -143,13 +143,11 @@ func (f File) Write(b []byte) (n int, err error) {
 		fileId = extra[constant.HttpExtraFileId].(string)
 	} else {
 		var fileMd5 string
-		var sliceMd5 string
 		if fileSize == 0 {
 			md5Sum.Write(b)
 			fileMd5 = hex.EncodeToString(md5Sum.Sum(nil))
-			sliceMd5 = fileMd5
 		}
-		res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize, fileMd5, sliceMd5)
+		res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize, fileMd5)
 		if err != nil {
 			return 0, nil
 		}
@@ -181,7 +179,8 @@ func (f File) Write(b []byte) (n int, err error) {
 
 // Uploader upload to remote
 type Uploader struct {
-	File model.ProviderFile
+	Context context.Context
+	File    model.ProviderFile
 	io.ReadCloser
 }
 
