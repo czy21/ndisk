@@ -236,11 +236,11 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 	return err
 }
 
-func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileMd5 string, sliceMd5 string, chunks int) (InitUploadVO, error) {
+func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileMd5, sliceMd5 string) (InitUploadVO, error) {
 	var initUploadVO ResponseDataVO[InitUploadVO]
-	var lazyCheck int
-	if chunks > 1 {
-		lazyCheck = 1
+	lazyCheck := 1
+	if fileSize == 0 {
+		lazyCheck = 0
 	}
 	queryParam := map[string]string{
 		"parentFolderId": parentFolderId,
@@ -257,11 +257,11 @@ func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileM
 	return initUploadVO.Data, err
 }
 
-func (a API) CommitFile(fileId string, fileMd5 string, sliceMd5 string, chunks int) (err error) {
+func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 string) (err error) {
 	var ret map[string]interface{}
-	var lazyCheck int
-	if chunks > 1 {
-		lazyCheck = 1
+	lazyCheck := 1
+	if fileSize == 0 {
+		lazyCheck = 0
 	}
 	err = a.UploadRequest(
 		"/person/commitMultiUploadFile",
