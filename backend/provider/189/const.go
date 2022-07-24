@@ -9,5 +9,5 @@ const QueryParamNoCache = "0.42321547761726697"
 
 const UploadMd5s = "md5s"
 const UploadMd5Sum = "md5Sum"
-const ContentLength = "contentLength"
+const UploadFileSize = "fileSize"
 const UploadFileId = "fileId"

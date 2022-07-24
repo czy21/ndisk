@@ -24,7 +24,6 @@ type File struct {
 	Name    string
 	File    model.ProviderFile
 	Context context.Context
-	Extra   map[string]interface{}
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
@@ -37,15 +36,16 @@ func (f File) Close() error {
 }
 
 func (f File) Read(b []byte) (n int, err error) {
-	fileSize := f.Context.Value(ContentLength).(int64)
-	_, _, rangeL, rangeR := util.GetChunk(f.Name, fileSize, int64(len(b)), f.Extra)
+	extra := f.Context.Value("extra").(map[string]interface{})
+	fileSize := f.Context.Value(UploadFileSize).(int64)
+	_, _, rangeL, rangeR := util.GetChunk(f.Name, fileSize, int64(len(b)), extra)
 	dFunc := func(dUrl string) (int, error) {
 		req := http2.GetClient().NewRequest()
 		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeL, rangeR))
 		res, err := req.Get(dUrl)
 		return copy(b, res.Body()), err
 	}
-	if dUrl := f.Extra["dUrl"]; dUrl != nil {
+	if dUrl := extra["dUrl"]; dUrl != nil {
 		return dFunc(dUrl.(string))
 	}
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
@@ -54,7 +54,7 @@ func (f File) Read(b []byte) (n int, err error) {
 		return 0, err
 	}
 	if !fileInfo.IsDir {
-		f.Extra["dUrl"] = fileInfoVO.FileDownloadUrl
+		extra["dUrl"] = fileInfoVO.FileDownloadUrl
 		return dFunc(fileInfoVO.FileDownloadUrl)
 	}
 	log.Error(err)
@@ -118,29 +118,30 @@ func uploadChunk(uploadFileId string, data []byte, index int) ([]byte, error) {
 }
 
 func (f File) Write(b []byte) (n int, err error) {
-	fileSize := f.Context.Value(ContentLength).(int64)
+	extra := f.Context.Value("extra").(map[string]interface{})
+	fileSize := extra[UploadFileSize].(int64)
 	chunkSize := int64(len(b))
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
-	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, fileSize, chunkSize, f.Extra)
+	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, fileSize, chunkSize, extra)
 	// CreateFile
 	var fileId string
-	if f.Extra[UploadFileId] != nil {
-		fileId = f.Extra[UploadFileId].(string)
+	if extra[UploadFileId] != nil {
+		fileId = extra[UploadFileId].(string)
 	} else {
 		res, err := API{}.CreateUpload(fileInfo.RemoteName, fName, fileSize)
 		if err != nil {
 			return 0, nil
 		}
 		fileId = res.UploadFileId
-		f.Extra[UploadFileId] = fileId
+		extra[UploadFileId] = fileId
 	}
 	// UploadFile
 	var md5s []string
 	var md5Sum hash.Hash
-	if f.Extra[UploadMd5s] != nil {
-		md5s = f.Extra[UploadMd5s].([]string)
-		md5Sum = f.Extra[UploadMd5Sum].(hash.Hash)
+	if extra[UploadMd5s] != nil {
+		md5s = extra[UploadMd5s].([]string)
+		md5Sum = extra[UploadMd5Sum].(hash.Hash)
 	} else {
 		md5s = make([]string, 0)
 		md5Sum = md5.New()
@@ -152,8 +153,8 @@ func (f File) Write(b []byte) (n int, err error) {
 	md5Hex := hex.EncodeToString(chunkMd5Bytes)
 	md5s = append(md5s, strings.ToUpper(md5Hex))
 	md5Sum.Write(b)
-	f.Extra[UploadMd5s] = md5s
-	f.Extra[UploadMd5Sum] = md5Sum
+	extra[UploadMd5s] = md5s
+	extra[UploadMd5Sum] = md5Sum
 
 	// CommitFile
 	if fileSize == rangeR {
