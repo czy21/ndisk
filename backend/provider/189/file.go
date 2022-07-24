@@ -17,7 +17,6 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"strings"
 )
@@ -30,9 +29,6 @@ type File struct {
 
 func (f File) Stat() (fs.FileInfo, error) {
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	if os.IsNotExist(err) {
-		err = nil
-	}
 	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
 
@@ -106,7 +102,9 @@ func uploadChunk(fileId string, data []byte, index int) ([]byte, error) {
 		map[string]string{
 			"partInfo":     fmt.Sprintf("%d-%s", index, md5Base64),
 			"uploadFileId": fileId,
-		}, &uploadUrlsRes)
+		}, &uploadUrlsRes, func() bool {
+			return uploadUrlsRes.Code != SuccessCode
+		})
 	if err != nil {
 		return md5Bytes, err
 	}

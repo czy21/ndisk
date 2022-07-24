@@ -87,9 +87,14 @@ type InitUploadVO struct {
 	UploadType     int    `json:"uploadType"`
 }
 
-type ResponseDataVO[TData any] struct {
+type ResponseDataVO[TData any, TFile any] struct {
 	Code string `json:"code"`
 	Data TData  `json:"data"`
+	File TFile  `json:"file"`
+}
+
+type CommitFileVO struct {
+	Name string `json:"fileName"`
 }
 
 type UploadPartVO struct {

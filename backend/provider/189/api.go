@@ -202,7 +202,7 @@ func (a API) GetUserBriefInfo() UserBriefInfoVO {
 	return ret.UserBriefInfoVO
 }
 
-func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}) error {
+func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}, errExpression func() bool) error {
 	var err error
 	rand.Seed(time.Now().UnixNano())
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
@@ -232,12 +232,14 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 		SetQueryParam("params", encryptParam).
 		SetResult(resVO)
 	res, err := req.Get("https://upload.cloud.189.cn" + uri)
-	log.Debug(res.String())
+	if errExpression() {
+		log.Error(res)
+	}
 	return err
 }
 
 func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileMd5, sliceMd5 string) (InitUploadVO, error) {
-	var initUploadVO ResponseDataVO[InitUploadVO]
+	var initUploadVO ResponseDataVO[InitUploadVO, any]
 	lazyCheck := 1
 	if fileSize == 0 {
 		lazyCheck = 0
@@ -253,12 +255,14 @@ func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileM
 		queryParam["fileMd5"] = fileMd5
 		queryParam["sliceMd5"] = sliceMd5
 	}
-	err := a.UploadRequest("/person/initMultiUpload", queryParam, &initUploadVO)
+	err := a.UploadRequest("/person/initMultiUpload", queryParam, &initUploadVO, func() bool {
+		return initUploadVO.Code != SuccessCode
+	})
 	return initUploadVO.Data, err
 }
 
 func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 string) (err error) {
-	var ret map[string]interface{}
+	var ret ResponseDataVO[any, CommitFileVO]
 	lazyCheck := 1
 	if fileSize == 0 {
 		lazyCheck = 0
@@ -271,6 +275,8 @@ func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 
 			"sliceMd5":     sliceMd5,
 			"lazyCheck":    fmt.Sprintf("%d", lazyCheck),
 			"opertype":     "3",
-		}, &ret)
+		}, &ret, func() bool {
+			return ret.Code != SuccessCode
+		})
 	return err
 }
