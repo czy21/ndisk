@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/constant"
 	http2 "github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
@@ -29,18 +30,19 @@ func (f File) Stat() (fs.FileInfo, error) {
 }
 
 func (f File) Close() error {
+	cache.Client.Del(f.Context, cache.GetFileInfoCacheKey(f.Name))
 	return nil
 }
 
 func (f File) Read(b []byte) (n int, err error) {
 	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
 	fileSize := extra[constant.HttpExtraFileSize].(int64)
-	_, _, rangeL, rangeR := util.GetChunk(f.Name, fileSize, int64(len(b)), extra)
+	_, _, rangeS, rangeE := util.GetChunk(f.Name, fileSize, int64(len(b)), extra)
 	dFunc := func(dUrl string) (int, error) {
 		req := http2.GetClient().NewRequest()
-		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeL, rangeR))
+		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeS, rangeE))
 		res, _ := req.Get(dUrl)
-		if fileSize == 0 || fileSize == rangeR {
+		if fileSize == 0 || fileSize == rangeE {
 			err = io.EOF
 		}
 		return copy(b, res.Body()), err
