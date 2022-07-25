@@ -303,7 +303,7 @@ func (a API) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) er
 		i := strings.Index(t, "=")
 		uploadRequest.Header.Set(t[0:i], t[i+1:])
 	}
-	uRes, err := uploadRequest.Put(uploadData.RequestURL)
-	log.Debugf("fileId: %s request: %s response: %s", fileId, uploadData, uRes)
+	_, err = uploadRequest.Put(uploadData.RequestURL)
+	log.Debugf("fileId: %s request: %s", fileId, uploadData)
 	return err
 }
