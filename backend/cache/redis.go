@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/czy21/ndisk/exception"
 	"github.com/go-redis/redis/v8"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -17,24 +16,24 @@ type Redis struct {
 
 func (c Redis) Set(ctx context.Context, key string, value interface{}) {
 	expiration := time.Duration(viper.GetInt64("cache.expire")) * time.Second
-	_, err := c.Cmd.Set(ctx, key, value, expiration).Result()
-	exception.Check(err)
+	_, _ = c.Cmd.Set(ctx, key, value, expiration).Result()
+	//exception.Check(err)
 }
 
 func (c Redis) SetObj(ctx context.Context, key string, value interface{}) {
-	val, err := json.Marshal(value)
-	exception.Check(err)
+	val, _ := json.Marshal(value)
+	//exception.Check(err)
 	c.Set(ctx, key, val)
 }
 
 func (c Redis) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) {
-	_, err := c.Cmd.SetEX(ctx, key, value, expiration).Result()
-	exception.Check(err)
+	_, _ = c.Cmd.SetEX(ctx, key, value, expiration).Result()
+	//exception.Check(err)
 }
 
 func (c Redis) SetObjEX(ctx context.Context, key string, value interface{}, expiration time.Duration) {
-	val, err := json.Marshal(value)
-	exception.Check(err)
+	val, _ := json.Marshal(value)
+	//exception.Check(err)
 	c.SetEX(ctx, key, val, expiration)
 }
 
@@ -42,8 +41,6 @@ func (c Redis) Get(ctx context.Context, key string) string {
 	val, err := c.Cmd.Get(ctx, key).Result()
 	if err == redis.Nil {
 		log.Tracef("%s does not exist", key)
-	} else {
-		exception.Check(err)
 	}
 	return val
 }
@@ -51,8 +48,6 @@ func (c Redis) GetEX(ctx context.Context, key string, expiration time.Duration) 
 	val, err := c.Cmd.GetEx(ctx, key, expiration).Result()
 	if err == redis.Nil {
 		log.Tracef("%s does not exist", key)
-	} else {
-		exception.Check(err)
 	}
 	return val
 }
@@ -60,8 +55,7 @@ func (c Redis) GetEX(ctx context.Context, key string, expiration time.Duration) 
 func (c Redis) GetObj(ctx context.Context, key string, v interface{}) bool {
 	val := c.Get(ctx, key)
 	if val != "" {
-		err := json.Unmarshal([]byte(val), v)
-		exception.Check(err)
+		_ = json.Unmarshal([]byte(val), v)
 		return true
 	}
 	return false
