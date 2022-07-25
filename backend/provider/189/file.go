@@ -116,7 +116,7 @@ func (f File) Write(b []byte) (n int, err error) {
 			md5Sum.Write(b)
 			fileMd5 = hex.EncodeToString(md5Sum.Sum(nil))
 		}
-		res, err := api.CreateUpload(fileInfo.RemoteName, fName, fileSize, fileMd5)
+		res, err := api.CreateFile(fileInfo.RemoteName, fName, fileSize, fileMd5)
 		if err != nil {
 			return 0, nil
 		}

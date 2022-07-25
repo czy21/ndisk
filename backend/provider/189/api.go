@@ -31,7 +31,7 @@ func getRequestWithJsonAndToken(req *resty.Request) *resty.Request {
 
 func logRes(funcName string, strBody string, ret ResponseVO, err error) {
 	fmtMsg := fmt.Sprintf("%s %s", funcName, strBody)
-	if ret.ResMsg != ResSuccessMsg {
+	if ret.ResMsg != SuccessMsg {
 		log.Error(fmtMsg)
 		err = errors.New(ret.ErrorMsg)
 	}
@@ -240,7 +240,7 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 	return err
 }
 
-func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileMd5 string) (InitUploadVO, error) {
+func (a API) CreateFile(parentFolderId, fileName string, fileSize int64, fileMd5 string) (InitUploadVO, error) {
 	var initUploadVO ResponseDataVO[InitUploadVO, any]
 	lazyCheck := 1
 	if fileSize == 0 {
@@ -262,12 +262,12 @@ func (a API) CreateUpload(parentFolderId, fileName string, fileSize int64, fileM
 	})
 	return initUploadVO.Data, err
 }
-func (a API) UploadChunk(fileId string, data []byte, index int) ([]byte, error) {
+func (a API) UploadChunk(fileId string, b []byte, index int) ([]byte, error) {
 	md5Obj := md5.New()
-	md5Obj.Write(data)
+	md5Obj.Write(b)
 	md5Bytes := md5Obj.Sum(nil)
 	md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
-	if len(data) == 0 {
+	if len(b) == 0 {
 		return md5Bytes, nil
 	}
 	var uploadUrlsRes UploadUrlVORes
@@ -284,12 +284,12 @@ func (a API) UploadChunk(fileId string, data []byte, index int) ([]byte, error) 
 	uploadData := uploadUrlsRes.UploadUrls[fmt.Sprintf("partNumber_%d", index)]
 	uploadHeader, _ := url.PathUnescape(uploadData.RequestHeader)
 	uploadHeaders := strings.Split(uploadHeader, "&")
-	uReq := http2.GetClient().NewRequest().SetBody(bytes.NewReader(data))
+	uploadRequest := http2.GetClient().NewRequest().SetBody(bytes.NewReader(b))
 	for _, t := range uploadHeaders {
 		i := strings.Index(t, "=")
-		uReq.Header.Set(t[0:i], t[i+1:])
+		uploadRequest.Header.Set(t[0:i], t[i+1:])
 	}
-	uRes, err := uReq.Put(uploadData.RequestURL)
+	uRes, err := uploadRequest.Put(uploadData.RequestURL)
 	log.Debugf("fileId: %s request: %s response: %s", fileId, uploadData, uRes)
 	return md5Bytes, err
 }
