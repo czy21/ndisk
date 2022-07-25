@@ -2,6 +2,7 @@ package webdav
 
 import (
 	"fmt"
+	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider"
 	"github.com/czy21/ndisk/provider/local"
@@ -29,15 +30,19 @@ func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.F
 	p, fs := getProvider(name, "")
 	return fs.OpenFile(ctx, name, flag, perm, p)
 }
-func (FileSystem) RemoveAll(ctx context.Context, name string) error {
+func (FileSystem) RemoveAll(ctx context.Context, name string) (err error) {
 	web.LogDav("RemoveAll", name)
-	p, fs := getProvider(name, "")
-	return fs.RemoveAll(ctx, name, p)
+	f, fs := getProvider(name, "")
+	err = fs.RemoveAll(ctx, name, f)
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.NewPath))
+	return err
 }
-func (FileSystem) Rename(ctx context.Context, oldName, newName string) error {
-	web.LogDav("Rename", fmt.Sprintf("src:%s dest:%s", oldName, newName))
-	p, fs := getProvider(newName, oldName)
-	return fs.Rename(ctx, oldName, newName, p)
+func (FileSystem) Rename(ctx context.Context, oldName, newName string) (err error) {
+	web.LogDav("Rename", fmt.Sprintf("src:%s dst:%s", oldName, newName))
+	f, fs := getProvider(newName, oldName)
+	err = fs.Rename(ctx, oldName, newName, f)
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.OldPath))
+	return err
 }
 func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	web.LogDav("Stat", name)

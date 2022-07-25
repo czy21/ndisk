@@ -61,7 +61,7 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 	return ret.FileListAO, err
 }
 
-func (a API) CreateFolder(parentFolderId string, name string) (FolderRes, error) {
+func (a API) CreateFolder(parentFolderId string, name string) (err error) {
 	var ret FolderRes
 	queryParam := map[string]string{
 		"noCache": QueryParamNoCache,
@@ -76,12 +76,11 @@ func (a API) CreateFolder(parentFolderId string, name string) (FolderRes, error)
 		SetResult(&ret)
 	res, err := req.Post(fmt.Sprintf("%s/open/file/createFolder.action", ApiUrl))
 	logRes("CreateFolder", res.String(), ret.ResponseVO, err)
-	return ret, err
+	return err
 }
 
-func (a API) Delete(fileId string, fileName string, isFolder bool) error {
+func (a API) Delete(fileId string, fileName string, isFolder bool) (err error) {
 	var (
-		err error
 		ret TaskRes
 	)
 	const taskType = "DELETE"
@@ -140,9 +139,8 @@ func (a API) CheckTask(taskId string, kind string) int {
 	logRes("CheckTask", res.String(), ret.ResponseVO, err)
 	return ret.TaskStatus
 }
-func (a API) RenameFolder(folderId string, destName string) error {
+func (a API) RenameFolder(folderId string, destName string) (err error) {
 	var (
-		err error
 		ret FolderRes
 	)
 	formParams := map[string]string{
@@ -204,7 +202,7 @@ func (a API) GetUserBriefInfo() UserBriefInfoVO {
 	return ret.UserBriefInfoVO
 }
 
-func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}, errExpression func() bool) error {
+func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}, errPredicate func() bool) error {
 	var err error
 	rand.Seed(time.Now().UnixNano())
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
@@ -234,7 +232,7 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 		SetQueryParam("params", encryptParam).
 		SetResult(resVO)
 	res, err := req.Get("https://upload.cloud.189.cn" + uri)
-	if errExpression() {
+	if errPredicate() {
 		log.Error(res)
 	}
 	return err
@@ -262,6 +260,26 @@ func (a API) CreateFile(parentFolderId, fileName string, fileSize int64, fileMd5
 	})
 	return initUploadVO.Data, err
 }
+func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 string) (err error) {
+	var ret ResponseDataVO[any, CommitFileVO]
+	lazyCheck := 1
+	if fileSize == 0 {
+		lazyCheck = 0
+	}
+	err = a.UploadRequest(
+		"/person/commitMultiUploadFile",
+		map[string]string{
+			"uploadFileId": fileId,
+			"fileMd5":      fileMd5,
+			"sliceMd5":     sliceMd5,
+			"lazyCheck":    fmt.Sprintf("%d", lazyCheck),
+			"opertype":     "3",
+		}, &ret, func() bool {
+			return ret.Code != SuccessCode
+		})
+	return err
+}
+
 func (a API) UploadChunk(fileId string, b []byte, index int) ([]byte, error) {
 	md5Obj := md5.New()
 	md5Obj.Write(b)
@@ -292,23 +310,4 @@ func (a API) UploadChunk(fileId string, b []byte, index int) ([]byte, error) {
 	uRes, err := uploadRequest.Put(uploadData.RequestURL)
 	log.Debugf("fileId: %s request: %s response: %s", fileId, uploadData, uRes)
 	return md5Bytes, err
-}
-func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 string) (err error) {
-	var ret ResponseDataVO[any, CommitFileVO]
-	lazyCheck := 1
-	if fileSize == 0 {
-		lazyCheck = 0
-	}
-	err = a.UploadRequest(
-		"/person/commitMultiUploadFile",
-		map[string]string{
-			"uploadFileId": fileId,
-			"fileMd5":      fileMd5,
-			"sliceMd5":     sliceMd5,
-			"lazyCheck":    fmt.Sprintf("%d", lazyCheck),
-			"opertype":     "3",
-		}, &ret, func() bool {
-			return ret.Code != SuccessCode
-		})
-	return err
 }

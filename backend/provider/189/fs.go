@@ -31,7 +31,6 @@ func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.Prov
 	_, fName := path.Split(file.NewPath)
 	fileInfo, err := fs.GetFileInfo(ctx, name, file)
 	err = API{}.Delete(fileInfo.RemoteName, fName, fileInfo.IsDir)
-	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(file.NewPath))
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error {
@@ -40,7 +39,6 @@ func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file m
 	if !os.IsNotExist(err) {
 		err = API{}.RenameFolder(oldFileInfo.RemoteName, fName)
 	}
-	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(file.OldPath))
 	return err
 }
 func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderFile) (os.FileInfo, error) {
