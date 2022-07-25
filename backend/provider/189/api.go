@@ -2,7 +2,6 @@ package _189
 
 import (
 	"bytes"
-	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -280,13 +279,10 @@ func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 
 	return err
 }
 
-func (a API) UploadChunk(fileId string, b []byte, index int) ([]byte, error) {
-	md5Obj := md5.New()
-	md5Obj.Write(b)
-	md5Bytes := md5Obj.Sum(nil)
+func (a API) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) error {
 	md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
 	if len(b) == 0 {
-		return md5Bytes, nil
+		return nil
 	}
 	var uploadUrlsRes UploadUrlVORes
 	err := API{}.UploadRequest("/person/getMultiUploadUrls",
@@ -297,7 +293,7 @@ func (a API) UploadChunk(fileId string, b []byte, index int) ([]byte, error) {
 			return uploadUrlsRes.Code != SuccessCode
 		})
 	if err != nil {
-		return md5Bytes, err
+		return err
 	}
 	uploadData := uploadUrlsRes.UploadUrls[fmt.Sprintf("partNumber_%d", index)]
 	uploadHeader, _ := url.PathUnescape(uploadData.RequestHeader)
@@ -309,5 +305,5 @@ func (a API) UploadChunk(fileId string, b []byte, index int) ([]byte, error) {
 	}
 	uRes, err := uploadRequest.Put(uploadData.RequestURL)
 	log.Debugf("fileId: %s request: %s response: %s", fileId, uploadData, uRes)
-	return md5Bytes, err
+	return err
 }

@@ -2,7 +2,6 @@ package _189
 
 import (
 	"context"
-	"crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"github.com/czy21/ndisk/cache"
@@ -89,7 +88,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	return fileInfos, err
 }
 
-func (f File) Write(b []byte) (n int, err error) {
+func (f File) WriteMd5(b []byte, md5Bytes []byte, md5Hash hash.Hash, md5s []string) (n int, err error) {
 	api := API{}
 	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
 	fileSize := extra[constant.HttpExtraFileSize].(int64)
@@ -97,15 +96,7 @@ func (f File) Write(b []byte) (n int, err error) {
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
 	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, fileSize, chunkLen, extra)
-	var md5s []string
-	var md5Sum hash.Hash
-	if extra[constant.HttpExtraMd5s] != nil {
-		md5s = extra[constant.HttpExtraMd5s].([]string)
-		md5Sum = extra[constant.HttpExtraMd5Sum].(hash.Hash)
-	} else {
-		md5s = make([]string, 0)
-		md5Sum = md5.New()
-	}
+
 	// CreateFile
 	var fileId string
 	if extra[constant.HttpExtraFileId] != nil {
@@ -113,8 +104,7 @@ func (f File) Write(b []byte) (n int, err error) {
 	} else {
 		var fileMd5 string
 		if fileSize == 0 {
-			md5Sum.Write(b)
-			fileMd5 = hex.EncodeToString(md5Sum.Sum(nil))
+			fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
 		}
 		res, err := api.CreateFile(fileInfo.RemoteName, fName, fileSize, fileMd5)
 		if err != nil {
@@ -123,19 +113,14 @@ func (f File) Write(b []byte) (n int, err error) {
 		fileId = res.UploadFileId
 		extra[constant.HttpExtraFileId] = fileId
 	}
-	chunkMd5Bytes, err := api.UploadChunk(fileId, b, chunkIndex+1)
+	err = api.UploadChunk(fileId, b, md5Bytes, chunkIndex+1)
 	if err != nil {
 		return 0, err
 	}
-	md5Hex := hex.EncodeToString(chunkMd5Bytes)
-	md5s = append(md5s, strings.ToUpper(md5Hex))
-	md5Sum.Write(b)
-	extra[constant.HttpExtraMd5s] = md5s
-	extra[constant.HttpExtraMd5Sum] = md5Sum
 
 	// CommitFile
 	if fileSize == rangeR {
-		fileMd5 := hex.EncodeToString(md5Sum.Sum(nil))
+		fileMd5 := hex.EncodeToString(md5Hash.Sum(nil))
 		sliceMd5 := fileMd5
 		if fileSize > chunkLen {
 			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
@@ -144,6 +129,10 @@ func (f File) Write(b []byte) (n int, err error) {
 		return int(chunkLen), io.EOF
 	}
 	return int(chunkLen), err
+}
+
+func (f File) Write(b []byte) (n int, err error) {
+	panic("implement me")
 }
 
 // Uploader upload to remote

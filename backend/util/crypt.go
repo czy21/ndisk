@@ -10,3 +10,9 @@ func GetMD5Encode(plainText string) string {
 	h.Write([]byte(plainText))
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+func GetMd5Bytes(p []byte) []byte {
+	h := md5.New()
+	h.Write(p)
+	return h.Sum(nil)
+}

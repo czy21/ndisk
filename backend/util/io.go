@@ -1,19 +1,39 @@
 package util
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/czy21/ndisk/constant"
 	log "github.com/sirupsen/logrus"
+	"hash"
 	"io"
 	"math"
+	"strings"
 )
 
+type WriterMd5 interface {
+	WriteMd5(p []byte, md5Bytes []byte, md5Hash hash.Hash, md5s []string) (n int, err error)
+}
+
 func CopyN(dst io.Writer, src io.Reader, buf []byte) (n int64, err error) {
+	chunkMd5s := make([]string, 0)
+	fileMd5Hash := md5.New()
 	for {
 		nr, er := io.ReadFull(src, buf)
-		if nr >= 0 {
-			nw, ew := dst.Write(buf[0:nr])
+		if nr > 0 || er == io.EOF {
+			bufBytes := buf[0:nr]
+			var nw int
+			var ew error
+			if wt, ok := dst.(WriterMd5); ok {
+				fileMd5Hash.Write(bufBytes)
+				chunkMd5Bytes := GetMd5Bytes(bufBytes)
+				chunkMd5s = append(chunkMd5s, strings.ToUpper(hex.EncodeToString(chunkMd5Bytes)))
+				nw, er = wt.WriteMd5(bufBytes, chunkMd5Bytes, fileMd5Hash, chunkMd5s)
+			} else {
+				nw, ew = dst.Write(bufBytes)
+			}
 			if nw < 0 || nr < nw {
 				nw = 0
 				if ew == nil {
