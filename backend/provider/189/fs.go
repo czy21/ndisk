@@ -18,10 +18,10 @@ import (
 type FileSystem struct {
 }
 
-func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) error {
+func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) (err error) {
 	d, f := path.Split(file.NewPath)
 	folder, _ := fs.GetFileInfo(ctx, d, file)
-	_, err := API{}.CreateFolder(folder.RemoteName, f)
+	err = API{}.CreateFolder(folder.RemoteName, f)
 	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
