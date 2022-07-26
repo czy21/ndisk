@@ -35,22 +35,21 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	if err != nil {
 		return 0, err
 	}
-	chunkI := 0
 	chunkL := len(buf)
 	chunks := int(math.Max(1, math.Ceil(float64(fileSize)/float64(cap(buf)))))
 	rangeS := int64(0)
 	rangeE := int64(0)
-	for {
+	for i := 0; i < chunks; i++ {
 		nr, er := io.ReadFull(src, buf)
 		rangeS = rangeE
 		rangeE += int64(nr)
-		logChunk(fileName, fileSize, chunks, chunkL, chunkI, rangeS, rangeE)
+		logChunk(fileName, fileSize, chunks, chunkL, i, rangeS, rangeE)
 		if nr > 0 || fileSize == 0 {
 			bufBytes := buf[0:nr]
 			md5Hash.Write(bufBytes)
 			md5Bytes := GetMd5Bytes(bufBytes)
 			md5s = append(md5s, strings.ToUpper(hex.EncodeToString(md5Bytes)))
-			nw, ew := wt.Chunk(fileId, bufBytes, md5Bytes, chunkI)
+			nw, ew := wt.Chunk(fileId, bufBytes, md5Bytes, i)
 			if nw < 0 || nr < nw {
 				nw = 0
 				if ew == nil {
@@ -76,7 +75,6 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 			}
 			break
 		}
-		chunkI++
 	}
 	err = wt.Commit(fileId, md5Hash, md5s, chunkL)
 	return written, err
