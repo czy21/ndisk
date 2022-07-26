@@ -88,47 +88,43 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	return fileInfos, err
 }
 
-func (f File) WriteMd5(b []byte, md5Bytes []byte, md5Hash hash.Hash, md5s []string) (n int, err error) {
-	api := API{}
+func (f File) FileName() string {
+	return f.Name
+}
+
+func (f File) FileSize() int64 {
 	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
 	fileSize := extra[constant.HttpExtraFileSize].(int64)
-	chunkLen := int64(len(b))
+	return fileSize
+}
+
+func (f File) Create(md5Hash hash.Hash) (fileId string, err error) {
+	fileSize := f.FileSize()
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
-	_, chunkIndex, _, rangeR := util.GetChunk(f.Name, fileSize, chunkLen, extra)
+	var fileMd5 string
+	if fileSize == 0 {
+		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
+	}
+	res, err := API{}.CreateFile(fileInfo.RemoteName, fName, fileSize, fileMd5)
+	return res.UploadFileId, nil
+}
 
-	// CreateFile
-	var fileId string
-	if extra[constant.HttpExtraFileId] != nil {
-		fileId = extra[constant.HttpExtraFileId].(string)
-	} else {
-		var fileMd5 string
-		if fileSize == 0 {
-			fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
-		}
-		res, err := api.CreateFile(fileInfo.RemoteName, fName, fileSize, fileMd5)
-		if err != nil {
-			return 0, nil
-		}
-		fileId = res.UploadFileId
-		extra[constant.HttpExtraFileId] = fileId
+func (f File) Commit(fileId string, md5Hash hash.Hash, md5s []string, chunkLen int) (err error) {
+	fileSize := f.FileSize()
+	fileMd5 := hex.EncodeToString(md5Hash.Sum(nil))
+	sliceMd5 := fileMd5
+	if fileSize > int64(chunkLen) {
+		sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
 	}
-	err = api.UploadChunk(fileId, b, md5Bytes, chunkIndex+1)
-	if err != nil {
-		return 0, err
-	}
+	err = API{}.CommitFile(fileId, fileSize, fileMd5, sliceMd5)
+	return err
+}
 
-	// CommitFile
-	if fileSize == rangeR {
-		fileMd5 := hex.EncodeToString(md5Hash.Sum(nil))
-		sliceMd5 := fileMd5
-		if fileSize > chunkLen {
-			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
-		}
-		err = api.CommitFile(fileId, fileSize, fileMd5, sliceMd5)
-		return int(chunkLen), io.EOF
-	}
-	return int(chunkLen), err
+func (f File) Chunk(fileId string, b []byte, md5Bytes []byte, index int) (n int, err error) {
+	chunkLen := len(b)
+	err = API{}.UploadChunk(fileId, b, md5Bytes, index+1)
+	return chunkLen, err
 }
 
 func (f File) Write(b []byte) (n int, err error) {
@@ -144,7 +140,7 @@ type Uploader struct {
 
 func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
 	l := limitBuf(u.File.ProviderFolder.Account.PutBuf)
-	return util.CopyN(w, u.ReadCloser, make([]byte, 1024*1024*l))
+	return util.WriteFull(w, u.ReadCloser, 1024*1024*l)
 }
 
 // Downloader download from remote
@@ -155,7 +151,7 @@ type Downloader struct {
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
 	l := limitBuf(d.File.ProviderFolder.Account.GetBuf)
-	return util.CopyN(d.ResponseWriter, r, make([]byte, 1024*1024*l))
+	return util.ReadFull(d.ResponseWriter, r, 1024*1024*l)
 }
 
 func limitBuf(val int) int {
