@@ -33,32 +33,20 @@ func (f File) Close() error {
 	return nil
 }
 
-func (f File) Read(b []byte) (n int, err error) {
-	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
-	fileSize := extra[constant.HttpExtraFileSize].(int64)
-	_, _, rangeS, rangeE := util.GetChunk(f.Name, fileSize, int64(len(b)), extra)
-	dFunc := func(dUrl string) (int, error) {
-		req := http2.GetClient().NewRequest()
-		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeS, rangeE))
-		res, _ := req.Get(dUrl)
-		if fileSize == 0 || fileSize == rangeE {
-			err = io.EOF
-		}
-		return copy(b, res.Body()), err
-	}
-	if dUrl := extra[constant.HttpExtraDownloadUrl]; dUrl != nil {
-		return dFunc(dUrl.(string))
-	}
+func (f File) DownloadCreate() (dUrl string, fileSize int64, err error) {
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	fileInfoVO, err := API{}.GetFileInfoById(fileInfo.RemoteName)
-	if err != nil {
-		return 0, err
-	}
-	if !fileInfo.IsDir {
-		extra[constant.HttpExtraDownloadUrl] = fileInfoVO.FileDownloadUrl
-		return dFunc(fileInfoVO.FileDownloadUrl)
-	}
-	return len(b), err
+	return fileInfoVO.FileDownloadUrl, fileInfoVO.Size, err
+}
+func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd int64) (n int, err error) {
+	req := http2.GetClient().NewRequest()
+	req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeStart, rangeEnd))
+	res, _ := req.Get(dUrl)
+	return copy(p, res.Body()), err
+}
+
+func (f File) Read(b []byte) (n int, err error) {
+	panic("implement me")
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
@@ -92,14 +80,14 @@ func (f File) FileName() string {
 	return f.Name
 }
 
-func (f File) FileSize() int64 {
+func (f File) UploadFileSize() int64 {
 	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
 	fileSize := extra[constant.HttpExtraFileSize].(int64)
 	return fileSize
 }
 
-func (f File) Create(md5Hash hash.Hash) (fileId string, err error) {
-	fileSize := f.FileSize()
+func (f File) UploadCreate(md5Hash hash.Hash) (fileId string, err error) {
+	fileSize := f.UploadFileSize()
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
 	var fileMd5 string
@@ -110,8 +98,8 @@ func (f File) Create(md5Hash hash.Hash) (fileId string, err error) {
 	return res.UploadFileId, nil
 }
 
-func (f File) Commit(fileId string, md5Hash hash.Hash, md5s []string, chunkLen int) (err error) {
-	fileSize := f.FileSize()
+func (f File) UploadCommit(fileId string, md5Hash hash.Hash, md5s []string, chunkLen int) (err error) {
+	fileSize := f.UploadFileSize()
 	fileMd5 := hex.EncodeToString(md5Hash.Sum(nil))
 	sliceMd5 := fileMd5
 	if fileSize > int64(chunkLen) {
@@ -121,7 +109,7 @@ func (f File) Commit(fileId string, md5Hash hash.Hash, md5s []string, chunkLen i
 	return err
 }
 
-func (f File) Chunk(fileId string, b []byte, md5Bytes []byte, index int) (n int, err error) {
+func (f File) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) (n int, err error) {
 	chunkLen := len(b)
 	err = API{}.UploadChunk(fileId, b, md5Bytes, index+1)
 	return chunkLen, err
@@ -151,7 +139,7 @@ type Downloader struct {
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
 	l := limitBuf(d.File.ProviderFolder.Account.GetBuf)
-	return util.ReadFull(d.ResponseWriter, r, 1024*1024*l)
+	return util.ReadFull(d.ResponseWriter, r.(*io.LimitedReader).R, 1024*1024*l)
 }
 
 func limitBuf(val int) int {
