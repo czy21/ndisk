@@ -46,7 +46,8 @@ func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd in
 }
 
 func (f File) Read(b []byte) (n int, err error) {
-	panic("implement me")
+	dUrl, _, err := f.DownloadCreate()
+	return f.DownloadChunk(dUrl, b, 0, int64(len(b)))
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
