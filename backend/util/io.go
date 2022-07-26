@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-type WriterProxy interface {
+type UpDownWriter interface {
 	FileName() string
 	UploadFileSize() int64
 	UploadCreate(md5Hash hash.Hash) (string, error)
@@ -24,9 +24,9 @@ type WriterProxy interface {
 }
 
 func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
-	wt, ok := dst.(WriterProxy)
+	wt, ok := dst.(UpDownWriter)
 	if !ok {
-		return 0, errors.New("no implement WriterProxy interface")
+		return 0, errors.New("no implement UpDownWriter interface")
 	}
 	buf := make([]byte, n)
 	md5s := make([]string, 0)
@@ -83,12 +83,12 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 }
 
 func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
-	wt, ok := src.(WriterProxy)
+	rt, ok := src.(UpDownWriter)
 	if !ok {
-		return 0, errors.New("no implement WriterProxy interface")
+		return 0, errors.New("no implement UpDownWriter interface")
 	}
-	dUrl, fileSize, err := wt.DownloadCreate()
-	fileName := wt.FileName()
+	dUrl, fileSize, err := rt.DownloadCreate()
+	fileName := rt.FileName()
 	buf := make([]byte, n)
 	chunkL := len(buf)
 	chunks := int(math.Max(1, math.Ceil(float64(fileSize)/float64(cap(buf)))))
@@ -97,7 +97,7 @@ func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	for i := 0; i < chunks; i++ {
 		rangeS = rangeE
 		rangeE += int64(chunkL)
-		nr, er := wt.DownloadChunk(dUrl, buf, rangeS, rangeE)
+		nr, er := rt.DownloadChunk(dUrl, buf, rangeS, rangeE)
 		logChunk("Get", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE)
 		if nr > 0 {
 			nw, ew := dst.Write(buf[0:nr])
