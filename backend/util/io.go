@@ -48,7 +48,7 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	for i := 0; i < chunks; i++ {
 		nr, er := io.ReadFull(src, buf)
 		rangeS = rangeE
-		rangeE += int64(nr)
+		rangeE += int64(chunkL)
 		logChunk("Put", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE)
 		if nr > 0 {
 			bufBytes := buf[0:nr]
