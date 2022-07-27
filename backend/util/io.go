@@ -82,6 +82,7 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 			break
 		}
 	}
+	log.Debugf("%s fileMd5: %s", fileName, hex.EncodeToString(md5Hash.Sum(nil)))
 	err = wt.UploadCommit(fileId, md5Hash, md5s, chunkL)
 	return written, err
 }
