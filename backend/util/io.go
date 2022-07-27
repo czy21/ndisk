@@ -28,16 +28,16 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	if !ok {
 		return 0, errors.New("no implement UpDownWriter interface")
 	}
-	// cache get u:/189/test/t1 ret: fileId,fileSize,writtenSize,last
-	buf := make([]byte, n)
-	md5s := make([]string, 0)
-	md5Hash := md5.New()
-	fileName := wt.FileName()
 	fileSize := wt.UploadFileSize()
 	if fileSize == 0 {
 		return 0, nil
 	}
+	// cache get u:/189/test/t1 ret: fileId,fileSize,writtenSize,last
+	buf := make([]byte, n)
+	md5s := make([]string, 0)
+	md5Hash := md5.New()
 	fileId, err := wt.UploadCreate(md5Hash)
+	fileName := wt.FileName()
 	if err != nil {
 		return 0, err
 	}
