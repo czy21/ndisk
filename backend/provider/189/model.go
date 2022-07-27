@@ -5,7 +5,7 @@ import (
 )
 
 type ResponseVO struct {
-	ResCode   int    `json:"res_code"`
+	ResCode   any    `json:"res_code"`
 	ResMsg    string `json:"res_message"`
 	Success   string `json:"success"`
 	ErrorCode string `json:"errorCode"`

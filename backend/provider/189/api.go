@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
+	"io/fs"
 	"math/rand"
 	"net/url"
 	"strconv"
@@ -168,6 +169,9 @@ func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 		SetResult(&ret)
 	res, err := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
 	logRes("GetFileInfoById", res.String(), ret.ResponseVO, err)
+	if ret.ResCode == ResFileNotFoundCode {
+		err = fs.ErrNotExist
+	}
 	return ret.FileInfoVO, err
 }
 

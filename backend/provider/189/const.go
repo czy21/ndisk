@@ -7,3 +7,4 @@ const SuccessMsg = "成功"
 const SuccessCode = "SUCCESS"
 
 const QueryParamNoCache = "0.42321547761726697"
+const ResFileNotFoundCode = "FileNotFound"
