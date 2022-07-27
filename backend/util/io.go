@@ -48,13 +48,14 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	for i := 0; i < chunks; i++ {
 		nr, er := io.ReadFull(src, buf)
 		rangeS = rangeE
-		rangeE += int64(chunkL)
-		logChunk("Put", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE)
+		rangeE += int64(nr)
+		logChunk("Put", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE, fmt.Sprintf("nr: %d", nr))
 		if nr > 0 {
-			md5Hash.Write(buf)
-			md5Bytes := GetMd5Bytes(buf)
+			bufBytes := buf[0:nr]
+			md5Hash.Write(bufBytes)
+			md5Bytes := GetMd5Bytes(bufBytes)
 			md5s = append(md5s, strings.ToUpper(hex.EncodeToString(md5Bytes)))
-			nw, ew := wt.UploadChunk(fileId, buf, md5Bytes, i)
+			nw, ew := wt.UploadChunk(fileId, bufBytes, md5Bytes, i)
 			if nw < 0 || nr < nw {
 				nw = 0
 				if ew == nil {
@@ -106,7 +107,7 @@ func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 			rangeE += remain
 		}
 		nr, er := rt.DownloadChunk(dUrl, buf, rangeS, rangeE)
-		logChunk("Get", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE)
+		logChunk("Get", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE, "")
 		if nr > 0 {
 			nw, ew := dst.Write(buf[0:nr])
 			if nw < 0 || nr < nw {
@@ -135,7 +136,16 @@ func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	return written, err
 }
 
-func logChunk(fnName, fileName string, fileSize int64, chunks int, chunkL int, chunkI int, rangeS int64, rangeE int64) {
+func logChunk(
+	fnName string,
+	fileName string,
+	fileSize int64,
+	chunks int,
+	chunkL int,
+	chunkI int,
+	rangeS int64,
+	rangeE int64,
+	extension string) {
 	chunkArr := []interface{}{
 		constant.HttpExtraFileSize, fileSize,
 		constant.HttpExtraChunks, chunks,
@@ -148,5 +158,5 @@ func logChunk(fnName, fileName string, fileSize int64, chunks int, chunkL int, c
 	for i := 0; i < len(chunkArr)/2; i++ {
 		chunkLog += fmt.Sprintf(" %s: %d", chunkArr[i*2], chunkArr[i*2+1])
 	}
-	log.Infof("%s %s %s", fnName, fileName, chunkLog)
+	log.Infof("%s %s %s %s", fnName, fileName, chunkLog, extension)
 }
