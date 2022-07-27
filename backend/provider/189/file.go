@@ -26,7 +26,7 @@ type File struct {
 
 func (f File) Stat() (fs.FileInfo, error) {
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	if f.Context.Value("extra").(map[string]interface{})["method"] == http.MethodPut && os.IsNotExist(err) {
+	if f.Context.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut && os.IsNotExist(err) {
 		err = nil
 	}
 	return model.FileInfoProxy{FileInfo: fileInfo}, err
