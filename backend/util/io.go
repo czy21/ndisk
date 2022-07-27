@@ -95,8 +95,13 @@ func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	rangeS := int64(0)
 	rangeE := int64(0)
 	for i := 0; i < chunks; i++ {
+		remain := fileSize - written
 		rangeS = rangeE
-		rangeE += int64(chunkL)
+		if remain > int64(chunkL) {
+			rangeE += int64(chunkL)
+		} else {
+			rangeE += remain
+		}
 		nr, er := rt.DownloadChunk(dUrl, buf, rangeS, rangeE)
 		logChunk("Get", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE)
 		if nr > 0 {
