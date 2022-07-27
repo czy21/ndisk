@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 )
@@ -25,6 +26,9 @@ type File struct {
 
 func (f File) Stat() (fs.FileInfo, error) {
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	if f.Context.Value("extra").(map[string]interface{})["method"] == http.MethodPut && os.IsNotExist(err) {
+		err = nil
+	}
 	return model.FileInfoProxy{FileInfo: fileInfo}, err
 }
 
