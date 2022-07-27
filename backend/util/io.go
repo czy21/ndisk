@@ -36,7 +36,7 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	buf := make([]byte, n)
 	md5s := make([]string, 0)
 	md5Hash := md5.New()
-	fileId, err := wt.UploadCreate(md5Hash)
+	//fileId, err := wt.UploadCreate(md5Hash)
 	fileName := wt.FileName()
 	if err != nil {
 		return 0, err
@@ -49,31 +49,33 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 		nr, er := io.ReadFull(src, buf)
 		rangeS = rangeE
 		rangeE += int64(chunkL)
+		if nr < chunkL {
+			fmt.Println(nr)
+		}
 		logChunk("Put", fileName, fileSize, chunks, chunkL, i, rangeS, rangeE)
 		if nr > 0 {
-			bufBytes := buf[0:nr]
-			md5Hash.Write(bufBytes)
-			md5Bytes := GetMd5Bytes(bufBytes)
+			md5Hash.Write(buf)
+			md5Bytes := GetMd5Bytes(buf)
 			md5s = append(md5s, strings.ToUpper(hex.EncodeToString(md5Bytes)))
-			nw, ew := wt.UploadChunk(fileId, bufBytes, md5Bytes, i)
-			if nw < 0 || nr < nw {
-				nw = 0
-				if ew == nil {
-					ew = errors.New("invalid write result")
-				}
-			}
-			written += int64(nw)
-			if ew == io.EOF || fileSize == written {
-				break
-			}
-			if ew != nil {
-				err = ew
-				break
-			}
-			if nr != nw {
-				err = io.ErrShortWrite
-				break
-			}
+			//nw, ew := wt.UploadChunk(fileId, bufBytes, md5Bytes, i)
+			//if nw < 0 || nr < nw {
+			//	nw = 0
+			//	if ew == nil {
+			//		ew = errors.New("invalid write result")
+			//	}
+			//}
+			//written += int64(nw)
+			//if ew == io.EOF || fileSize == written {
+			//	break
+			//}
+			//if ew != nil {
+			//	err = ew
+			//	break
+			//}
+			//if nr != nw {
+			//	err = io.ErrShortWrite
+			//	break
+			//}
 		}
 		if er != nil {
 			if er != io.EOF {
@@ -82,7 +84,7 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 			break
 		}
 	}
-	err = wt.UploadCommit(fileId, md5Hash, md5s, chunkL)
+	//err = wt.UploadCommit(fileId, md5Hash, md5s, chunkL)
 	return written, err
 }
 
