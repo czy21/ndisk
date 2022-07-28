@@ -62,6 +62,7 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
+	ctx := context.Background()
 	fileInfo, _ := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	folder, err := API{}.GetFolderById(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
@@ -72,19 +73,27 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				IsDir: true,
 			},
 		})
+		fi := model.FileInfo{
+			Name:       path.Join(f.Name, t.Name),
+			ModTime:    time.Time(t.UpdateDate).Add(-8 * time.Hour),
+			RemoteName: strconv.FormatInt(t.Id, 10),
+			IsDir:      true,
+		}
+		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
 	}
 	for _, t := range folder.Files {
+		fileInfos = append(fileInfos, model.FileInfoProxy{
+			FileInfo: model.FileInfo{
+				Name: t.Name,
+			},
+		})
 		fi := model.FileInfo{
-			Name:       t.Name,
+			Name:       path.Join(f.Name, t.Name),
 			ModTime:    time.Time(t.UpdateDate).Add(-8 * time.Hour),
 			Size:       t.Size,
-			IsDir:      false,
 			RemoteName: strconv.FormatInt(t.Id, 10),
 		}
-		cache.Client.SetObj(f.Context, cache.GetFileInfoCacheKey(strings.Join([]string{f.Name, t.Name}, "")), &fi)
-		fileInfos = append(fileInfos, model.FileInfoProxy{
-			FileInfo: fi,
-		})
+		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
 	}
 	return fileInfos, err
 }
