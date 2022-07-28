@@ -53,11 +53,6 @@ func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd in
 	return copy(p, res.Body()), err
 }
 
-func (f File) Read(b []byte) (n int, err error) {
-	dUrl, _, err := f.DownloadCreate()
-	return f.DownloadChunk(dUrl, b, 0, int64(len(b)))
-}
-
 func (f File) Seek(offset int64, whence int) (int64, error) {
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	return fileInfo.Size, err
@@ -136,6 +131,10 @@ func (f File) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) (
 	chunkLen := len(b)
 	err = API{}.UploadChunk(fileId, b, md5Bytes, index+1)
 	return chunkLen, err
+}
+
+func (f File) Read(b []byte) (n int, err error) {
+	panic("implement me")
 }
 
 func (f File) Write(b []byte) (n int, err error) {
