@@ -47,7 +47,7 @@ func (FileSystem) Rename(ctx context.Context, oldName, newName string) (err erro
 func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	web.LogDav("Stat", name)
 	if name == "/" {
-		return model.FileInfoProxy{FileInfo: model.FileInfo{IsDir: true}}, nil
+		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	p, fs := getProvider(name, "")
 	return fs.Stat(ctx, name, p)

@@ -19,38 +19,38 @@ type FileInfo struct {
 	RemoteName string      `json:"remoteName"`
 }
 
-type FileInfoProxy struct {
+type FileInfoDelegate struct {
 	FileInfo
 }
 
-func (c FileInfoProxy) Name() string {
+func (c FileInfoDelegate) Name() string {
 	return c.FileInfo.Name
 }
 
-func (c FileInfoProxy) Size() int64 {
+func (c FileInfoDelegate) Size() int64 {
 	return c.FileInfo.Size
 }
 
-func (c FileInfoProxy) Mode() fs.FileMode {
+func (c FileInfoDelegate) Mode() fs.FileMode {
 	return c.FileInfo.Mode
 }
 
-func (c FileInfoProxy) ModTime() time.Time {
+func (c FileInfoDelegate) ModTime() time.Time {
 	return c.FileInfo.ModTime
 }
 
-func (c FileInfoProxy) IsDir() bool {
+func (c FileInfoDelegate) IsDir() bool {
 	return c.FileInfo.IsDir
 }
 
-func (c FileInfoProxy) Sys() any {
+func (c FileInfoDelegate) Sys() any {
 	return c.FileInfo.Sys
 }
 
-func (c FileInfoProxy) ContentType(ctx context.Context) (string, error) {
-	ctype := mime.TypeByExtension(filepath.Ext(c.Name()))
-	if ctype != "" {
-		return ctype, nil
+func (c FileInfoDelegate) ContentType(ctx context.Context) (cType string, err error) {
+	cType = mime.TypeByExtension(filepath.Ext(c.Name()))
+	if cType != "" {
+		return cType, err
 	}
-	return "application/octet-stream", nil
+	return "application/octet-stream", err
 }

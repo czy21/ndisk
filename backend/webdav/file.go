@@ -27,7 +27,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	var fileInfos []fs.FileInfo
 	for _, t := range providerMetas {
 		fileInfos = append(fileInfos,
-			model.FileInfoProxy{
+			model.FileInfoDelegate{
 				FileInfo: model.FileInfo{
 					IsDir: true,
 					Name:  t.Name,
@@ -45,7 +45,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 			}
 			if !exist {
 				fileInfos = append(fileInfos,
-					model.FileInfoProxy{
+					model.FileInfoDelegate{
 						FileInfo: model.FileInfo{
 							Name:  t.Name(),
 							IsDir: true,
@@ -58,7 +58,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	return model.FileInfoProxy{FileInfo: model.FileInfo{IsDir: true}}, nil
+	return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 }
 
 func (f File) Write(p []byte) (n int, err error) {

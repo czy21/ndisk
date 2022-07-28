@@ -31,7 +31,7 @@ func (f File) Stat() (fs.FileInfo, error) {
 	if f.Context.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut && os.IsNotExist(err) {
 		err = nil
 	}
-	return model.FileInfoProxy{FileInfo: fileInfo}, err
+	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
 
 func (f File) Close() error {
@@ -65,7 +65,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	folder, err := API{}.GetFolderById(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Folders {
-		fileInfos = append(fileInfos, model.FileInfoProxy{
+		fileInfos = append(fileInfos, model.FileInfoDelegate{
 			FileInfo: model.FileInfo{
 				Name:  t.Name,
 				IsDir: true,
@@ -80,7 +80,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 		cache.Client.SetObj(f.Context, cache.GetFileInfoCacheKey(fi.Name), &fi)
 	}
 	for _, t := range folder.Files {
-		fileInfos = append(fileInfos, model.FileInfoProxy{
+		fileInfos = append(fileInfos, model.FileInfoDelegate{
 			FileInfo: model.FileInfo{
 				Name: t.Name,
 			},

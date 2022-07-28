@@ -43,7 +43,7 @@ func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file m
 }
 func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderFile) (os.FileInfo, error) {
 	fileInfo, err := fs.GetFileInfo(ctx, name, file)
-	return model.FileInfoProxy{FileInfo: fileInfo}, err
+	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	remoteName := file.ProviderFolder.RemoteName
