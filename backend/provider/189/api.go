@@ -43,10 +43,11 @@ func setTokenHeader(req *resty.Request) {
 
 func (a API) GetFolderById(folderId string) (FileListAO, error) {
 	var ret FileListAORes
+	pageIndex := 1
 	params := map[string]string{
 		"noCache":    QueryParamNoCache,
-		"pageNum":    "1",
-		"pageSize":   "5000",
+		"pageNum":    strconv.Itoa(pageIndex),
+		"pageSize":   "500",
 		"mediaType":  "0",
 		"folderId":   folderId,
 		"iconOption": "5",
