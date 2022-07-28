@@ -46,7 +46,7 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 	params := map[string]string{
 		"noCache":    QueryParamNoCache,
 		"pageNum":    "1",
-		"pageSize":   "100",
+		"pageSize":   "5000",
 		"mediaType":  "0",
 		"folderId":   folderId,
 		"iconOption": "5",
