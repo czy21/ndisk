@@ -100,7 +100,7 @@ func (f File) UploadCreate(md5Hash hash.Hash) (fileId string, err error) {
 		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
 	}
 	res, err := API{}.CreateFile(fileInfo.RemoteName, fName, fileSize, fileMd5)
-	return res.UploadFileId, nil
+	return res.UploadFileId, err
 }
 
 func (f File) UploadCommit(fileId string, md5Hash hash.Hash, md5s []string, chunkLen int) (err error) {

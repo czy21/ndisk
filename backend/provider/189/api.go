@@ -261,6 +261,9 @@ func (a API) CreateFile(parentFolderId, fileName string, fileSize int64, fileMd5
 	err := a.UploadRequest("/person/initMultiUpload", queryParam, &initUploadVO, func() bool {
 		return initUploadVO.Code != SuccessCode
 	})
+	if initUploadVO.Data.UploadFileId == "" {
+		err = errors.New("create file fail")
+	}
 	return initUploadVO.Data, err
 }
 func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 string) (err error) {
