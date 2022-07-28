@@ -35,6 +35,9 @@ func (f File) Stat() (fs.FileInfo, error) {
 }
 
 func (f File) Close() error {
+	if f.Context.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut {
+		cache.Client.Del(f.Context, cache.GetFileInfoCacheKey(f.Name))
+	}
 	return nil
 }
 
