@@ -32,13 +32,16 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	if fileSize == 0 {
 		return 0, nil
 	}
-	// cache get u:/189/test/t1 ret: fileId,fileSize,writtenSize,last
 	buf := make([]byte, n)
 	md5s := make([]string, 0)
 	md5Hash := md5.New()
 	fileId, err := wt.UploadCreate(md5Hash)
 	fileName := wt.FileName()
 	if err != nil {
+		return 0, err
+	}
+	if fileId == "" {
+		err = errors.New(fmt.Sprintf("%s create fail", fileName))
 		return 0, err
 	}
 	chunkL := len(buf)
@@ -159,5 +162,5 @@ func logChunk(
 	for i := 0; i < len(chunkArr)/2; i++ {
 		chunkLog += fmt.Sprintf(" %s: %d", chunkArr[i*2], chunkArr[i*2+1])
 	}
-	log.Infof("%s %s %s %s", fnName, fileName, chunkLog, extension)
+	log.Debugf("%s %s %s %s", fnName, fileName, chunkLog, extension)
 }
