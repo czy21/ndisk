@@ -41,7 +41,7 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 		return 0, err
 	}
 	if fileId == "" {
-		err = errors.New(fmt.Sprintf("%s create fail", fileName))
+		err = errors.New("create file fail")
 		return 0, err
 	}
 	chunkL := len(buf)
