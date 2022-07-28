@@ -49,7 +49,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 	remoteName := file.ProviderFolder.RemoteName
 	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 	var err error
-	if cache.Client.GetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo) {
+	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
 	}
 	d, f := path.Split(name)
@@ -89,7 +89,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		}
 	}
 	if err == nil {
-		cache.Client.SetObj(context.Background(), cache.GetFileInfoCacheKey(name), &fileInfo)
+		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}
 	return fileInfo, err
 }

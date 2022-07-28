@@ -1,8 +1,11 @@
 package model
 
 import (
+	"context"
 	"io/fs"
+	"mime"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -42,4 +45,12 @@ func (c FileInfoProxy) IsDir() bool {
 
 func (c FileInfoProxy) Sys() any {
 	return c.FileInfo.Sys
+}
+
+func (c FileInfoProxy) ContentType(ctx context.Context) (string, error) {
+	ctype := mime.TypeByExtension(filepath.Ext(c.Name()))
+	if ctype != "" {
+		return ctype, nil
+	}
+	return "application/octet-stream", nil
 }
