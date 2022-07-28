@@ -42,23 +42,35 @@ func setTokenHeader(req *resty.Request) {
 }
 
 func (a API) GetFolderById(folderId string) (FileListAO, error) {
-	var ret FileListAORes
+	var (
+		ret FileListAORes
+		err error
+	)
 	pageIndex := 1
-	params := map[string]string{
-		"noCache":    QueryParamNoCache,
-		"pageNum":    strconv.Itoa(pageIndex),
-		"pageSize":   "500",
-		"mediaType":  "0",
-		"folderId":   folderId,
-		"iconOption": "5",
-		"orderBy":    "lastOpTime",
-		"descending": "true",
+	for {
+		params := map[string]string{
+			"noCache":    QueryParamNoCache,
+			"pageNum":    strconv.Itoa(pageIndex),
+			"pageSize":   "100",
+			"mediaType":  "0",
+			"folderId":   folderId,
+			"iconOption": "5",
+			"orderBy":    "lastOpTime",
+			"descending": "true",
+		}
+		var pageRet FileListAORes
+		req := getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
+			SetQueryParams(params).
+			SetResult(&pageRet)
+		res, err := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
+		if pageRet.FileListAO.Count == 0 {
+			break
+		}
+		ret.FileListAO.Folders = append(ret.FileListAO.Folders, pageRet.FileListAO.Folders...)
+		ret.FileListAO.Files = append(ret.FileListAO.Files, pageRet.FileListAO.Files...)
+		logRes("GetFolderById", res.String(), pageRet.ResponseVO, err)
+		pageIndex++
 	}
-	req := getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
-		SetQueryParams(params).
-		SetResult(&ret)
-	res, err := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
-	logRes("GetFolderById", res.String(), ret.ResponseVO, err)
 	return ret.FileListAO, err
 }
 

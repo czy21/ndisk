@@ -15,7 +15,9 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type File struct {
@@ -72,10 +74,16 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 		})
 	}
 	for _, t := range folder.Files {
+		fi := model.FileInfo{
+			Name:       t.Name,
+			ModTime:    time.Time(t.UpdateDate).Add(-8 * time.Hour),
+			Size:       t.Size,
+			IsDir:      false,
+			RemoteName: strconv.FormatInt(t.Id, 10),
+		}
+		cache.Client.SetObj(f.Context, cache.GetFileInfoCacheKey(strings.Join([]string{f.Name, t.Name}, "")), &fi)
 		fileInfos = append(fileInfos, model.FileInfoProxy{
-			FileInfo: model.FileInfo{
-				Name: t.Name,
-			},
+			FileInfo: fi,
 		})
 	}
 	return fileInfos, err
