@@ -17,3 +17,12 @@ type FileSystem interface {
 	GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error)
 	HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request)
 }
+
+type API interface {
+	SetProvider(file model.ProviderFile)
+	Create(parentFileInfo model.FileInfo, name string) error
+	Delete(parentFileInfo model.FileInfo, name string) error
+	Rename(oldFileInfo model.FileInfo, name string) error
+	GetFile(fileInfo model.FileInfo) model.FileInfo
+	GetFiles(fileInfo model.FileInfo) []model.FileInfo
+}
