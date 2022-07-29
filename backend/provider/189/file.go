@@ -10,7 +10,6 @@ import (
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/util"
 	"hash"
-	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -134,39 +133,10 @@ func (f File) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) (
 }
 
 func (f File) Read(b []byte) (n int, err error) {
-	panic("implement me")
+	dUrl, _, err := f.DownloadCreate()
+	return f.DownloadChunk(dUrl, b, 0, int64(len(b)))
 }
 
 func (f File) Write(b []byte) (n int, err error) {
 	panic("implement me")
-}
-
-// Uploader upload to remote
-type Uploader struct {
-	Context context.Context
-	File    model.ProviderFile
-	io.ReadCloser
-}
-
-func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
-	l := limitBuf(u.File.ProviderFolder.Account.PutBuf)
-	return util.WriteFull(w, u.ReadCloser, 1024*1024*l)
-}
-
-// Downloader download from remote
-type Downloader struct {
-	File model.ProviderFile
-	http.ResponseWriter
-}
-
-func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
-	l := limitBuf(d.File.ProviderFolder.Account.GetBuf)
-	return util.ReadFull(d.ResponseWriter, r.(*io.LimitedReader).R, 1024*1024*l)
-}
-
-func limitBuf(val int) int {
-	if val < 10 || val > 64 {
-		val = 10
-	}
-	return val
 }

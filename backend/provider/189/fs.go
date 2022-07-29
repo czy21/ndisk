@@ -2,12 +2,10 @@ package _189
 
 import (
 	"github.com/czy21/ndisk/cache"
-	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	fs1 "io/fs"
-	"net/http"
 	"os"
 	"path"
 	"strconv"
@@ -92,14 +90,4 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}
 	return fileInfo, err
-}
-
-func (fs FileSystem) HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request) {
-	extra := ctx.Value(constant.HttpExtra).(map[string]interface{})
-	if extra[constant.HttpExtraMethod] == http.MethodGet {
-		*w = Downloader{File: file, ResponseWriter: *w}
-	}
-	if extra[constant.HttpExtraMethod] == http.MethodPut {
-		r.Body = Uploader{File: file, ReadCloser: r.Body}
-	}
 }

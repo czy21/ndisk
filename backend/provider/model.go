@@ -8,6 +8,10 @@ import (
 	"os"
 )
 
+type HandlerHttp interface {
+	HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request)
+}
+
 type FileSystem interface {
 	Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) error
 	OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error)
@@ -15,7 +19,6 @@ type FileSystem interface {
 	Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error
 	Stat(ctx context.Context, name string, file model.ProviderFile) (os.FileInfo, error)
 	GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error)
-	HandleHttp(ctx context.Context, name string, file model.ProviderFile, w *http.ResponseWriter, r *http.Request)
 }
 
 type API interface {
