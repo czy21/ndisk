@@ -5,6 +5,11 @@ module.exports = {
     eslint: {
         enable: false
     },
+    webpack: {
+        alias: {
+            "@": path.resolve(__dirname, "src/")
+        }
+    },
     plugins: [
         {plugin: webpackConfigPlugin, options: {preText: "Will log the webpack config:"}}
     ],
