@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/czy21/ndisk/cache"
 	http2 "github.com/czy21/ndisk/http"
+	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/util"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
@@ -21,7 +22,9 @@ import (
 	"time"
 )
 
-type API struct{}
+type API struct {
+	File model.ProviderFile
+}
 
 func getRequestWithJsonAndToken(req *resty.Request) *resty.Request {
 	req.SetHeader("accept", "application/json;charset=UTF-8")
@@ -316,7 +319,7 @@ func (a API) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) er
 		return nil
 	}
 	var uploadUrlsRes UploadUrlVORes
-	err := API{}.UploadRequest("/person/getMultiUploadUrls",
+	err := a.UploadRequest("/person/getMultiUploadUrls",
 		map[string]string{
 			"partInfo":     fmt.Sprintf("%d-%s", index, md5Base64),
 			"uploadFileId": fileId,

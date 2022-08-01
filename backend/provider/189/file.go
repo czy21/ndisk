@@ -42,8 +42,9 @@ func (f File) Close() error {
 }
 
 func (f File) DownloadCreate() (dUrl string, fileSize int64, err error) {
+	api := API{File: f.File}
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	fileInfoVO, err := API{}.GetFileInfoById(fileInfo.RemoteName)
+	fileInfoVO, err := api.GetFileInfoById(fileInfo.RemoteName)
 	return fileInfoVO.FileDownloadUrl, fileInfoVO.Size, err
 }
 func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd int64) (n int, err error) {
@@ -59,8 +60,9 @@ func (f File) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
+	api := API{File: f.File}
 	fileInfo, _ := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	folder, err := API{}.GetFolderById(fileInfo.RemoteName)
+	folder, err := api.GetFolderById(fileInfo.RemoteName)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Folders {
 		fileInfos = append(fileInfos, model.FileInfoDelegate{
@@ -105,6 +107,7 @@ func (f File) UploadFileSize() int64 {
 }
 
 func (f File) UploadCreate(md5Hash hash.Hash) (fileId string, err error) {
+	api := API{File: f.File}
 	fileSize := f.UploadFileSize()
 	d, fName := path.Split(f.Name)
 	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
@@ -112,24 +115,26 @@ func (f File) UploadCreate(md5Hash hash.Hash) (fileId string, err error) {
 	if fileSize == 0 {
 		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
 	}
-	res, err := API{}.CreateFile(fileInfo.RemoteName, fName, fileSize, fileMd5)
+	res, err := api.CreateFile(fileInfo.RemoteName, fName, fileSize, fileMd5)
 	return res.UploadFileId, err
 }
 
 func (f File) UploadCommit(fileId string, md5Hash hash.Hash, md5s []string, chunkLen int) (err error) {
+	api := API{File: f.File}
 	fileSize := f.UploadFileSize()
 	fileMd5 := hex.EncodeToString(md5Hash.Sum(nil))
 	sliceMd5 := fileMd5
 	if fileSize > int64(chunkLen) {
 		sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
 	}
-	err = API{}.CommitFile(fileId, fileSize, fileMd5, sliceMd5)
+	err = api.CommitFile(fileId, fileSize, fileMd5, sliceMd5)
 	return err
 }
 
 func (f File) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) (n int, err error) {
+	api := API{File: f.File}
 	chunkLen := len(b)
-	err = API{}.UploadChunk(fileId, b, md5Bytes, index+1)
+	err = api.UploadChunk(fileId, b, md5Bytes, index+1)
 	return chunkLen, err
 }
 
@@ -143,11 +148,12 @@ func (f File) Write(b []byte) (n int, err error) {
 
 //WriteTo CopyTo
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
+	api := API{File: f.File}
 	_, srfF := path.Split(f.Name)
 	dstName := w.(File).Name
 	srcFileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
 	dstD, _ := path.Split(dstName)
 	dstFileInfo, err := FileSystem{}.GetFileInfo(f.Context, dstD, f.File)
-	err = API{}.Copy(srcFileInfo.RemoteName, srfF, srcFileInfo.IsDir, dstFileInfo.RemoteName)
+	err = api.Copy(srcFileInfo.RemoteName, srfF, srcFileInfo.IsDir, dstFileInfo.RemoteName)
 	return srcFileInfo.Size, nil
 }

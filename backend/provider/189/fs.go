@@ -17,18 +17,20 @@ type FileSystem struct {
 }
 
 func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) (err error) {
+	api := API{File: file}
 	d, f := path.Split(file.NewPath)
 	folder, _ := fs.GetFileInfo(ctx, d, file)
-	err = API{}.CreateFolder(folder.RemoteName, f)
+	err = api.CreateFolder(folder.RemoteName, f)
 	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
 	return File{Name: name, Context: ctx, File: file}, nil
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.ProviderFile) error {
+	api := API{File: file}
 	_, fName := path.Split(file.NewPath)
 	fileInfo, err := fs.GetFileInfo(ctx, name, file)
-	err = API{}.Delete(fileInfo.RemoteName, fName, fileInfo.IsDir)
+	err = api.Delete(fileInfo.RemoteName, fName, fileInfo.IsDir)
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error {
