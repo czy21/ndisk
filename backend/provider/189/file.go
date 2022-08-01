@@ -149,11 +149,10 @@ func (f File) Write(b []byte) (n int, err error) {
 //WriteTo CopyTo
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	api := API{File: f.File}
-	_, srfF := path.Split(f.Name)
-	dstName := w.(File).Name
+	_, srcFName := path.Split(f.Name)
+	dstD, _ := path.Split(w.(File).Name)
 	srcFileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	dstD, _ := path.Split(dstName)
 	dstFileInfo, err := FileSystem{}.GetFileInfo(f.Context, dstD, f.File)
-	err = api.Copy(srcFileInfo.RemoteName, srfF, srcFileInfo.IsDir, dstFileInfo.RemoteName)
-	return srcFileInfo.Size, nil
+	err = api.Copy(srcFileInfo.RemoteName, srcFName, srcFileInfo.IsDir, dstFileInfo.RemoteName)
+	return srcFileInfo.Size, err
 }
