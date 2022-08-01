@@ -37,7 +37,9 @@ type ProviderFolderMeta struct {
 }
 
 type ProviderFile struct {
+	Path           string
+	Name           string
 	OldPath        string
-	NewPath        string
+	OldName        string
 	ProviderFolder ProviderFolderMeta
 }

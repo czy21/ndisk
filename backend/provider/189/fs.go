@@ -18,7 +18,7 @@ type FileSystem struct {
 
 func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) (err error) {
 	api := API{File: file}
-	d, f := path.Split(file.NewPath)
+	d, f := path.Split(file.Path)
 	folder, _ := fs.GetFileInfo(ctx, d, file)
 	err = api.CreateFolder(folder.Id, f)
 	return err
@@ -28,7 +28,7 @@ func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm o
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.ProviderFile) error {
 	api := API{File: file}
-	_, fName := path.Split(file.NewPath)
+	_, fName := path.Split(file.Path)
 	fileInfo, err := fs.GetFileInfo(ctx, name, file)
 	err = api.Delete(fileInfo.Id, fName, fileInfo.IsDir)
 	return err

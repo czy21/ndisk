@@ -35,7 +35,7 @@ func (FileSystem) RemoveAll(ctx context.Context, name string) (err error) {
 	web.LogDav("RemoveAll", name)
 	f, fs := getProvider(name, "")
 	err = fs.RemoveAll(ctx, name, f)
-	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.NewPath))
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.Path))
 	return err
 }
 func (FileSystem) Rename(ctx context.Context, oldName, newName string) (err error) {
@@ -61,8 +61,10 @@ func getProvider(name string, oldName string) (model.ProviderFile, provider.File
 			file.ProviderFolder = t
 		}
 	}
+	file.Path = strings.TrimSuffix(name, "/")
+	file.Name = name
 	file.OldPath = strings.TrimSuffix(oldName, "/")
-	file.NewPath = strings.TrimSuffix(name, "/")
+	file.OldName = oldName
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
 		return file, fs
 	}
@@ -107,7 +109,7 @@ func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodGet {
-		(*w).Header().Set("Content-Type", util.GetContentType(p.NewPath))
+		(*w).Header().Set("Content-Type", util.GetContentType(p.Path))
 		*w = Downloader{File: p, ResponseWriter: *w}
 	}
 	if r.Method == http.MethodPut {
