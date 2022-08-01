@@ -99,7 +99,9 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 func (f File) FileName() string {
 	return f.Name
 }
-
+func (f File) LimitSize() int64 {
+	return 1024 * 1024 * 8192
+}
 func (f File) UploadFileSize() int64 {
 	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
 	fileSize := extra[constant.HttpExtraFileSize].(int64)

@@ -15,6 +15,7 @@ import (
 
 type UpDownWriter interface {
 	FileName() string
+	LimitSize() int64
 	UploadFileSize() int64
 	UploadCreate(md5Hash hash.Hash) (string, error)
 	UploadChunk(fileId string, p []byte, md5Bytes []byte, index int) (n int, err error)
@@ -31,6 +32,10 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	fileSize := wt.UploadFileSize()
 	if fileSize == 0 {
 		return 0, nil
+	}
+	limitSize := wt.LimitSize()
+	if limitSize > 0 && fileSize > limitSize {
+		return 0, errors.New(fmt.Sprintf("fileSize:%d > limitSize:%d", fileSize, limitSize))
 	}
 	buf := make([]byte, n)
 	md5s := make([]string, 0)
