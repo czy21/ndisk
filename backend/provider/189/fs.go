@@ -20,7 +20,7 @@ func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, f
 	api := API{File: file}
 	d, f := path.Split(file.NewPath)
 	folder, _ := fs.GetFileInfo(ctx, d, file)
-	err = api.CreateFolder(folder.RemoteName, f)
+	err = api.CreateFolder(folder.Id, f)
 	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
@@ -30,7 +30,7 @@ func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.Prov
 	api := API{File: file}
 	_, fName := path.Split(file.NewPath)
 	fileInfo, err := fs.GetFileInfo(ctx, name, file)
-	err = api.Delete(fileInfo.RemoteName, fName, fileInfo.IsDir)
+	err = api.Delete(fileInfo.Id, fName, fileInfo.IsDir)
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error {
@@ -40,14 +40,14 @@ func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file m
 	oldFileInfo, err := fs.GetFileInfo(ctx, oldName, file)
 	newFoldInfo, err := fs.GetFileInfo(ctx, newD, file)
 	if oldD != newD {
-		err = api.Move(oldFileInfo.RemoteName, oldFName, oldFileInfo.IsDir, newFoldInfo.RemoteName)
+		err = api.Move(oldFileInfo.Id, oldFName, oldFileInfo.IsDir, newFoldInfo.Id)
 		return err
 	}
 	if !os.IsNotExist(err) {
 		if oldFileInfo.IsDir {
-			err = api.RenameFolder(oldFileInfo.RemoteName, newFName)
+			err = api.RenameFolder(oldFileInfo.Id, newFName)
 		} else {
-			err = api.RenameFile(oldFileInfo.RemoteName, newFName)
+			err = api.RenameFile(oldFileInfo.Id, newFName)
 		}
 	}
 	return err
@@ -58,7 +58,7 @@ func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderF
 }
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	remoteName := file.ProviderFolder.RemoteName
-	fileInfo := model.FileInfo{Name: name, RemoteName: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
+	fileInfo := model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 	var err error
 	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
@@ -78,8 +78,8 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 			for _, q := range folder.Folders {
 				if q.Name == t {
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
-					remoteName = fileInfo.RemoteName
+					fileInfo.Id = strconv.FormatInt(q.Id, 10)
+					remoteName = fileInfo.Id
 					err = nil
 				}
 			}
@@ -93,20 +93,20 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 				fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 				fileInfo.Size = q.Size
 				fileInfo.IsDir = false
-				fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
+				fileInfo.Id = strconv.FormatInt(q.Id, 10)
 				err = nil
 			}
 		}
 		for _, q := range folder.Folders {
 			if q.Name == f {
 				fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-				fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
+				fileInfo.Id = strconv.FormatInt(q.Id, 10)
 				err = nil
 			}
 		}
 	}
 	if os.IsNotExist(err) {
-		fileInfo.RemoteName = ""
+		fileInfo.Id = ""
 	}
 	if err == nil {
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
