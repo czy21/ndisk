@@ -24,7 +24,7 @@ func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, f
 	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
-	return File{Name: name, Context: ctx, File: file}, nil
+	return File{name: name, ctx: ctx, file: file}, nil
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.ProviderFile) error {
 	api := API{File: file}

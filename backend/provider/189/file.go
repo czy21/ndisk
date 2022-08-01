@@ -21,29 +21,29 @@ import (
 )
 
 type File struct {
-	Name    string
-	File    model.ProviderFile
-	Context context.Context
+	name string
+	file model.ProviderFile
+	ctx  context.Context
 }
 
 func (f File) Stat() (fs.FileInfo, error) {
-	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	if f.Context.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut && os.IsNotExist(err) {
+	fileInfo, err := FileSystem{}.GetFileInfo(f.ctx, f.name, f.file)
+	if f.ctx.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut && os.IsNotExist(err) {
 		err = nil
 	}
 	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
 
 func (f File) Close() error {
-	if f.Context.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut {
-		cache.Client.Del(f.Context, cache.GetFileInfoCacheKey(f.Name))
+	if f.ctx.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut {
+		cache.Client.Del(f.ctx, cache.GetFileInfoCacheKey(f.name))
 	}
 	return nil
 }
 
 func (f File) DownloadCreate() (dUrl string, fileSize int64, err error) {
-	api := API{File: f.File}
-	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	api := API{File: f.file}
+	fileInfo, err := FileSystem{}.GetFileInfo(f.ctx, f.name, f.file)
 	fileInfoVO, err := api.GetFileInfoById(fileInfo.Id)
 	return fileInfoVO.FileDownloadUrl, fileInfoVO.Size, err
 }
@@ -55,13 +55,13 @@ func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd in
 }
 
 func (f File) Seek(offset int64, whence int) (int64, error) {
-	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	fileInfo, err := FileSystem{}.GetFileInfo(f.ctx, f.name, f.file)
 	return fileInfo.Size, err
 }
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
-	api := API{File: f.File}
-	fileInfo, _ := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	api := API{File: f.file}
+	fileInfo, _ := FileSystem{}.GetFileInfo(f.ctx, f.name, f.file)
 	folder, err := api.GetFolderById(fileInfo.Id)
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Folders {
@@ -72,12 +72,12 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 			},
 		})
 		fi := model.FileInfo{
-			Name:    path.Join(f.Name, t.Name),
+			Name:    path.Join(f.name, t.Name),
 			ModTime: time.Time(t.UpdateDate).Add(-8 * time.Hour),
 			Id:      strconv.FormatInt(t.Id, 10),
 			IsDir:   true,
 		}
-		cache.Client.SetObj(f.Context, cache.GetFileInfoCacheKey(fi.Name), &fi)
+		cache.Client.SetObj(f.ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
 	}
 	for _, t := range folder.Files {
 		fileInfos = append(fileInfos, model.FileInfoDelegate{
@@ -86,33 +86,34 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 			},
 		})
 		fi := model.FileInfo{
-			Name:    path.Join(f.Name, t.Name),
+			Name:    path.Join(f.name, t.Name),
 			ModTime: time.Time(t.UpdateDate).Add(-8 * time.Hour),
 			Size:    t.Size,
 			Id:      strconv.FormatInt(t.Id, 10),
 		}
-		cache.Client.SetObj(f.Context, cache.GetFileInfoCacheKey(fi.Name), &fi)
+		cache.Client.SetObj(f.ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
 	}
 	return fileInfos, err
 }
 
-func (f File) FileName() string {
-	return f.Name
+func (f File) Name() string {
+	return f.name
 }
-func (f File) LimitSize() int64 {
+
+func (f File) UploadLimitSize() int64 {
 	return 1024 * 1024 * 8192
 }
 func (f File) UploadFileSize() int64 {
-	extra := f.Context.Value(constant.HttpExtra).(map[string]interface{})
+	extra := f.ctx.Value(constant.HttpExtra).(map[string]interface{})
 	fileSize := extra[constant.HttpExtraFileSize].(int64)
 	return fileSize
 }
 
 func (f File) UploadCreate(md5Hash hash.Hash) (fileId string, err error) {
-	api := API{File: f.File}
+	api := API{File: f.file}
 	fileSize := f.UploadFileSize()
-	d, fName := path.Split(f.Name)
-	fileInfo, err := FileSystem{}.GetFileInfo(f.Context, d, f.File)
+	d, fName := path.Split(f.name)
+	fileInfo, err := FileSystem{}.GetFileInfo(f.ctx, d, f.file)
 	var fileMd5 string
 	if fileSize == 0 {
 		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
@@ -122,7 +123,7 @@ func (f File) UploadCreate(md5Hash hash.Hash) (fileId string, err error) {
 }
 
 func (f File) UploadCommit(fileId string, md5Hash hash.Hash, md5s []string, chunkLen int) (err error) {
-	api := API{File: f.File}
+	api := API{File: f.file}
 	fileSize := f.UploadFileSize()
 	fileMd5 := hex.EncodeToString(md5Hash.Sum(nil))
 	sliceMd5 := fileMd5
@@ -134,7 +135,7 @@ func (f File) UploadCommit(fileId string, md5Hash hash.Hash, md5s []string, chun
 }
 
 func (f File) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) (n int, err error) {
-	api := API{File: f.File}
+	api := API{File: f.file}
 	chunkLen := len(b)
 	err = api.UploadChunk(fileId, b, md5Bytes, index+1)
 	return chunkLen, err
@@ -150,11 +151,11 @@ func (f File) Write(b []byte) (n int, err error) {
 
 //WriteTo CopyTo
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
-	api := API{File: f.File}
-	_, srcFName := path.Split(f.Name)
-	dstD, _ := path.Split(w.(File).Name)
-	srcFileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
-	dstFileInfo, err := FileSystem{}.GetFileInfo(f.Context, dstD, f.File)
+	api := API{File: f.file}
+	_, srcFName := path.Split(f.name)
+	dstD, _ := path.Split(w.(File).Name())
+	srcFileInfo, err := FileSystem{}.GetFileInfo(f.ctx, f.name, f.file)
+	dstFileInfo, err := FileSystem{}.GetFileInfo(f.ctx, dstD, f.file)
 	err = api.Copy(srcFileInfo.Id, srcFName, srcFileInfo.IsDir, dstFileInfo.Id)
 	return srcFileInfo.Size, err
 }

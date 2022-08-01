@@ -14,8 +14,8 @@ import (
 )
 
 type UpDownWriter interface {
-	FileName() string
-	LimitSize() int64
+	Name() string
+	UploadLimitSize() int64
 	UploadFileSize() int64
 	UploadCreate(md5Hash hash.Hash) (string, error)
 	UploadChunk(fileId string, p []byte, md5Bytes []byte, index int) (n int, err error)
@@ -33,7 +33,7 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	if fileSize == 0 {
 		return 0, nil
 	}
-	limitSize := wt.LimitSize()
+	limitSize := wt.UploadLimitSize()
 	if limitSize > 0 && fileSize > limitSize {
 		return 0, errors.New(fmt.Sprintf("fileSize:%d > limitSize:%d", fileSize, limitSize))
 	}
@@ -41,7 +41,7 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	md5s := make([]string, 0)
 	md5Hash := md5.New()
 	fileId, err := wt.UploadCreate(md5Hash)
-	fileName := wt.FileName()
+	fileName := wt.Name()
 	if err != nil {
 		return 0, err
 	}
@@ -101,7 +101,7 @@ func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 		return 0, errors.New("no implement UpDownWriter interface")
 	}
 	dUrl, fileSize, err := rt.DownloadCreate()
-	fileName := rt.FileName()
+	fileName := rt.Name()
 	buf := make([]byte, n)
 	chunkL := len(buf)
 	chunks := int(math.Max(1, math.Ceil(float64(fileSize)/float64(cap(buf)))))
