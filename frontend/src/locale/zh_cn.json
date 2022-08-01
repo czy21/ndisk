@@ -1,0 +1,19 @@
+{
+  "global.language.name": "简体中文",
+  "table.operation": "操作",
+  "common.ok": "确认",
+  "common.cancel": "取消",
+  "common.filter.reset": "重置",
+  "common.filter.search": "查询",
+  "environment.add": "添加",
+  "environment.name": "名称",
+  "environment.url": "地址",
+  "environment.description": "描述",
+  "environment.edit": "编辑",
+  "environment.del": "删除",
+  "cluster.add": "添加",
+  "cluster.name": "名称",
+  "cluster.brokers": "brokers",
+  "cluster.edit": "编辑",
+  "cluster.del": "删除"
+}
