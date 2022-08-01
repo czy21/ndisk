@@ -133,8 +133,7 @@ func (f File) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) (
 }
 
 func (f File) Read(b []byte) (n int, err error) {
-	dUrl, _, err := f.DownloadCreate()
-	return f.DownloadChunk(dUrl, b, 0, int64(len(b)))
+	panic("implement me")
 }
 
 func (f File) Write(b []byte) (n int, err error) {

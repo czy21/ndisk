@@ -2,10 +2,9 @@ package model
 
 import (
 	"context"
+	"github.com/czy21/ndisk/util"
 	"io/fs"
-	"mime"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -48,9 +47,5 @@ func (c FileInfoDelegate) Sys() any {
 }
 
 func (c FileInfoDelegate) ContentType(ctx context.Context) (cType string, err error) {
-	cType = mime.TypeByExtension(filepath.Ext(c.Name()))
-	if cType != "" {
-		return cType, err
-	}
-	return "application/octet-stream", err
+	return util.GetContentType(c.Name()), err
 }

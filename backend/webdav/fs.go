@@ -109,6 +109,7 @@ func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 	}
 	extra := ctx.Value(constant.HttpExtra).(map[string]interface{})
 	if extra[constant.HttpExtraMethod] == http.MethodGet {
+		(*w).Header().Set("Content-Type", util.GetContentType(p.NewPath))
 		*w = Downloader{File: p, ResponseWriter: *w}
 	}
 	if extra[constant.HttpExtraMethod] == http.MethodPut {
