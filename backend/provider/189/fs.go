@@ -32,13 +32,21 @@ func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.Prov
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error {
+	api := API{}
+	oldD, oldFName := path.Split(oldName)
+	newD, newFName := path.Split(newName)
 	oldFileInfo, err := fs.GetFileInfo(ctx, oldName, file)
-	_, fName := path.Split(newName)
+	newFoldInfo, err := fs.GetFileInfo(ctx, newD, file)
+	if oldD != newD {
+		err = api.Move(oldFileInfo.RemoteName, oldFName, oldFileInfo.IsDir, newFoldInfo.RemoteName)
+		return err
+	}
 	if !os.IsNotExist(err) {
 		if oldFileInfo.IsDir {
-			err = API{}.RenameFolder(oldFileInfo.RemoteName, fName)
+			err = api.RenameFolder(oldFileInfo.RemoteName, newFName)
+		} else {
+			err = api.RenameFile(oldFileInfo.RemoteName, newFName)
 		}
-		err = API{}.RenameFile(oldFileInfo.RemoteName, fName)
 	}
 	return err
 }
@@ -54,7 +62,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		return fileInfo, err
 	}
 	d, f := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(file.ProviderFolder.Name, "/"))))
-	if d == "" || d == "/" {
+	if (d == "" || d == "/") && f == "" {
 		return fileInfo, nil
 	}
 	d = path.Clean(d)
@@ -62,9 +70,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 	api := API{}
 	var folder FileListAO
 	if d != "/" {
-		err = fs1.ErrNotExist
 		for _, t := range ds {
 			folder, err = api.GetFolderById(remoteName)
+			err = fs1.ErrNotExist
 			for _, q := range folder.Folders {
 				if q.Name == t {
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
@@ -95,7 +103,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 			}
 		}
 	}
-
+	if os.IsNotExist(err) {
+		fileInfo.RemoteName = ""
+	}
 	if err == nil {
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}

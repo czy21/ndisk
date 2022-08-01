@@ -73,7 +73,6 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 	}
 	return ret.FileListAO, err
 }
-
 func (a API) CreateFolder(parentFolderId string, name string) (err error) {
 	var ret FolderRes
 	queryParam := map[string]string{
@@ -91,12 +90,14 @@ func (a API) CreateFolder(parentFolderId string, name string) (err error) {
 	logRes("CreateFolder", res.String(), ret.ResponseVO, err)
 	return err
 }
-
 func (a API) Delete(fileId string, fileName string, isFolder bool) (err error) {
 	return a.CreateTask("DELETE", fileId, fileName, isFolder, nil)
 }
 func (a API) Copy(fileId string, fileName string, isFolder bool, targetFolderId string) (err error) {
 	return a.CreateTask("COPY", fileId, fileName, isFolder, map[string]string{"targetFolderId": targetFolderId})
+}
+func (a API) Move(fileId string, fileName string, isFolder bool, targetFolderId string) (err error) {
+	return a.CreateTask("MOVE", fileId, fileName, isFolder, map[string]string{"targetFolderId": targetFolderId})
 }
 func (a API) CreateTask(kind string, fileId string, fileName string, isFolder bool, extraFormParam map[string]string) (err error) {
 	var ret TaskRes
@@ -186,7 +187,6 @@ func (a API) RenameFolder(folderId string, destName string) (err error) {
 	logRes("RenameFolder", res.String(), ret.ResponseVO, err)
 	return err
 }
-
 func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 	var (
 		err error
@@ -206,7 +206,6 @@ func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 	}
 	return ret.FileInfoVO, err
 }
-
 func (a API) GetRSAKey() (RSAKeyRes, error) {
 	const rsaCacheKey = "e:rsa:189"
 	var (
@@ -224,7 +223,6 @@ func (a API) GetRSAKey() (RSAKeyRes, error) {
 	}
 	return ret, err
 }
-
 func (a API) GetUserBriefInfo() UserBriefInfoVO {
 	var (
 		err error
@@ -236,7 +234,6 @@ func (a API) GetUserBriefInfo() UserBriefInfoVO {
 	logRes("GetUserBriefInfo", res.String(), ret.ResponseVO, err)
 	return ret.UserBriefInfoVO
 }
-
 func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}, errPredicate func() bool) error {
 	var err error
 	rand.Seed(time.Now().UnixNano())
@@ -272,7 +269,6 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 	}
 	return err
 }
-
 func (a API) CreateFile(parentFolderId, fileName string, fileSize int64, fileMd5 string) (InitUploadVO, error) {
 	var initUploadVO ResponseDataVO[InitUploadVO, any]
 	lazyCheck := 1
@@ -314,7 +310,6 @@ func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 
 		})
 	return err
 }
-
 func (a API) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) error {
 	md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
 	if len(b) == 0 {
