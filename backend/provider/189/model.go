@@ -33,6 +33,10 @@ type FolderRes struct {
 	FolderVO
 }
 
+type FileRes struct {
+	ResponseVO
+	FileVO
+}
 type FileListAO struct {
 	Count   int        `json:"count"`
 	Files   []FileVO   `json:"fileList"`

@@ -3,7 +3,6 @@ package webdav
 import (
 	"fmt"
 	"github.com/czy21/ndisk/cache"
-	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider"
 	"github.com/czy21/ndisk/provider/local"
@@ -107,12 +106,11 @@ func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 		h.HandleHttp(ctx, name, p, w, r)
 		return
 	}
-	extra := ctx.Value(constant.HttpExtra).(map[string]interface{})
-	if extra[constant.HttpExtraMethod] == http.MethodGet {
+	if r.Method == http.MethodGet {
 		(*w).Header().Set("Content-Type", util.GetContentType(p.NewPath))
 		*w = Downloader{File: p, ResponseWriter: *w}
 	}
-	if extra[constant.HttpExtraMethod] == http.MethodPut {
+	if r.Method == http.MethodPut {
 		r.Body = Uploader{File: p, ReadCloser: r.Body}
 	}
 }

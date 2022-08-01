@@ -35,7 +35,10 @@ func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file m
 	oldFileInfo, err := fs.GetFileInfo(ctx, oldName, file)
 	_, fName := path.Split(newName)
 	if !os.IsNotExist(err) {
-		err = API{}.RenameFolder(oldFileInfo.RemoteName, fName)
+		if oldFileInfo.IsDir {
+			err = API{}.RenameFolder(oldFileInfo.RemoteName, fName)
+		}
+		err = API{}.RenameFile(oldFileInfo.RemoteName, fName)
 	}
 	return err
 }
@@ -50,11 +53,16 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
 	}
-	d, f := path.Split(name)
-	ds := strings.Split(strings.Trim(d, "/"), "/")[1:]
-	if d != "/" || len(ds) > 0 || f != "" {
-		api := API{}
-		var folder FileListAO
+	d, f := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(file.ProviderFolder.Name, "/"))))
+	if d == "" || d == "/" {
+		return fileInfo, nil
+	}
+	d = path.Clean(d)
+	ds := strings.Split(strings.Trim(d, "/"), "/")
+	api := API{}
+	var folder FileListAO
+	if d != "/" {
+		err = fs1.ErrNotExist
 		for _, t := range ds {
 			folder, err = api.GetFolderById(remoteName)
 			for _, q := range folder.Folders {
@@ -62,30 +70,32 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					remoteName = fileInfo.RemoteName
-				}
-			}
-		}
-		if d != "/" && f != "" {
-			folder, err = api.GetFolderById(remoteName)
-			err = fs1.ErrNotExist
-			for _, q := range folder.Files {
-				if q.Name == f {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.Size = q.Size
-					fileInfo.IsDir = false
-					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
-					err = nil
-				}
-			}
-			for _, q := range folder.Folders {
-				if q.Name == f {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
 					err = nil
 				}
 			}
 		}
 	}
+	if f != "" {
+		folder, err = api.GetFolderById(remoteName)
+		err = fs1.ErrNotExist
+		for _, q := range folder.Files {
+			if q.Name == f {
+				fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+				fileInfo.Size = q.Size
+				fileInfo.IsDir = false
+				fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
+				err = nil
+			}
+		}
+		for _, q := range folder.Folders {
+			if q.Name == f {
+				fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+				fileInfo.RemoteName = strconv.FormatInt(q.Id, 10)
+				err = nil
+			}
+		}
+	}
+
 	if err == nil {
 		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}

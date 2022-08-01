@@ -10,6 +10,7 @@ import (
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/util"
 	"hash"
+	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -138,4 +139,15 @@ func (f File) Read(b []byte) (n int, err error) {
 
 func (f File) Write(b []byte) (n int, err error) {
 	panic("implement me")
+}
+
+//WriteTo CopyTo
+func (f File) WriteTo(w io.Writer) (n int64, err error) {
+	_, srfF := path.Split(f.Name)
+	dstName := w.(File).Name
+	srcFileInfo, err := FileSystem{}.GetFileInfo(f.Context, f.Name, f.File)
+	dstD, _ := path.Split(dstName)
+	dstFileInfo, err := FileSystem{}.GetFileInfo(f.Context, dstD, f.File)
+	err = API{}.Copy(srcFileInfo.RemoteName, srfF, srcFileInfo.IsDir, dstFileInfo.RemoteName)
+	return srcFileInfo.Size, nil
 }

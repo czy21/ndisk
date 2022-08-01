@@ -93,10 +93,13 @@ func (a API) CreateFolder(parentFolderId string, name string) (err error) {
 }
 
 func (a API) Delete(fileId string, fileName string, isFolder bool) (err error) {
-	var (
-		ret TaskRes
-	)
-	const taskType = "DELETE"
+	return a.CreateTask("DELETE", fileId, fileName, isFolder, nil)
+}
+func (a API) Copy(fileId string, fileName string, isFolder bool, targetFolderId string) (err error) {
+	return a.CreateTask("COPY", fileId, fileName, isFolder, map[string]string{"targetFolderId": targetFolderId})
+}
+func (a API) CreateTask(kind string, fileId string, fileName string, isFolder bool, extraFormParam map[string]string) (err error) {
+	var ret TaskRes
 	taskInfosBytes, err := json.Marshal([]map[string]string{
 		{
 			"fileId":   fileId,
@@ -108,8 +111,13 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) (err error) {
 		"noCache": QueryParamNoCache,
 	}
 	formParam := map[string]string{
-		"type":      taskType,
+		"type":      kind,
 		"taskInfos": string(taskInfosBytes),
+	}
+	if extraFormParam != nil {
+		for k, v := range extraFormParam {
+			formParam[k] = v
+		}
 	}
 	req := getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetFormData(formParam).
@@ -127,7 +135,7 @@ func (a API) Delete(fileId string, fileName string, isFolder bool) (err error) {
 			break
 		}
 		time.Sleep(500 * time.Millisecond)
-		taskStatus = a.CheckTask(ret.TaskId, taskType)
+		taskStatus = a.CheckTask(ret.TaskId, kind)
 		i++
 	}
 	return err
@@ -152,10 +160,21 @@ func (a API) CheckTask(taskId string, kind string) int {
 	logRes("CheckTask", res.String(), ret.ResponseVO, err)
 	return ret.TaskStatus
 }
+func (a API) RenameFile(fileId string, destName string) (err error) {
+	var ret FileRes
+	formParam := map[string]string{
+		"fileId":       fileId,
+		"destFileName": destName,
+	}
+	req := getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
+		SetFormData(formParam).
+		SetResult(&ret)
+	res, err := req.Post(fmt.Sprintf("%s/open/file/renameFile.action?noCache=%s", ApiUrl, QueryParamNoCache))
+	logRes("RenameFile", res.String(), ret.ResponseVO, err)
+	return err
+}
 func (a API) RenameFolder(folderId string, destName string) (err error) {
-	var (
-		ret FolderRes
-	)
+	var ret FolderRes
 	formParams := map[string]string{
 		"folderId":       folderId,
 		"destFolderName": destName,
