@@ -16,29 +16,29 @@ import (
 type FileSystem struct {
 }
 
-func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) (err error) {
+func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) (err error) {
 	api := API{File: file}
 	d, f := path.Split(file.Path)
-	folder, _ := fs.GetFileInfo(ctx, d, file)
+	folder, _ := fs.GetFileInfo(ctx, d, file.ProviderFolder)
 	err = api.CreateFolder(folder.Id, f)
 	return err
 }
-func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
-	return File{name: name, ctx: ctx, file: file}, nil
+func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
+	return File{ctx: ctx, file: file}, nil
 }
-func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.ProviderFile) error {
+func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
 	api := API{File: file}
 	_, fName := path.Split(file.Path)
-	fileInfo, err := fs.GetFileInfo(ctx, name, file)
+	fileInfo, err := fs.GetFileInfo(ctx, file.Name, file.ProviderFolder)
 	err = api.Delete(fileInfo.Id, fName, fileInfo.IsDir)
 	return err
 }
-func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error {
+func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error {
 	api := API{}
-	oldD, oldFName := path.Split(oldName)
-	newD, newFName := path.Split(newName)
-	oldFileInfo, err := fs.GetFileInfo(ctx, oldName, file)
-	newFoldInfo, err := fs.GetFileInfo(ctx, newD, file)
+	oldD, oldFName := path.Split(file.OldName)
+	newD, newFName := path.Split(file.Name)
+	oldFileInfo, err := fs.GetFileInfo(ctx, file.OldName, file.ProviderFolder)
+	newFoldInfo, err := fs.GetFileInfo(ctx, newD, file.ProviderFolder)
 	if oldD != newD {
 		err = api.Move(oldFileInfo.Id, oldFName, oldFileInfo.IsDir, newFoldInfo.Id)
 		return err
@@ -52,18 +52,18 @@ func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file m
 	}
 	return err
 }
-func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderFile) (os.FileInfo, error) {
-	fileInfo, err := fs.GetFileInfo(ctx, name, file)
+func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
+	fileInfo, err := fs.GetFileInfo(ctx, file.Name, file.ProviderFolder)
 	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
-	remoteName := file.ProviderFolder.RemoteName
-	fileInfo := model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, providerFolder model.ProviderFolderMeta) (model.FileInfo, error) {
+	remoteName := providerFolder.RemoteName
+	fileInfo := model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *providerFolder.UpdateTime}
 	var err error
 	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
 	}
-	d, f := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(file.ProviderFolder.Name, "/"))))
+	d, f := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(providerFolder.Name, "/"))))
 	if (d == "" || d == "/") && f == "" {
 		return fileInfo, nil
 	}

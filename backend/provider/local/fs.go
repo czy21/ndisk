@@ -19,28 +19,28 @@ func NewFS() FileSystem {
 	return FileSystem{Dir: viper.GetString("data.dav")}
 }
 
-func (fs FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode, file model.ProviderFile) error {
-	return webdav.Dir(fs.Dir).Mkdir(ctx, name, perm)
+func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) error {
+	return webdav.Dir(fs.Dir).Mkdir(ctx, file.Name, perm)
 }
-func (fs FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
-	return webdav.Dir(fs.Dir).OpenFile(ctx, name, flag, perm)
+func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
+	return webdav.Dir(fs.Dir).OpenFile(ctx, file.Name, flag, perm)
 }
-func (fs FileSystem) RemoveAll(ctx context.Context, name string, file model.ProviderFile) error {
-	return webdav.Dir(fs.Dir).RemoveAll(ctx, name)
+func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
+	return webdav.Dir(fs.Dir).RemoveAll(ctx, file.Name)
 }
-func (fs FileSystem) Rename(ctx context.Context, oldName, newName string, file model.ProviderFile) error {
-	return webdav.Dir(fs.Dir).Rename(ctx, oldName, newName)
+func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error {
+	return webdav.Dir(fs.Dir).Rename(ctx, file.OldName, file.Name)
 }
-func (fs FileSystem) Stat(ctx context.Context, name string, file model.ProviderFile) (os.FileInfo, error) {
+func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
 	d := path.Join(fs.Dir, file.ProviderFolder.Name)
 	if _, err := os.Stat(d); os.IsNotExist(err) {
 		err = os.MkdirAll(d, os.ModePerm)
 		exception.Check(err)
 	}
-	return webdav.Dir(fs.Dir).Stat(ctx, name)
+	return webdav.Dir(fs.Dir).Stat(ctx, file.Name)
 }
 
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, providerFile model.ProviderFolderMeta) (model.FileInfo, error) {
 	return model.FileInfo{}, nil
 }
 

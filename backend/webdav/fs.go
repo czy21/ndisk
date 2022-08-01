@@ -21,7 +21,7 @@ type FileSystem struct{}
 func (FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
 	web.LogDav("Mkdir", name)
 	p, fs := getProvider(name, "")
-	return fs.Mkdir(ctx, name, perm, p)
+	return fs.Mkdir(ctx, perm, p)
 }
 func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
 	web.LogDav("OpenFile", name)
@@ -29,19 +29,19 @@ func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.F
 		return File{Name: name}, nil
 	}
 	p, fs := getProvider(name, "")
-	return fs.OpenFile(ctx, name, flag, perm, p)
+	return fs.OpenFile(ctx, flag, perm, p)
 }
 func (FileSystem) RemoveAll(ctx context.Context, name string) (err error) {
 	web.LogDav("RemoveAll", name)
 	f, fs := getProvider(name, "")
-	err = fs.RemoveAll(ctx, name, f)
+	err = fs.RemoveAll(ctx, f)
 	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.Path))
 	return err
 }
 func (FileSystem) Rename(ctx context.Context, oldName, newName string) (err error) {
 	web.LogDav("Rename", fmt.Sprintf("src:%s dst:%s", oldName, newName))
 	f, fs := getProvider(newName, oldName)
-	err = fs.Rename(ctx, oldName, newName, f)
+	err = fs.Rename(ctx, f)
 	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.OldPath))
 	return err
 }
@@ -51,7 +51,7 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	p, fs := getProvider(name, "")
-	return fs.Stat(ctx, name, p)
+	return fs.Stat(ctx, p)
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, provider.FileSystem) {
@@ -61,10 +61,10 @@ func getProvider(name string, oldName string) (model.ProviderFile, provider.File
 			file.ProviderFolder = t
 		}
 	}
-	file.Path = strings.TrimSuffix(name, "/")
 	file.Name = name
-	file.OldPath = strings.TrimSuffix(oldName, "/")
+	file.Path = strings.TrimSuffix(name, "/")
 	file.OldName = oldName
+	file.OldPath = strings.TrimSuffix(oldName, "/")
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
 		return file, fs
 	}

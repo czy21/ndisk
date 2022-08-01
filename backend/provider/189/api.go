@@ -66,12 +66,12 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 			SetQueryParams(params).
 			SetResult(&pageRet)
 		res, err := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
+		a.logRes("GetFolderById", res.String(), pageRet.ResponseVO, err)
 		if pageRet.FileListAO.Count == 0 {
 			break
 		}
 		ret.FileListAO.Folders = append(ret.FileListAO.Folders, pageRet.FileListAO.Folders...)
 		ret.FileListAO.Files = append(ret.FileListAO.Files, pageRet.FileListAO.Files...)
-		a.logRes("GetFolderById", res.String(), pageRet.ResponseVO, err)
 		pageIndex++
 	}
 	return ret.FileListAO, err
