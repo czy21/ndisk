@@ -11,7 +11,7 @@ var providers map[string]model.FileSystem
 func Boot() {
 	providers = make(map[string]model.FileSystem)
 	providers[string(Cloud189)] = _189.FileSystem{}
-	providers[string(CloudBaiDu)] = baidu.FileSystem{}
+	providers[string(CloudBaiDu)] = baidu.FileSystemBase{}
 }
 
 func GetProviders() map[string]model.FileSystem {

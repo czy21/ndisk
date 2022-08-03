@@ -11,9 +11,9 @@ import (
 )
 
 type FileBase struct {
+	Ctx  context.Context
 	FS   model.FileSystem
 	File model.ProviderFile
-	Ctx  context.Context
 }
 
 func (f FileBase) Stat() (fs.FileInfo, error) {
@@ -54,6 +54,5 @@ func (f FileBase) UploadLimitSize() int64 {
 
 func (f FileBase) UploadFileSize() int64 {
 	extra := f.Ctx.Value(constant.HttpExtra).(map[string]interface{})
-	fileSize := extra[constant.HttpExtraFileSize].(int64)
-	return fileSize
+	return extra[constant.HttpExtraFileSize].(int64)
 }

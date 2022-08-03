@@ -15,6 +15,7 @@ import (
 )
 
 type FileSystem struct {
+	base.FileSystemBase
 }
 
 func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) (err error) {
