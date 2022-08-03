@@ -54,7 +54,7 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	return fs.Stat(ctx, p)
 }
 
-func getProvider(name string, oldName string) (model.ProviderFile, provider.FileSystem) {
+func getProvider(name string, oldName string) (model.ProviderFile, model.FileSystem) {
 	file := model.ProviderFile{}
 	for _, t := range providerMetas {
 		if strings.HasPrefix(name, "/"+t.Name) {
@@ -104,7 +104,7 @@ func limitBuf(val int) int {
 func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	p, fs := getProvider(name, "")
-	if h, ok := fs.(provider.HandlerHttp); ok {
+	if h, ok := fs.(model.HandlerHttp); ok {
 		h.HandleHttp(ctx, name, p, w, r)
 		return
 	}

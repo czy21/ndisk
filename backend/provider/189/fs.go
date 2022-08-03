@@ -3,6 +3,7 @@ package _189
 import (
 	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
+	"github.com/czy21/ndisk/provider/base"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	fs1 "io/fs"
@@ -24,7 +25,7 @@ func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.Pro
 	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
-	return File{ctx: ctx, file: file}, nil
+	return File{base.FileBase{Ctx: ctx, File: file, FS: fs}}, nil
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
 	api := API{File: file}
