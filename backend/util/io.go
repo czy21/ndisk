@@ -30,9 +30,6 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 		return 0, errors.New("no implement UpDownWriter interface")
 	}
 	fileSize := wt.UploadFileSize()
-	if fileSize == 0 {
-		return 0, nil
-	}
 	limitSize := wt.UploadLimitSize()
 	if limitSize > 0 && fileSize > limitSize {
 		return 0, errors.New(fmt.Sprintf("fileSize:%d > limitSize:%d", fileSize, limitSize))
