@@ -38,6 +38,9 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	api := API{File: f.File}
 	fileInfo, _ := f.FS.GetFileInfo(f.Ctx, f.File.Name, f.File.ProviderFolder)
 	folder, err := api.GetFolderById(fileInfo.Id)
+	if err != nil {
+		return nil, err
+	}
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Folders {
 		fileInfos = append(fileInfos, model.FileInfoDelegate{

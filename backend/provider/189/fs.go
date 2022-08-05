@@ -76,7 +76,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, providerFolde
 	if d != "/" {
 		for _, t := range ds {
 			folder, err = api.GetFolderById(remoteName)
-			err = fs1.ErrNotExist
+			if err == nil {
+				err = fs1.ErrNotExist
+			}
 			for _, q := range folder.Folders {
 				if q.Name == t {
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
@@ -89,7 +91,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, providerFolde
 	}
 	if f != "" {
 		folder, err = api.GetFolderById(remoteName)
-		err = fs1.ErrNotExist
+		if err == nil {
+			err = fs1.ErrNotExist
+		}
 		for _, q := range folder.Files {
 			if q.Name == f {
 				fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
