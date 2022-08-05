@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/net/webdav"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -18,7 +19,11 @@ var providerMetas []model.ProviderFolderMeta
 func getDavLogger() func(request *http.Request, err error) {
 	return func(request *http.Request, err error) {
 		if err != nil {
-			log.Errorf("%s %s", request.RequestURI, err)
+			if os.IsNotExist(err) {
+				log.Debugf("%s %s", request.RequestURI, err)
+			} else {
+				log.Errorf("%s %s", request.RequestURI, err)
+			}
 		}
 	}
 }
