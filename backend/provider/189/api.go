@@ -315,9 +315,6 @@ func (a API) CommitFile(fileId string, fileSize int64, fileMd5 string, sliceMd5 
 }
 func (a API) UploadChunk(fileId string, b []byte, md5Bytes []byte, index int) error {
 	md5Base64 := base64.StdEncoding.EncodeToString(md5Bytes)
-	if len(b) == 0 {
-		return nil
-	}
 	var uploadUrlsRes UploadUrlVORes
 	err := a.UploadRequest("/person/getMultiUploadUrls",
 		map[string]string{
