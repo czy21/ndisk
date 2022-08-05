@@ -98,6 +98,9 @@ func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 		return 0, errors.New("no implement UpDownWriter interface")
 	}
 	dUrl, fileSize, err := rt.DownloadCreate()
+	if err != nil {
+		return 0, err
+	}
 	fileName := rt.Name()
 	buf := make([]byte, n)
 	chunkL := len(buf)

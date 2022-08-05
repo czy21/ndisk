@@ -64,8 +64,8 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 		req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 			SetQueryParams(params).
 			SetResult(&pageRet)
-		res, err := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
-		err = a.logRes("GetFolderById", res.String(), pageRet.ResponseVO)
+		res, _ := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
+		err := a.logRes("GetFolderById", res.String(), pageRet.ResponseVO)
 		if err != nil {
 			return ret.FileListAO, err
 		}
@@ -91,7 +91,7 @@ func (a API) CreateFolder(parentFolderId string, name string) (err error) {
 		SetQueryParams(queryParam).
 		SetFormData(formData).
 		SetResult(&ret)
-	res, err := req.Post(fmt.Sprintf("%s/open/file/createFolder.action", ApiUrl))
+	res, _ := req.Post(fmt.Sprintf("%s/open/file/createFolder.action", ApiUrl))
 	err = a.logRes("CreateFolder", res.String(), ret.ResponseVO)
 	return err
 }
@@ -129,7 +129,7 @@ func (a API) CreateTask(kind string, fileId string, fileName string, isFolder bo
 		SetFormData(formParam).
 		SetQueryParams(queryParam).
 		SetResult(&ret)
-	res, err := req.Post(fmt.Sprintf("%s/open/batch/createBatchTask.action", ApiUrl))
+	res, _ := req.Post(fmt.Sprintf("%s/open/batch/createBatchTask.action", ApiUrl))
 	err = a.logRes("Delete", res.String(), ret.ResponseVO)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func (a API) CreateTask(kind string, fileId string, fileName string, isFolder bo
 	var taskStatus int
 	i := 0
 	for {
-		if taskStatus == 4 || i >= 2 {
+		if err != nil || taskStatus == 4 || i >= 2 {
 			break
 		}
 		time.Sleep(500 * time.Millisecond)
@@ -161,7 +161,7 @@ func (a API) CheckTask(taskId string, kind string) (s int, err error) {
 		SetQueryParams(queryParam).
 		SetFormData(formParam).
 		SetResult(&ret)
-	res, err := req.Post(fmt.Sprintf("%s/open/batch/checkBatchTask.action", ApiUrl))
+	res, _ := req.Post(fmt.Sprintf("%s/open/batch/checkBatchTask.action", ApiUrl))
 	err = a.logRes("CheckTask", res.String(), ret.ResponseVO)
 	return ret.TaskStatus, err
 }
@@ -174,7 +174,7 @@ func (a API) RenameFile(fileId string, destName string) (err error) {
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetFormData(formParam).
 		SetResult(&ret)
-	res, err := req.Post(fmt.Sprintf("%s/open/file/renameFile.action?noCache=%s", ApiUrl, QueryParamNoCache))
+	res, _ := req.Post(fmt.Sprintf("%s/open/file/renameFile.action?noCache=%s", ApiUrl, QueryParamNoCache))
 	err = a.logRes("RenameFile", res.String(), ret.ResponseVO)
 	return err
 }
@@ -187,7 +187,7 @@ func (a API) RenameFolder(folderId string, destName string) (err error) {
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetFormData(formParams).
 		SetResult(&ret)
-	res, err := req.Post(fmt.Sprintf("%s/open/file/renameFolder.action?noCache=%s", ApiUrl, QueryParamNoCache))
+	res, _ := req.Post(fmt.Sprintf("%s/open/file/renameFolder.action?noCache=%s", ApiUrl, QueryParamNoCache))
 	err = a.logRes("RenameFolder", res.String(), ret.ResponseVO)
 	return err
 }
@@ -203,7 +203,7 @@ func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetQueryParams(queryParam).
 		SetResult(&ret)
-	res, err := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
+	res, _ := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
 	err = a.logRes("GetFileInfoById", res.String(), ret.ResponseVO)
 	if ret.ResCode == ResFileNotFoundCode {
 		err = fs.ErrNotExist
@@ -212,7 +212,6 @@ func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
 }
 func (a API) GetRSAKey() (ret RSAKeyRes, err error) {
 	const rsaCacheKey = "e:rsa:189"
-
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetResult(&ret)
 	cache.Client.GetObj(context.Background(), rsaCacheKey, &ret)
@@ -234,7 +233,7 @@ func (a API) GetUserBriefInfo() (UserBriefInfoVO, error) {
 	)
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetResult(&ret)
-	res, err := req.Get(fmt.Sprintf("%s/portal/v2/getUserBriefInfo.action?noCache=%s", ApiUrl, QueryParamNoCache))
+	res, _ := req.Get(fmt.Sprintf("%s/portal/v2/getUserBriefInfo.action?noCache=%s", ApiUrl, QueryParamNoCache))
 	err = a.logRes("GetUserBriefInfo", res.String(), ret.ResponseVO)
 	return ret.UserBriefInfoVO, err
 }
@@ -269,7 +268,7 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 		SetHeader("PkId", rsaRes.PKId).
 		SetQueryParam("params", encryptParam).
 		SetResult(resVO)
-	res, err := req.Get("https://upload.cloud.189.cn" + uri)
+	res, _ := req.Get("https://upload.cloud.189.cn" + uri)
 	if errPredicate() {
 		log.Error(res)
 	}
