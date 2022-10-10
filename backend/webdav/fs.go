@@ -20,16 +20,16 @@ type FileSystem struct{}
 
 func (FileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
 	web.LogDav("Mkdir", name)
-	p, fs := getProvider(name, "")
-	return fs.Mkdir(ctx, perm, p)
+	f, fs := getProvider(name, "")
+	return fs.Mkdir(ctx, perm, f)
 }
 func (FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
 	web.LogDav("OpenFile", name)
 	if name == "/" {
 		return File{Name: name}, nil
 	}
-	p, fs := getProvider(name, "")
-	return fs.OpenFile(ctx, flag, perm, p)
+	f, fs := getProvider(name, "")
+	return fs.OpenFile(ctx, flag, perm, f)
 }
 func (FileSystem) RemoveAll(ctx context.Context, name string) (err error) {
 	web.LogDav("RemoveAll", name)
@@ -50,8 +50,8 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	if name == "/" {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
-	p, fs := getProvider(name, "")
-	return fs.Stat(ctx, p)
+	f, fs := getProvider(name, "")
+	return fs.Stat(ctx, f)
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, model.FileSystem) {
