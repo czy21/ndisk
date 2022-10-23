@@ -66,21 +66,22 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 	}
 	dir, fileName := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(file.ProviderFolder.Name, "/"))))
 	dirs := strings.Split(strings.Trim(dir, "/"), "/")
+	if dirs[0] == "" || dirs[0] == "/" {
+		dirs = make([]string, 0)
+	}
 	api := API{}
 	var folder FileListAO
-	if !(dir == "" || dir == "/") {
-		for _, t := range dirs {
-			folder, err = api.GetFolderById(remoteName)
-			if err == nil {
-				err = fs1.ErrNotExist
-			}
-			for _, q := range folder.Folders {
-				if q.Name == t {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.Id = strconv.FormatInt(q.Id, 10)
-					remoteName = fileInfo.Id
-					err = nil
-				}
+	for _, t := range dirs {
+		folder, err = api.GetFolderById(remoteName)
+		if err == nil {
+			err = fs1.ErrNotExist
+		}
+		for _, q := range folder.Folders {
+			if q.Name == t {
+				fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+				fileInfo.Id = strconv.FormatInt(q.Id, 10)
+				remoteName = fileInfo.Id
+				err = nil
 			}
 		}
 	}

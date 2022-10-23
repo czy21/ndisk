@@ -39,6 +39,9 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileiInfo model.FileInfo, err error) {
 	err = filepath.SkipDir
+	//dir, fileName := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(file.ProviderFolder.Name, "/"))))
+	//dirs := strings.Split(strings.Trim(dir, "/"), "/")
+	//
 	account := file.ProviderFolder.Account
 	client, err := minio.New(account.Endpoint, account.UserName, account.Password, false)
 	buckets, err := client.ListBuckets()
