@@ -19,9 +19,9 @@ type FileSystem struct {
 
 func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) (err error) {
 	api := API{File: file}
-	d, f := path.Split(file.Path)
-	folder, _ := fs.GetFileInfo(ctx, d, file)
-	err = api.CreateFolder(folder.Id, f)
+	dir, fileName := path.Split(file.Path)
+	folder, _ := fs.GetFileInfo(ctx, dir, file)
+	err = api.CreateFolder(folder.Id, fileName)
 	return err
 }
 func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {

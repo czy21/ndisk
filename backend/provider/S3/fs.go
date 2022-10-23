@@ -33,13 +33,18 @@ func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error 
 }
 
 func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
-	//TODO implement me
-	account := file.ProviderFolder.Account
-	client, _ := minio.New(account.Endpoint, account.UserName, account.Password, false)
-	print(client)
-	return nil, filepath.SkipDir
+	fileInfo, _ := fs.GetFileInfo(ctx, file.Name, file)
+	return model.FileInfoDelegate{FileInfo: fileInfo}, filepath.SkipDir
 }
 
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileiInfo model.FileInfo, err error) {
+	err = filepath.SkipDir
+	account := file.ProviderFolder.Account
+	client, err := minio.New(account.Endpoint, account.UserName, account.Password, false)
+	buckets, err := client.ListBuckets()
+	for _, t := range buckets {
+		println(t.Name)
+	}
+	println(client.ListBuckets())
 	return model.FileInfo{}, nil
 }
