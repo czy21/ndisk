@@ -40,7 +40,7 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 	return webdav.Dir(fs.Dir).Stat(ctx, file.Name)
 }
 
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, providerFile model.ProviderFolderMeta) (model.FileInfo, error) {
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return model.FileInfo{}, nil
 }
 

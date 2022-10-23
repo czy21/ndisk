@@ -40,6 +40,6 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 	return nil, filepath.SkipDir
 }
 
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFolderMeta) (model.FileInfo, error) {
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return model.FileInfo{}, nil
 }

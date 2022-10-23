@@ -17,7 +17,7 @@ type FileBase struct {
 }
 
 func (f FileBase) Stat() (fs.FileInfo, error) {
-	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Name, f.File.ProviderFolder)
+	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Name, f.File)
 	if f.Ctx.Value(constant.HttpExtra).(map[string]interface{})[constant.HttpExtraMethod] == http.MethodPut && os.IsNotExist(err) {
 		err = nil
 	}
@@ -32,7 +32,7 @@ func (f FileBase) Close() error {
 }
 
 func (f FileBase) Seek(offset int64, whence int) (int64, error) {
-	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Name, f.File.ProviderFolder)
+	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Name, f.File)
 	return fileInfo.Size, err
 }
 

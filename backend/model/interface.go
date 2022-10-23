@@ -17,5 +17,5 @@ type FileSystem interface {
 	RemoveAll(ctx context.Context, file ProviderFile) error
 	Rename(ctx context.Context, file ProviderFile) error
 	Stat(ctx context.Context, file ProviderFile) (os.FileInfo, error)
-	GetFileInfo(ctx context.Context, name string, file ProviderFolderMeta) (FileInfo, error)
+	GetFileInfo(ctx context.Context, name string, file ProviderFile) (FileInfo, error)
 }
