@@ -2,6 +2,7 @@ create database if not exists ndisk default charset utf8mb4 collate utf8mb4_0900
 use ndisk;
 CREATE TABLE provider_account (
   id       int NOT NULL AUTO_INCREMENT,
+  endpoint varchar(50) NULL,
   username varchar(50) NULL,
   password varchar(50) NULL,
   token    varchar(50) NULL,

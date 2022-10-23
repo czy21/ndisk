@@ -13,7 +13,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 )
 
@@ -53,29 +52,6 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 	}
 	p, fs := getProvider(name, "")
 	return fs.Stat(ctx, p)
-}
-
-func (FileSystem) getFileInfo(ctx context.Context, name string, providerFolder model.ProviderFolderMeta, getFileFunc func(info model.FileInfo, ds []string)) (model.FileInfo, error) {
-	remoteName := providerFolder.RemoteName
-	fileInfo := model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *providerFolder.UpdateTime}
-	var err error
-	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
-		return fileInfo, err
-	}
-	d, f := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(providerFolder.Name, "/"))))
-	if (d == "" || d == "/") && f == "" {
-		return fileInfo, nil
-	}
-	d = path.Clean(d)
-	ds := strings.Split(strings.Trim(d, "/"), "/")
-	getFileFunc(fileInfo, ds)
-	if os.IsNotExist(err) {
-		fileInfo.Id = ""
-	}
-	if err == nil {
-		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
-	}
-	return fileInfo, err
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, model.FileSystem) {

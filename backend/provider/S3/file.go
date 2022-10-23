@@ -1,4 +1,4 @@
-package s3
+package S3
 
 import (
 	"github.com/czy21/ndisk/provider/base"
