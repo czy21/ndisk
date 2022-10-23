@@ -1,8 +1,0 @@
-plugins {
-    id 'org.springframework.boot'
-}
-
-dependencies {
-    implementation project(":ndisk-webdav")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-}
