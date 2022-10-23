@@ -73,8 +73,7 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 
 // Uploader upload to remote
 type Uploader struct {
-	Context context.Context
-	File    model.ProviderFile
+	File model.ProviderFile
 	io.ReadCloser
 }
 
@@ -108,11 +107,11 @@ func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 		h.HandleHttp(ctx, name, p, w, r)
 		return
 	}
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		(*w).Header().Set("Content-Type", util.GetContentType(p.Path))
 		*w = Downloader{File: p, ResponseWriter: *w}
-	}
-	if r.Method == http.MethodPut {
+	case http.MethodPut:
 		r.Body = Uploader{File: p, ReadCloser: r.Body}
 	}
 }

@@ -3,6 +3,7 @@ package model
 type ProviderAccountPO struct {
 	BaseEntity[int64]
 	TrackEntity
+	Endpoint string `gorm:"column:endpoint" json:"endpoint"`
 	UserName string `gorm:"column:username" json:"username"`
 	Password string `gorm:"column:password" json:"password"`
 	Token    string `gorm:"column:token" json:"token"`
