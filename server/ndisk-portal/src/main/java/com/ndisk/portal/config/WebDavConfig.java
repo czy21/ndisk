@@ -1,7 +1,6 @@
 package com.ndisk.portal.config;
 
-import com.ndisk.webdav.servlet.WebDavServlet;
-import org.springframework.beans.factory.annotation.Configurable;
+import com.ndisk.webdav.servlet.WebdavServlet;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 public class WebDavConfig {
 
     @Bean
-    ServletRegistrationBean<WebDavServlet> webDavServletServletRegistrationBean() {
-        ServletRegistrationBean<WebDavServlet> servletRegistrationBean = new ServletRegistrationBean<>(new WebDavServlet(), "/dav/*");
+    ServletRegistrationBean<WebdavServlet> webDavServletServletRegistrationBean() {
+        ServletRegistrationBean<WebdavServlet> servletRegistrationBean = new ServletRegistrationBean<>(new WebdavServlet(), "/dav/*");
         return servletRegistrationBean;
     }
 }
