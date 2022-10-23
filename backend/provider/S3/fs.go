@@ -5,6 +5,7 @@ import (
 	"github.com/czy21/ndisk/model"
 	"golang.org/x/net/webdav"
 	"os"
+	"path/filepath"
 )
 
 type FileSystem struct {
@@ -32,10 +33,9 @@ func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error 
 
 func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
 	//TODO implement me
-	panic("implement me")
+	return nil, filepath.SkipDir
 }
 
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFolderMeta) (model.FileInfo, error) {
-	//TODO implement me
-	panic("implement me")
+	return model.FileInfo{}, nil
 }
