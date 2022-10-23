@@ -57,14 +57,14 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 	fileInfo, err := fs.GetFileInfo(ctx, file.Name, file)
 	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, providerFile model.ProviderFile) (model.FileInfo, error) {
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	var err error
-	remoteName := providerFile.ProviderFolder.RemoteName
-	fileInfo := model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *providerFile.ProviderFolder.UpdateTime}
+	remoteName := file.ProviderFolder.RemoteName
+	fileInfo := model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
 	}
-	dir, fileName := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(providerFile.ProviderFolder.Name, "/"))))
+	dir, fileName := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(file.ProviderFolder.Name, "/"))))
 	dirs := strings.Split(strings.Trim(dir, "/"), "/")
 	api := API{}
 	var folder FileListAO
