@@ -57,8 +57,8 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileInfo model.FileInfo, err error) {
-	remoteName := file.ProviderFolder.RemoteName
-	fileInfo = model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
+	remoteName := file.FileInfo.Id
+	fileInfo = file.FileInfo
 	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return fileInfo, err
 	}

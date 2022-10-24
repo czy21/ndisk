@@ -56,21 +56,24 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, model.FileSystem) {
-	file := model.ProviderFile{Name: name}
+	file := model.ProviderFile{
+		Name:    name,
+		Path:    strings.TrimSuffix(name, "/"),
+		OldName: oldName,
+		OldPath: strings.TrimSuffix(oldName, "/"),
+	}
 	for _, t := range providerMetas {
 		if strings.HasPrefix(name, "/"+t.Name) {
 			file.ProviderFolder = t
 		}
 	}
 	dir, fileName, dirs, isRoot := util.SplitPath(file.Name, file.ProviderFolder.Name)
-	file.Path = strings.TrimSuffix(name, "/")
-	file.OldName = oldName
-	file.OldPath = strings.TrimSuffix(oldName, "/")
 	file.FileName = fileName
 	file.Dir = dir
 	file.Dirs = dirs
 	file.IsRoot = isRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
+		file.FileInfo = model.FileInfo{Name: name, Id: file.ProviderFolder.RemoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 		return file, fs
 	}
 	return file, local.NewFS()

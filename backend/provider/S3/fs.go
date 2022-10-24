@@ -2,6 +2,7 @@ package S3
 
 import (
 	"context"
+	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
 	"github.com/minio/minio-go/v6"
@@ -39,8 +40,11 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 }
 
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileInfo model.FileInfo, err error) {
-	remoteName := file.ProviderFolder.RemoteName
-	fileInfo = model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
+	fileInfo = file.FileInfo
+	fileInfo.Id = strings.Join([]string{path.Join(fileInfo.Id), name}, "")
+	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
+		return fileInfo, err
+	}
 	if !file.IsRoot {
 		api := API{file}
 		var objectInfos []minio.ObjectInfo
@@ -49,7 +53,6 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 			objectName := path.Base(t.Key)
 			if objectName == file.FileName {
 				fileInfo.ModTime = t.LastModified
-				fileInfo.Id = name
 				if strings.HasSuffix(t.Key, "/") {
 					fileInfo.IsDir = true
 				} else {
@@ -58,6 +61,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 				}
 			}
 		}
+	}
+	if err == nil {
+		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
 	}
 	return fileInfo, err
 }

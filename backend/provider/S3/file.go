@@ -26,7 +26,7 @@ func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, f.File.Dir)
 	for _, t := range objectInfos {
 		objectName := path.Base(t.Key)
-		id := path.Join(f.Name(), objectName)
+		id := strings.Join([]string{f.File.FileInfo.Id, t.Key}, "/")
 		fileInfo := model.FileInfo{Id: id, Name: objectName}
 		if strings.HasSuffix(t.Key, "/") {
 			fileInfo.IsDir = true
