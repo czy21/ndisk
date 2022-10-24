@@ -15,13 +15,6 @@ type File struct {
 	base.FileBase
 }
 
-func (f File) DownloadCreate() (dUrl string, fileSize int64, err error) {
-	panic("")
-}
-func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd int64) (n int, err error) {
-	panic("")
-}
-
 func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 	api := API{File: f.File}
 	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, f.File.RelPath)
@@ -46,15 +39,13 @@ func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	api := API{f.File}
 	client, err := api.GetClient()
-	objectName := strings.SplitAfterN(f.Name(), "/", 3)[2]
-	return client.PutObject(f.File.ProviderFolder.RemoteName, objectName, r, -1, minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
+	return client.PutObject(f.File.ProviderFolder.RemoteName, f.File.RelPath, r, -1, minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
 }
 
 //WriteTo CopyTo
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	api := API{f.File}
 	client, err := api.GetClient()
-	objectName := strings.SplitAfterN(f.Name(), "/", 3)[2]
-	object, err := client.GetObject(f.File.ProviderFolder.RemoteName, objectName, minio.GetObjectOptions{})
+	object, err := client.GetObject(f.File.ProviderFolder.RemoteName, f.File.RelPath, minio.GetObjectOptions{})
 	return io.Copy(w, object)
 }
