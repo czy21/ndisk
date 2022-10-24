@@ -73,7 +73,7 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 	file.Dirs = dirs
 	file.IsRoot = isRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
-		file.FileInfo = model.FileInfo{Name: name, Id: file.ProviderFolder.RemoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
+		file.FileInfo = &model.FileInfo{Name: name, Id: file.ProviderFolder.RemoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 		return file, fs
 	}
 	return file, local.NewFS()

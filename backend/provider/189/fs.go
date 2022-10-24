@@ -1,7 +1,6 @@
 package _189
 
 import (
-	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
 	"golang.org/x/net/context"
@@ -56,13 +55,10 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 	fileInfo, err := fs.GetFileInfo(ctx, file.Name, file)
 	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileInfo model.FileInfo, err error) {
-	remoteName := file.FileInfo.Id
-	fileInfo = file.FileInfo
-	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
-		return fileInfo, err
-	}
-	if !file.IsRoot {
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
+	return base.GetFileInfo(ctx, name, file, func(fileInfo *model.FileInfo) error {
+		var err error
+		remoteName := file.FileInfo.Id
 		api := API{}
 		var folder FileListAO
 		for _, t := range file.Dirs {
@@ -101,12 +97,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 				}
 			}
 		}
-	}
-	if os.IsNotExist(err) {
-		fileInfo.Id = ""
-	}
-	if err == nil {
-		cache.Client.SetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo)
-	}
-	return fileInfo, err
+		if os.IsNotExist(err) {
+			fileInfo.Id = ""
+		}
+		return err
+	})
 }

@@ -46,6 +46,6 @@ type ProviderFile struct {
 	Dir            string
 	Dirs           []string
 	IsRoot         bool
-	FileInfo       FileInfo
+	FileInfo       *FileInfo
 	ProviderFolder ProviderFolderMeta
 }
