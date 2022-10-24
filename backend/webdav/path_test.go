@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -45,4 +46,7 @@ func TestDirBase(t *testing.T) {
 	dirResult(p3)
 	dirResult(p4)
 	dirResult(p5)
+	a := "/a123/b123/c123/d123"
+	b := strings.SplitAfterN(a, "/", 3)
+	println(b)
 }

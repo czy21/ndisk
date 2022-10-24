@@ -15,8 +15,11 @@ type FileSystem struct {
 }
 
 func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) error {
-	//TODO implement me
-	panic("implement me")
+	api := API{file}
+	client, err := api.GetClient()
+	objectName := path.Join(strings.SplitAfterN(file.Name, "/", 3)[2]) + "/"
+	_, err = client.PutObject(file.ProviderFolder.RemoteName, objectName, nil, 0, minio.PutObjectOptions{ContentType: ""})
+	return err
 }
 
 func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
@@ -24,8 +27,11 @@ func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, f
 }
 
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
-	//TODO implement me
-	panic("implement me")
+	api := API{file}
+	client, err := api.GetClient()
+	objectName := strings.SplitAfterN(file.Name, "/", 3)[2]
+	err = client.RemoveObjectWithOptions(file.ProviderFolder.RemoteName, objectName, minio.RemoveObjectOptions{})
+	return err
 }
 
 func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error {

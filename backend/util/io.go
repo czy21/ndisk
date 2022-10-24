@@ -25,6 +25,9 @@ type UpDownWriter interface {
 }
 
 func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
+	if rt, ok := dst.(io.ReaderFrom); ok {
+		return rt.ReadFrom(src)
+	}
 	wt, ok := dst.(UpDownWriter)
 	if !ok {
 		return 0, errors.New("no implement UpDownWriter interface")
@@ -93,6 +96,9 @@ func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 }
 
 func ReadFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
+	if wt, ok := src.(io.WriterTo); ok {
+		return wt.WriteTo(dst)
+	}
 	rt, ok := src.(UpDownWriter)
 	if !ok {
 		return 0, errors.New("no implement UpDownWriter interface")
