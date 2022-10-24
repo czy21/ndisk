@@ -75,13 +75,13 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 				}
 			}
 		}
-		if file.FileName != "" {
+		if file.BaseName != "" {
 			folder, err = api.GetFolderById(remoteName)
 			if err == nil {
 				err = fs1.ErrNotExist
 			}
 			for _, q := range folder.Files {
-				if q.Name == file.FileName {
+				if q.Name == file.BaseName {
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 					fileInfo.Size = q.Size
 					fileInfo.IsDir = false
@@ -90,7 +90,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 				}
 			}
 			for _, q := range folder.Folders {
-				if q.Name == file.FileName {
+				if q.Name == file.BaseName {
 					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 					fileInfo.Id = strconv.FormatInt(q.Id, 10)
 					err = nil

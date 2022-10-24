@@ -3,7 +3,7 @@ package S3
 import (
 	"github.com/czy21/ndisk/model"
 	"github.com/minio/minio-go/v6"
-	"strings"
+	"path"
 )
 
 type API struct {
@@ -17,12 +17,14 @@ func (a API) GetClient() (*minio.Client, error) {
 }
 
 func (a API) GetObjects(bucketName string, objectPrefix string) (objectInfos []minio.ObjectInfo, err error) {
-	objectPrefix = strings.TrimPrefix(objectPrefix, "/")
+	objectPrefix = path.Join(objectPrefix) + "/"
 	client, err := a.GetClient()
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 	for t := range client.ListObjects(bucketName, objectPrefix, false, doneCh) {
-		objectInfos = append(objectInfos, t)
+		if objectPrefix != t.Key {
+			objectInfos = append(objectInfos, t)
+		}
 	}
 	return objectInfos, err
 }

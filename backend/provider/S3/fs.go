@@ -17,8 +17,7 @@ type FileSystem struct {
 func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) error {
 	api := API{file}
 	client, err := api.GetClient()
-	objectName := path.Join(strings.SplitAfterN(file.Name, "/", 3)[2]) + "/"
-	_, err = client.PutObject(file.ProviderFolder.RemoteName, objectName, nil, 0, minio.PutObjectOptions{ContentType: ""})
+	_, err = client.PutObject(file.ProviderFolder.RemoteName, path.Join(file.RelPath)+"/", nil, 0, minio.PutObjectOptions{ContentType: ""})
 	return err
 }
 
@@ -29,8 +28,7 @@ func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, f
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
 	api := API{file}
 	client, err := api.GetClient()
-	objectName := strings.SplitAfterN(file.Name, "/", 3)[2]
-	err = client.RemoveObjectWithOptions(file.ProviderFolder.RemoteName, objectName, minio.RemoveObjectOptions{})
+	err = client.RemoveObjectWithOptions(file.ProviderFolder.RemoteName, file.RelPath, minio.RemoveObjectOptions{})
 	return err
 }
 
@@ -53,7 +51,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		objectInfos, err = api.GetObjects(file.ProviderFolder.RemoteName, file.Dir)
 		for _, t := range objectInfos {
 			objectName := path.Base(t.Key)
-			if objectName == file.FileName {
+			if objectName == file.BaseName {
 				fileInfo.ModTime = t.LastModified
 				if strings.HasSuffix(t.Key, "/") {
 					fileInfo.IsDir = true

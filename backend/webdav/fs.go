@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -51,7 +52,7 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	f, fs := getProvider(name, "")
-	web.LogDav("Stat", fmt.Sprintf("dir:%s fileName:%s dirs:%s isRoot:%t", f.Dir, f.FileName, fmt.Sprint(f.Dirs), f.IsRoot))
+	web.LogDav("Stat", fmt.Sprintf("dir:%s fileName:%s dirs:%s isRoot:%t", f.Dir, f.BaseName, fmt.Sprint(f.Dirs), f.IsRoot))
 	return fs.Stat(ctx, f)
 }
 
@@ -68,7 +69,8 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 		}
 	}
 	dir, fileName, dirs, isRoot := util.SplitPath(file.Name, file.ProviderFolder.Name)
-	file.FileName = fileName
+	file.RelPath = strings.TrimPrefix(strings.ReplaceAll(name, path.Join("/", file.ProviderFolder.Name), ""), "/")
+	file.BaseName = fileName
 	file.Dir = dir
 	file.Dirs = dirs
 	file.IsRoot = isRoot

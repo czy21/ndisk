@@ -24,24 +24,21 @@ func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd in
 
 func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 	api := API{File: f.File}
-	objectPrefix := strings.SplitAfterN(path.Join(f.Name())+"/", "/", 3)[2]
-	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, objectPrefix)
+	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, f.File.RelPath)
 	for _, t := range objectInfos {
-		if objectPrefix != t.Key {
-			objectName := path.Base(t.Key)
-			id := strings.Join([]string{f.File.FileInfo.Id, t.Key}, "/")
-			fileInfo := model.FileInfo{Id: id, Name: objectName}
-			if strings.HasSuffix(t.Key, "/") {
-				fileInfo.IsDir = true
-			} else {
-				fileInfo.IsDir = false
-				fileInfo.Size = t.Size
-				fileInfo.ModTime = t.LastModified
-			}
-			fileInfos = append(fileInfos, model.FileInfoDelegate{
-				FileInfo: fileInfo,
-			})
+		objectName := path.Base(t.Key)
+		id := strings.Join([]string{f.File.FileInfo.Id, f.File.RelPath}, "/")
+		fileInfo := model.FileInfo{Id: id, Name: objectName}
+		if strings.HasSuffix(t.Key, "/") {
+			fileInfo.IsDir = true
+		} else {
+			fileInfo.IsDir = false
+			fileInfo.Size = t.Size
+			fileInfo.ModTime = t.LastModified
 		}
+		fileInfos = append(fileInfos, model.FileInfoDelegate{
+			FileInfo: fileInfo,
+		})
 	}
 	return fileInfos, err
 }

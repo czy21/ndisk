@@ -42,7 +42,8 @@ type ProviderFile struct {
 	Name           string
 	OldPath        string
 	OldName        string
-	FileName       string
+	RelPath        string
+	BaseName       string
 	Dir            string
 	Dirs           []string
 	IsRoot         bool
