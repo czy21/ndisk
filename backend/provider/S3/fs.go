@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
-	"github.com/czy21/ndisk/util"
 	"github.com/minio/minio-go/v6"
 	"golang.org/x/net/webdav"
 	"os"
@@ -42,17 +41,13 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileInfo model.FileInfo, err error) {
 	remoteName := file.ProviderFolder.RemoteName
 	fileInfo = model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
-	//if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
-	//	return fileInfo, err
-	//}
-	dir, fileName, _, isRoot := util.SplitPath(name, file.ProviderFolder.Name)
-	if !isRoot {
+	if !file.IsRoot {
 		api := API{file}
 		var objectInfos []minio.ObjectInfo
-		objectInfos, err = api.GetObjects(file.ProviderFolder.RemoteName, dir)
+		objectInfos, err = api.GetObjects(file.ProviderFolder.RemoteName, file.Dir)
 		for _, t := range objectInfos {
 			objectName := path.Base(t.Key)
-			if objectName == fileName {
+			if objectName == file.FileName {
 				fileInfo.ModTime = t.LastModified
 				fileInfo.Id = name
 				if strings.HasSuffix(t.Key, "/") {
