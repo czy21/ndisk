@@ -42,5 +42,9 @@ type ProviderFile struct {
 	Name           string
 	OldPath        string
 	OldName        string
+	FileName       string
+	Dir            string
+	Dirs           []string
+	IsRoot         bool
 	ProviderFolder ProviderFolderMeta
 }

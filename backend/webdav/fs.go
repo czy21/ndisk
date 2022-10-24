@@ -51,20 +51,25 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	f, fs := getProvider(name, "")
+	web.LogDav("Stat", fmt.Sprintf("dir:%s fileName:%s dirs:%s isRoot:%t", f.Dir, f.FileName, fmt.Sprint(f.Dirs), f.IsRoot))
 	return fs.Stat(ctx, f)
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, model.FileSystem) {
-	file := model.ProviderFile{}
+	file := model.ProviderFile{Name: name}
 	for _, t := range providerMetas {
 		if strings.HasPrefix(name, "/"+t.Name) {
 			file.ProviderFolder = t
 		}
 	}
-	file.Name = name
+	dir, fileName, dirs, isRoot := util.SplitPath(file.Name, file.ProviderFolder.Name)
 	file.Path = strings.TrimSuffix(name, "/")
 	file.OldName = oldName
 	file.OldPath = strings.TrimSuffix(oldName, "/")
+	file.FileName = fileName
+	file.Dir = dir
+	file.Dirs = dirs
+	file.IsRoot = isRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
 		return file, fs
 	}

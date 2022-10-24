@@ -3,10 +3,13 @@ package S3
 import (
 	"context"
 	"github.com/czy21/ndisk/model"
+	"github.com/czy21/ndisk/provider/base"
+	"github.com/czy21/ndisk/util"
 	"github.com/minio/minio-go/v6"
 	"golang.org/x/net/webdav"
 	"os"
-	"path/filepath"
+	"path"
+	"strings"
 )
 
 type FileSystem struct {
@@ -18,8 +21,7 @@ func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.Pro
 }
 
 func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
-	//TODO implement me
-	panic("implement me")
+	return File{base.FileBase{Ctx: ctx, File: file, FS: fs}}, nil
 }
 
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
@@ -33,21 +35,34 @@ func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error 
 }
 
 func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
-	fileInfo, _ := fs.GetFileInfo(ctx, file.Name, file)
-	return model.FileInfoDelegate{FileInfo: fileInfo}, filepath.SkipDir
+	fileInfo, err := fs.GetFileInfo(ctx, file.Name, file)
+	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
 
-func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileiInfo model.FileInfo, err error) {
-	err = filepath.SkipDir
-	//dir, fileName := path.Split(strings.TrimPrefix(name, path.Join("/", strings.TrimSuffix(file.ProviderFolder.Name, "/"))))
-	//dirs := strings.Split(strings.Trim(dir, "/"), "/")
-	//
-	account := file.ProviderFolder.Account
-	client, err := minio.New(account.Endpoint, account.UserName, account.Password, false)
-	buckets, err := client.ListBuckets()
-	for _, t := range buckets {
-		println(t.Name)
+func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (fileInfo model.FileInfo, err error) {
+	remoteName := file.ProviderFolder.RemoteName
+	fileInfo = model.FileInfo{Name: name, Id: remoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
+	//if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
+	//	return fileInfo, err
+	//}
+	dir, fileName, _, isRoot := util.SplitPath(name, file.ProviderFolder.Name)
+	if !isRoot {
+		api := API{file}
+		var objectInfos []minio.ObjectInfo
+		objectInfos, err = api.GetObjects(file.ProviderFolder.RemoteName, dir)
+		for _, t := range objectInfos {
+			objectName := path.Base(t.Key)
+			if objectName == fileName {
+				fileInfo.ModTime = t.LastModified
+				fileInfo.Id = name
+				if strings.HasSuffix(t.Key, "/") {
+					fileInfo.IsDir = true
+				} else {
+					fileInfo.Size = t.Size
+					fileInfo.IsDir = false
+				}
+			}
+		}
 	}
-	println(client.ListBuckets())
-	return model.FileInfo{}, nil
+	return fileInfo, err
 }

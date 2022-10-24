@@ -1,10 +1,13 @@
 package S3
 
 import (
+	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
 	"hash"
 	"io"
 	"io/fs"
+	"path"
+	"strings"
 )
 
 type File struct {
@@ -18,8 +21,25 @@ func (f File) DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd in
 	panic("")
 }
 
-func (f File) Readdir(count int) ([]fs.FileInfo, error) {
-	panic("")
+func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
+	api := API{File: f.File}
+	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, f.File.Dir)
+	for _, t := range objectInfos {
+		objectName := path.Base(t.Key)
+		id := path.Join(f.Name(), objectName)
+		fileInfo := model.FileInfo{Id: id, Name: objectName}
+		if strings.HasSuffix(t.Key, "/") {
+			fileInfo.IsDir = true
+		} else {
+			fileInfo.IsDir = false
+			fileInfo.Size = t.Size
+			fileInfo.ModTime = t.LastModified
+		}
+		fileInfos = append(fileInfos, model.FileInfoDelegate{
+			FileInfo: fileInfo,
+		})
+	}
+	return fileInfos, err
 }
 
 func (f File) UploadCreate(md5Hash hash.Hash) (fileId string, err error) {
