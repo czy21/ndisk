@@ -17,10 +17,13 @@ type File struct {
 
 func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 	api := API{File: f.File}
-	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, f.File.RelPath)
+	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath)
 	for _, t := range objectInfos {
+		if path.Join(t.Key) == path.Join(f.File.Target.RelPath) {
+			continue
+		}
 		objectName := path.Base(t.Key)
-		id := strings.Join([]string{f.File.FileInfo.Id, f.File.RelPath}, "/")
+		id := strings.Join([]string{f.File.FileInfo.Id, f.File.Target.RelPath}, "/")
 		fileInfo := model.FileInfo{Id: id, Name: objectName}
 		if strings.HasSuffix(t.Key, "/") {
 			fileInfo.IsDir = true
@@ -38,14 +41,17 @@ func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 
 func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	api := API{f.File}
-	client, err := api.GetClient()
-	return client.PutObject(f.File.ProviderFolder.RemoteName, f.File.RelPath, r, -1, minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
+	_, exist, err := api.ExistObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath)
+	if exist {
+		return 0, fs.ErrExist
+	}
+	return api.PutObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, r, -1, minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
 }
 
 //WriteTo CopyTo
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	api := API{f.File}
 	client, err := api.GetClient()
-	object, err := client.GetObject(f.File.ProviderFolder.RemoteName, f.File.RelPath, minio.GetObjectOptions{})
+	object, err := client.GetObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, minio.GetObjectOptions{})
 	return io.Copy(w, object)
 }

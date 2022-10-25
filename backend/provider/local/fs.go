@@ -20,16 +20,16 @@ func NewFS() FileSystem {
 }
 
 func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) error {
-	return webdav.Dir(fs.Dir).Mkdir(ctx, file.Name, perm)
+	return webdav.Dir(fs.Dir).Mkdir(ctx, file.Target.Name, perm)
 }
 func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, file model.ProviderFile) (webdav.File, error) {
-	return webdav.Dir(fs.Dir).OpenFile(ctx, file.Name, flag, perm)
+	return webdav.Dir(fs.Dir).OpenFile(ctx, file.Target.Name, flag, perm)
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
-	return webdav.Dir(fs.Dir).RemoveAll(ctx, file.Name)
+	return webdav.Dir(fs.Dir).RemoveAll(ctx, file.Target.Name)
 }
 func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error {
-	return webdav.Dir(fs.Dir).Rename(ctx, file.OldName, file.Name)
+	return webdav.Dir(fs.Dir).Rename(ctx, file.Source.Name, file.Target.Name)
 }
 func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
 	d := path.Join(fs.Dir, file.ProviderFolder.Name)
@@ -37,7 +37,7 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 		err = os.MkdirAll(d, os.ModePerm)
 		exception.Check(err)
 	}
-	return webdav.Dir(fs.Dir).Stat(ctx, file.Name)
+	return webdav.Dir(fs.Dir).Stat(ctx, file.Target.Name)
 }
 
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {

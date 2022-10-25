@@ -17,7 +17,7 @@ type FileSystem struct {
 
 func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) (err error) {
 	api := API{File: file}
-	dir, fileName := path.Split(file.Path)
+	dir, fileName := path.Split(file.Target.Path)
 	folder, _ := fs.GetFileInfo(ctx, dir, file)
 	err = api.CreateFolder(folder.Id, fileName)
 	return err
@@ -27,16 +27,16 @@ func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, f
 }
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
 	api := API{File: file}
-	_, fName := path.Split(file.Path)
-	fileInfo, err := fs.GetFileInfo(ctx, file.Name, file)
+	_, fName := path.Split(file.Target.Path)
+	fileInfo, err := fs.GetFileInfo(ctx, file.Target.Name, file)
 	err = api.Delete(fileInfo.Id, fName, fileInfo.IsDir)
 	return err
 }
 func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error {
 	api := API{}
-	oldD, oldFName := path.Split(file.OldName)
-	newD, newFName := path.Split(file.Name)
-	oldFileInfo, err := fs.GetFileInfo(ctx, file.OldName, file)
+	oldD, oldFName := path.Split(file.Source.Name)
+	newD, newFName := path.Split(file.Target.Name)
+	oldFileInfo, err := fs.GetFileInfo(ctx, file.Source.Name, file)
 	newFoldInfo, err := fs.GetFileInfo(ctx, newD, file)
 	if oldD != newD {
 		err = api.Move(oldFileInfo.Id, oldFName, oldFileInfo.IsDir, newFoldInfo.Id)
@@ -52,7 +52,7 @@ func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error 
 	return err
 }
 func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
-	fileInfo, err := fs.GetFileInfo(ctx, file.Name, file)
+	fileInfo, err := fs.GetFileInfo(ctx, file.Target.Name, file)
 	return model.FileInfoDelegate{FileInfo: fileInfo}, err
 }
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
@@ -61,8 +61,8 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		remoteName := file.FileInfo.Id
 		api := API{}
 		var folder FileListAO
-		if !file.IsRoot {
-			for _, t := range file.DirNames {
+		if !file.Target.IsRoot {
+			for _, t := range file.Target.DirNames {
 				folder, err = api.GetFolderById(remoteName)
 				if err == nil {
 					err = fs1.ErrNotExist
@@ -76,13 +76,13 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 					}
 				}
 			}
-			if file.BaseName != "" {
+			if file.Target.BaseName != "" {
 				folder, err = api.GetFolderById(remoteName)
 				if err == nil {
 					err = fs1.ErrNotExist
 				}
 				for _, q := range folder.Files {
-					if q.Name == file.BaseName {
+					if q.Name == file.Target.BaseName {
 						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 						fileInfo.Size = q.Size
 						fileInfo.IsDir = false
@@ -91,7 +91,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 					}
 				}
 				for _, q := range folder.Folders {
-					if q.Name == file.BaseName {
+					if q.Name == file.Target.BaseName {
 						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 						fileInfo.Id = strconv.FormatInt(q.Id, 10)
 						err = nil

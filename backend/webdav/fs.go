@@ -36,14 +36,14 @@ func (FileSystem) RemoveAll(ctx context.Context, name string) (err error) {
 	web.LogDav("RemoveAll", name)
 	f, fs := getProvider(name, "")
 	err = fs.RemoveAll(ctx, f)
-	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.Path))
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.Target.Path))
 	return err
 }
 func (FileSystem) Rename(ctx context.Context, oldName, newName string) (err error) {
 	web.LogDav("Rename", fmt.Sprintf("src:%s dst:%s", oldName, newName))
 	f, fs := getProvider(newName, oldName)
 	err = fs.Rename(ctx, f)
-	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.OldPath))
+	cache.Client.DelPrefix(ctx, cache.GetFileInfoCacheKey(f.Source.Path))
 	return err
 }
 func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
@@ -51,29 +51,40 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	f, fs := getProvider(name, "")
-	web.LogDav("Stat", fmt.Sprintf("%s dir:%s fileName:%s dirNames:%s isRoot:%t", name, f.Dir, f.BaseName, fmt.Sprint(f.DirNames), f.IsRoot))
+	web.LogDav("Stat", fmt.Sprintf("%s dir:%s fileName:%s dirNames:%s isRoot:%t", name, f.Target.Dir, f.Target.BaseName, fmt.Sprint(f.Target.DirNames), f.Target.IsRoot))
 	return fs.Stat(ctx, f)
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, model.FileSystem) {
 	file := model.ProviderFile{
-		Name:    name,
-		Path:    strings.TrimSuffix(name, "/"),
-		OldName: oldName,
-		OldPath: strings.TrimSuffix(oldName, "/"),
+		Target: model.ProviderFileMeta{
+			Name: name,
+			Path: strings.TrimSuffix(name, "/"),
+		},
+		Source: model.ProviderFileMeta{
+			Name: oldName,
+			Path: strings.TrimSuffix(oldName, "/"),
+		},
 	}
-	rootPath := path.Join(strings.SplitAfter(file.Name, "/")[0:2]...)
+	rootPath := path.Join(strings.SplitAfter(file.Target.Name, "/")[0:2]...)
 	for _, t := range providerMetas {
 		if rootPath == path.Join("/", t.Name) {
 			file.ProviderFolder = t
 		}
 	}
-	dir, fileName, dirNames, isRoot := util.SplitPath(file.Name, path.Join("/", file.ProviderFolder.Name))
-	file.RelPath = strings.TrimPrefix(dir+fileName, "/")
-	file.BaseName = fileName
-	file.Dir = dir
-	file.DirNames = dirNames
-	file.IsRoot = isRoot
+	targetDir, targetFileName, targetDirNames, targetIsRoot := util.SplitPath(file.Target.Name, path.Join("/", file.ProviderFolder.Name))
+	file.Target.RelPath = strings.TrimPrefix(targetDir+targetFileName, "/")
+	file.Target.BaseName = targetFileName
+	file.Target.Dir = targetDir
+	file.Target.DirNames = targetDirNames
+	file.Target.IsRoot = targetIsRoot
+
+	sourceDir, sourceFileName, sourceDirNames, sourceIsRoot := util.SplitPath(file.Source.Name, path.Join("/", file.ProviderFolder.Name))
+	file.Source.RelPath = strings.TrimPrefix(sourceDir+sourceFileName, "/")
+	file.Source.BaseName = sourceFileName
+	file.Source.Dir = sourceDir
+	file.Source.DirNames = sourceDirNames
+	file.Source.IsRoot = sourceIsRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
 		file.FileInfo = &model.FileInfo{Name: name, Id: file.ProviderFolder.RemoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 		return file, fs
@@ -119,7 +130,7 @@ func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		(*w).Header().Set("Content-Type", util.GetContentType(p.Path))
+		(*w).Header().Set("Content-Type", util.GetContentType(p.Target.Path))
 		*w = Downloader{File: p, ResponseWriter: *w}
 	case http.MethodPut:
 		r.Body = Uploader{File: p, ReadCloser: r.Body}

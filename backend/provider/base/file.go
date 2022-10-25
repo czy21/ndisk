@@ -37,7 +37,7 @@ func (f FileBase) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f FileBase) Name() string {
-	return f.File.Name
+	return f.File.Target.Name
 }
 
 func (f FileBase) Read(b []byte) (n int, err error) {
