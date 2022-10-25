@@ -47,12 +47,11 @@ func (FileSystem) Rename(ctx context.Context, oldName, newName string) (err erro
 	return err
 }
 func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
-	web.LogDav("Stat", name)
 	if name == "/" {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	f, fs := getProvider(name, "")
-	web.LogDav("Stat", fmt.Sprintf("dir:%s fileName:%s dirNames:%s isRoot:%t", f.Dir, f.BaseName, fmt.Sprint(f.DirNames), f.IsRoot))
+	web.LogDav("Stat", fmt.Sprintf("%s dir:%s fileName:%s dirNames:%s isRoot:%t", name, f.Dir, f.BaseName, fmt.Sprint(f.DirNames), f.IsRoot))
 	return fs.Stat(ctx, f)
 }
 
