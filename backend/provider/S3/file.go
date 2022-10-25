@@ -17,7 +17,7 @@ type File struct {
 
 func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 	api := API{File: f.File}
-	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath)
+	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, path.Join(f.File.Target.RelPath)+"/")
 	for _, t := range objectInfos {
 		if path.Join(t.Key) == path.Join(f.File.Target.RelPath) {
 			continue
