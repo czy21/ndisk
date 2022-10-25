@@ -3,7 +3,6 @@ package _189
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/czy21/ndisk/cache"
 	http2 "github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
@@ -12,9 +11,7 @@ import (
 	"io"
 	"io/fs"
 	"path"
-	"strconv"
 	"strings"
-	"time"
 )
 
 type File struct {
@@ -49,13 +46,6 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				IsDir: true,
 			},
 		})
-		fi := model.FileInfo{
-			Name:    path.Join(f.File.Target.Name, t.Name),
-			ModTime: time.Time(t.UpdateDate).Add(-8 * time.Hour),
-			Id:      strconv.FormatInt(t.Id, 10),
-			IsDir:   true,
-		}
-		cache.Client.SetObj(f.Ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
 	}
 	for _, t := range folder.Files {
 		fileInfos = append(fileInfos, model.FileInfoDelegate{
@@ -63,13 +53,6 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				Name: t.Name,
 			},
 		})
-		fi := model.FileInfo{
-			Name:    path.Join(f.File.Target.Name, t.Name),
-			ModTime: time.Time(t.UpdateDate).Add(-8 * time.Hour),
-			Size:    t.Size,
-			Id:      strconv.FormatInt(t.Id, 10),
-		}
-		cache.Client.SetObj(f.Ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
 	}
 	return fileInfos, err
 }

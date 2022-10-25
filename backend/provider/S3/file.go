@@ -23,8 +23,7 @@ func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 			continue
 		}
 		objectName := path.Base(t.Key)
-		id := strings.Join([]string{f.File.FileInfo.Id, f.File.Target.RelPath}, "/")
-		fileInfo := model.FileInfo{Id: id, Name: objectName}
+		fileInfo := model.FileInfo{Name: objectName}
 		if strings.HasSuffix(t.Key, "/") {
 			fileInfo.IsDir = true
 		} else {

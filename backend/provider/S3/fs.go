@@ -51,7 +51,7 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return base.GetFileInfo(ctx, name, file, func(fileInfo *model.FileInfo) error {
 		var err error
-		fileInfo.Id = strings.Join([]string{path.Join(fileInfo.Id), name}, "")
+		fileInfo.Id = path.Join(fileInfo.Id) + strings.ReplaceAll(file.Target.Name, path.Join("/", file.ProviderFolder.Name), "")
 		if !file.Target.IsRoot {
 			api := API{file}
 			err = statObject(api, file.ProviderFolder.RemoteName, file.Target.RelPath, file.FileInfo)
