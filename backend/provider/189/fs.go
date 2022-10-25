@@ -62,7 +62,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		api := API{}
 		var folder FileListAO
 		if !file.IsRoot {
-			for _, t := range file.Dirs {
+			for _, t := range file.DirNames {
 				folder, err = api.GetFolderById(remoteName)
 				if err == nil {
 					err = fs1.ErrNotExist

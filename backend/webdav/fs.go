@@ -52,7 +52,7 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	f, fs := getProvider(name, "")
-	web.LogDav("Stat", fmt.Sprintf("dir:%s fileName:%s dirs:%s isRoot:%t", f.Dir, f.BaseName, fmt.Sprint(f.Dirs), f.IsRoot))
+	web.LogDav("Stat", fmt.Sprintf("dir:%s fileName:%s dirNames:%s isRoot:%t", f.Dir, f.BaseName, fmt.Sprint(f.DirNames), f.IsRoot))
 	return fs.Stat(ctx, f)
 }
 
@@ -63,16 +63,17 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 		OldName: oldName,
 		OldPath: strings.TrimSuffix(oldName, "/"),
 	}
+	rootPath := path.Join(strings.SplitAfter(file.Name, "/")[0:2]...)
 	for _, t := range providerMetas {
-		if strings.HasPrefix(name, "/"+t.Name) {
+		if rootPath == path.Join("/", t.Name) {
 			file.ProviderFolder = t
 		}
 	}
-	dir, fileName, dirs, isRoot := util.SplitPath(file.Name, file.ProviderFolder.Name)
-	file.RelPath = strings.TrimPrefix(strings.ReplaceAll(name, path.Join("/", file.ProviderFolder.Name), ""), "/")
+	dir, fileName, dirNames, isRoot := util.SplitPath(file.Name, path.Join("/", file.ProviderFolder.Name))
+	file.RelPath = strings.TrimPrefix(dir+fileName, "/")
 	file.BaseName = fileName
 	file.Dir = dir
-	file.Dirs = dirs
+	file.DirNames = dirNames
 	file.IsRoot = isRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
 		file.FileInfo = &model.FileInfo{Name: name, Id: file.ProviderFolder.RemoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}

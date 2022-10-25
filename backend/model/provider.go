@@ -45,7 +45,7 @@ type ProviderFile struct {
 	RelPath        string
 	BaseName       string
 	Dir            string
-	Dirs           []string
+	DirNames       []string
 	IsRoot         bool
 	FileInfo       *FileInfo
 	ProviderFolder ProviderFolderMeta

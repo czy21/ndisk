@@ -46,7 +46,7 @@ func TestDirBase(t *testing.T) {
 	dirResult(p3)
 	dirResult(p4)
 	dirResult(p5)
-	a := "/a123/b123/c123/d123"
-	b := strings.SplitAfterN(a, "/", 3)
+	a := "/a123"
+	b := path.Join(strings.SplitAfter(a, "/")[0:2]...)
 	println(b)
 }
