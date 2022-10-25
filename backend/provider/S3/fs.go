@@ -54,22 +54,29 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		fileInfo.Id = strings.Join([]string{path.Join(fileInfo.Id), name}, "")
 		if !file.Target.IsRoot {
 			api := API{file}
-			var objectInfos []minio.ObjectInfo
-			objectInfos, err = api.GetObjects(file.ProviderFolder.RemoteName, file.Target.Dir)
-			if err == nil {
-				err = fs1.ErrNotExist
+			err = statObject(api, file.ProviderFolder.RemoteName, file.Target.RelPath, file.FileInfo)
+			if err != nil {
+				err = statObject(api, file.ProviderFolder.RemoteName, path.Join(file.Target.RelPath)+"/", file.FileInfo)
 			}
-			for _, t := range objectInfos {
-				if t.Key == file.Target.RelPath || path.Join(t.Key) == file.Target.RelPath {
-					fileInfo.ModTime = t.LastModified
-					if !strings.HasSuffix(t.Key, "/") {
-						fileInfo.Size = t.Size
-						fileInfo.IsDir = false
-					}
-					err = nil
-				}
-			}
+			return err
 		}
 		return err
 	})
+}
+
+func statObject(api API, bucketName string, objectName string, fileInfo *model.FileInfo) error {
+	objectInfo, stateErr := api.StatObject(bucketName, objectName)
+	if stateErr != nil {
+		return stateErr
+	}
+	err := fs1.ErrNotExist
+	if objectInfo.Key != "" {
+		fileInfo.ModTime = objectInfo.LastModified
+		if !strings.HasSuffix(objectInfo.Key, "/") {
+			fileInfo.Size = objectInfo.Size
+			fileInfo.IsDir = false
+		}
+		err = nil
+	}
+	return err
 }
