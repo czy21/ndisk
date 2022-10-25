@@ -4,7 +4,6 @@ import (
 	"github.com/czy21/ndisk/model"
 	"github.com/minio/minio-go/v6"
 	"io"
-	"path"
 	"sync"
 )
 
@@ -45,15 +44,4 @@ func (a API) PutObject(bucketName, objectName string, reader io.Reader, objectSi
 func (a API) StatObject(bucketName string, objectName string) (objectInfo minio.ObjectInfo, err error) {
 	client, err := a.GetClient()
 	return client.StatObject(bucketName, objectName, minio.StatObjectOptions{})
-}
-
-func (a API) ExistObject(bucketName string, objectName string) (objectInfo minio.ObjectInfo, exist bool, err error) {
-	objectInfos, err := a.GetObjects(bucketName, objectName)
-	for _, t := range objectInfos {
-		if t.Key == objectName || path.Join(t.Key) == objectName {
-			objectInfo = t
-			exist = true
-		}
-	}
-	return objectInfo, exist, err
 }

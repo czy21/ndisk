@@ -41,10 +41,6 @@ func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 
 func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	api := API{f.File}
-	_, exist, err := api.ExistObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath)
-	if exist {
-		return 0, fs.ErrExist
-	}
 	return api.PutObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, r, -1, minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
 }
 
