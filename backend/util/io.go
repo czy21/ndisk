@@ -25,11 +25,11 @@ type UpDownWriter interface {
 }
 
 func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
-	if rt, ok := dst.(io.ReaderFrom); ok {
-		return rt.ReadFrom(src)
-	}
 	wt, ok := dst.(UpDownWriter)
 	if !ok {
+		if rt, ok := dst.(io.ReaderFrom); ok {
+			return rt.ReadFrom(src)
+		}
 		return 0, errors.New("no implement UpDownWriter interface")
 	}
 	fileSize := wt.UploadFileSize()
