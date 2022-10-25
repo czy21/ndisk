@@ -48,7 +48,6 @@ func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	return api.PutObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, r, -1, minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
 }
 
-//WriteTo CopyTo
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	api := API{f.File}
 	client, err := api.GetClient()

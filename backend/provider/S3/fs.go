@@ -33,10 +33,14 @@ func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) err
 	return err
 }
 
-func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error {
-	//src := minio.NewSourceInfo(file.ProviderFolder.RemoteName, file.RelPath, nil)
-	//dst := minio.NewSourceInfo(file.ProviderFolder.RemoteName, file.RelPath, nil)
-	panic("")
+func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) (err error) {
+	src := minio.NewSourceInfo(file.ProviderFolder.RemoteName, file.Source.RelPath, nil)
+	dst, err := minio.NewDestinationInfo(file.ProviderFolder.RemoteName, file.Target.RelPath, nil, nil)
+	api := API{file}
+	client, err := api.GetClient()
+	err = client.CopyObject(dst, src)
+	err = client.RemoveObjectWithOptions(file.ProviderFolder.RemoteName, file.Source.RelPath, minio.RemoveObjectOptions{})
+	return err
 }
 
 func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.FileInfo, error) {
