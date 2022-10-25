@@ -61,39 +61,41 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		remoteName := file.FileInfo.Id
 		api := API{}
 		var folder FileListAO
-		for _, t := range file.Dirs {
-			folder, err = api.GetFolderById(remoteName)
-			if err == nil {
-				err = fs1.ErrNotExist
-			}
-			for _, q := range folder.Folders {
-				if q.Name == t {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.Id = strconv.FormatInt(q.Id, 10)
-					remoteName = fileInfo.Id
-					err = nil
+		if !file.IsRoot {
+			for _, t := range file.Dirs {
+				folder, err = api.GetFolderById(remoteName)
+				if err == nil {
+					err = fs1.ErrNotExist
+				}
+				for _, q := range folder.Folders {
+					if q.Name == t {
+						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+						fileInfo.Id = strconv.FormatInt(q.Id, 10)
+						remoteName = fileInfo.Id
+						err = nil
+					}
 				}
 			}
-		}
-		if file.BaseName != "" {
-			folder, err = api.GetFolderById(remoteName)
-			if err == nil {
-				err = fs1.ErrNotExist
-			}
-			for _, q := range folder.Files {
-				if q.Name == file.BaseName {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.Size = q.Size
-					fileInfo.IsDir = false
-					fileInfo.Id = strconv.FormatInt(q.Id, 10)
-					err = nil
+			if file.BaseName != "" {
+				folder, err = api.GetFolderById(remoteName)
+				if err == nil {
+					err = fs1.ErrNotExist
 				}
-			}
-			for _, q := range folder.Folders {
-				if q.Name == file.BaseName {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.Id = strconv.FormatInt(q.Id, 10)
-					err = nil
+				for _, q := range folder.Files {
+					if q.Name == file.BaseName {
+						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+						fileInfo.Size = q.Size
+						fileInfo.IsDir = false
+						fileInfo.Id = strconv.FormatInt(q.Id, 10)
+						err = nil
+					}
+				}
+				for _, q := range folder.Folders {
+					if q.Name == file.BaseName {
+						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+						fileInfo.Id = strconv.FormatInt(q.Id, 10)
+						err = nil
+					}
 				}
 			}
 		}

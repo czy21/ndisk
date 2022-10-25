@@ -44,20 +44,19 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return base.GetFileInfo(ctx, name, file, func(fileInfo *model.FileInfo) error {
-		fileInfo.Id = strings.Join([]string{path.Join(fileInfo.Id), name}, "")
 		var err error
-		api := API{file}
-		var objectInfos []minio.ObjectInfo
-		objectInfos, err = api.GetObjects(file.ProviderFolder.RemoteName, file.Dir)
-		for _, t := range objectInfos {
-			objectName := path.Base(t.Key)
-			if objectName == file.BaseName {
-				fileInfo.ModTime = t.LastModified
-				if strings.HasSuffix(t.Key, "/") {
-					fileInfo.IsDir = true
-				} else {
-					fileInfo.Size = t.Size
-					fileInfo.IsDir = false
+		fileInfo.Id = strings.Join([]string{path.Join(fileInfo.Id), name}, "")
+		if !file.IsRoot {
+			api := API{file}
+			var objectInfos []minio.ObjectInfo
+			objectInfos, err = api.GetObjects(file.ProviderFolder.RemoteName, file.Dir)
+			for _, t := range objectInfos {
+				if path.Base(t.Key) == file.BaseName {
+					fileInfo.ModTime = t.LastModified
+					if !strings.HasSuffix(t.Key, "/") {
+						fileInfo.Size = t.Size
+						fileInfo.IsDir = false
+					}
 				}
 			}
 		}
