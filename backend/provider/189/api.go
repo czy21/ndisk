@@ -44,32 +44,33 @@ func (a API) setTokenHeader(req *resty.Request) {
 	req.SetHeader("cookie", viper.GetString("cloud189.cookie"))
 }
 
-func (a API) GetFolderById(folderId string) (FileListAO, error) {
+func (a API) GetObjectsById(folderId string, fileName string) (FileListAO, error) {
 	var (
 		ret FileListAORes
 	)
 	pageIndex := 1
+	pageSize := 60
 	for {
 		params := map[string]string{
 			"noCache":    QueryParamNoCache,
 			"pageNum":    strconv.Itoa(pageIndex),
-			"pageSize":   "60",
+			"pageSize":   strconv.Itoa(pageSize),
 			"mediaType":  "0",
 			"folderId":   folderId,
 			"iconOption": "5",
 			"orderBy":    "lastOpTime",
 			"descending": "true",
 		}
+		if fileName != "" {
+			params["filename"] = fileName
+		}
 		var pageRet FileListAORes
 		req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 			SetQueryParams(params).
 			SetResult(&pageRet)
-		res, _ := req.Get(fmt.Sprintf("%s/open/file/listFiles.action", ApiUrl))
+		res, _ := req.Get(fmt.Sprintf("%s/open/file/searchFiles.action", ApiUrl))
 		err := a.logRes("GetFolderById", res.String(), pageRet.ResponseVO)
-		if err != nil {
-			return ret.FileListAO, err
-		}
-		if pageRet.FileListAO.Count == 0 {
+		if err != nil || pageRet.FileListAO.Count == 0 {
 			break
 		}
 		ret.FileListAO.Folders = append(ret.FileListAO.Folders, pageRet.FileListAO.Folders...)
@@ -77,6 +78,43 @@ func (a API) GetFolderById(folderId string) (FileListAO, error) {
 		pageIndex++
 	}
 	return ret.FileListAO, nil
+}
+
+func (a API) GetFoldersById(folderId string) ([]FolderChildrenRes, error) {
+	var ret []FolderChildrenRes
+	queryParam := map[string]string{
+		"noCache": QueryParamNoCache,
+	}
+	formParam := map[string]string{
+		"id":      folderId,
+		"orderBy": strconv.Itoa(1),
+		"order":   "ASC",
+	}
+	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
+		SetFormData(formParam).
+		SetQueryParams(queryParam).
+		SetResult(&ret)
+	_, err := req.Post(fmt.Sprintf("%s/portal/getObjectFolderNodes.action", ApiUrl))
+	return ret, err
+}
+func (a API) GetFileById(fileId string) (FileInfoVO, error) {
+	var (
+		err error
+		ret FileInfoVORes
+	)
+	queryParam := map[string]string{
+		"noCache": QueryParamNoCache,
+		"fileId":  fileId,
+	}
+	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
+		SetQueryParams(queryParam).
+		SetResult(&ret)
+	res, _ := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
+	err = a.logRes("GetFileById", res.String(), ret.ResponseVO)
+	if ret.ResCode == ResFileNotFoundCode {
+		err = fs.ErrNotExist
+	}
+	return ret.FileInfoVO, err
 }
 func (a API) CreateFolder(parentFolderId string, name string) (err error) {
 	var ret FolderRes
@@ -191,25 +229,6 @@ func (a API) RenameFolder(folderId string, destName string) (err error) {
 	err = a.logRes("RenameFolder", res.String(), ret.ResponseVO)
 	return err
 }
-func (a API) GetFileInfoById(fileId string) (FileInfoVO, error) {
-	var (
-		err error
-		ret FileInfoVORes
-	)
-	queryParam := map[string]string{
-		"noCache": QueryParamNoCache,
-		"fileId":  fileId,
-	}
-	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
-		SetQueryParams(queryParam).
-		SetResult(&ret)
-	res, _ := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
-	err = a.logRes("GetFileInfoById", res.String(), ret.ResponseVO)
-	if ret.ResCode == ResFileNotFoundCode {
-		err = fs.ErrNotExist
-	}
-	return ret.FileInfoVO, err
-}
 func (a API) GetRSAKey() (ret RSAKeyRes, err error) {
 	const rsaCacheKey = "e:rsa:189"
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
@@ -226,7 +245,7 @@ func (a API) GetRSAKey() (ret RSAKeyRes, err error) {
 	}
 	return ret, err
 }
-func (a API) GetUserBriefInfo() (UserBriefInfoVO, error) {
+func (a API) GetUserBrief() (UserBriefInfoVO, error) {
 	var (
 		err error
 		ret UserBriefInfoVORes
@@ -234,7 +253,7 @@ func (a API) GetUserBriefInfo() (UserBriefInfoVO, error) {
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetResult(&ret)
 	res, _ := req.Get(fmt.Sprintf("%s/portal/v2/getUserBriefInfo.action?noCache=%s", ApiUrl, QueryParamNoCache))
-	err = a.logRes("GetUserBriefInfo", res.String(), ret.ResponseVO)
+	err = a.logRes("GetUserBrief", res.String(), ret.ResponseVO)
 	return ret.UserBriefInfoVO, err
 }
 func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}, errPredicate func() bool) (err error) {
@@ -247,7 +266,7 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 	for k, v := range queryParam {
 		u = append(u, k+"="+v)
 	}
-	userBriefInfo, err := a.GetUserBriefInfo()
+	userBriefInfo, err := a.GetUserBrief()
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package util
 
 import (
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ func SplitPath(p string, pPrefix string) (string, string, []string, bool) {
 		pPrefix = path.Join(pSplits[0:2]...)
 	}
 	dir, fileName := path.Split(strings.TrimPrefix(p, pPrefix))
-	dirNames := strings.Split(strings.Trim(dir, "/"), "/")
+	dirNames := filepath.SplitList(strings.ReplaceAll(strings.Trim(dir, "/"), "/", ";"))
 	isRoot := (dir == "" || dir == "/") && fileName == ""
 	return dir, fileName, dirNames, isRoot
 }

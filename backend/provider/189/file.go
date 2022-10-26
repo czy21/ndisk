@@ -23,7 +23,7 @@ type File struct {
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	api := API{File: f.File}
 	fileInfo, _ := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
-	folder, err := api.GetFolderById(fileInfo.Id)
+	folder, err := api.GetObjectsById(fileInfo.Id, "")
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 func (f File) WriteTo(w io.Writer) (written int64, err error) {
 	api := API{File: f.File}
 	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
-	fileInfoVO, err := api.GetFileInfoById(fileInfo.Id)
+	fileInfoVO, err := api.GetFileById(fileInfo.Id)
 	req := http2.GetClient().NewRequest()
 	buf := make([]byte, 1024*1024*f.File.ProviderFolder.Account.GetBuf)
 	chunkL := len(buf)

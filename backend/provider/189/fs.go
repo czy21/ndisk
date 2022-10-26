@@ -8,7 +8,6 @@ import (
 	fs1 "io/fs"
 	"os"
 	"path"
-	"strconv"
 	"time"
 )
 
@@ -63,21 +62,20 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		var folder FileListAO
 		if !file.Target.IsRoot {
 			for _, t := range file.Target.DirNames {
-				folder, err = api.GetFolderById(remoteName)
+				folders, err := api.GetFoldersById(remoteName)
 				if err == nil {
 					err = fs1.ErrNotExist
 				}
-				for _, q := range folder.Folders {
-					if q.Name == t {
-						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-						fileInfo.Id = strconv.FormatInt(q.Id, 10)
+				for _, f := range folders {
+					if f.Name == t {
+						fileInfo.Id = f.Id
 						remoteName = fileInfo.Id
 						err = nil
 					}
 				}
 			}
 			if file.Target.BaseName != "" {
-				folder, err = api.GetFolderById(remoteName)
+				folder, err = api.GetObjectsById(remoteName, file.Target.BaseName)
 				if err == nil {
 					err = fs1.ErrNotExist
 				}
@@ -86,14 +84,14 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 						fileInfo.Size = q.Size
 						fileInfo.IsDir = false
-						fileInfo.Id = strconv.FormatInt(q.Id, 10)
+						fileInfo.Id = q.Id
 						err = nil
 					}
 				}
 				for _, q := range folder.Folders {
 					if q.Name == file.Target.BaseName {
 						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-						fileInfo.Id = strconv.FormatInt(q.Id, 10)
+						fileInfo.Id = q.Id
 						err = nil
 					}
 				}

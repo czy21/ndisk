@@ -20,14 +20,19 @@ type BaseTrackModel[TID any, TCreateDate any, TUpdateDate any] struct {
 }
 
 type FolderVO struct {
-	BaseTrackModel[int64, model.LocalTime, model.LocalTime]
+	BaseTrackModel[string, model.LocalTime, model.LocalTime]
 }
 
 type FileVO struct {
-	BaseTrackModel[int64, model.LocalTime, model.LocalTime]
+	BaseTrackModel[string, model.LocalTime, model.LocalTime]
 	Size int64 `json:"size"`
 }
-
+type FolderChildrenRes struct {
+	Id       string `json:"id"`
+	Name     string `json:"name"`
+	PId      string `json:"pId"`
+	IsParent string `json:"IsParent"`
+}
 type FolderRes struct {
 	ResponseVO
 	FolderVO
@@ -44,7 +49,7 @@ type FileListAO struct {
 }
 type FileListAORes struct {
 	ResponseVO
-	FileListAO FileListAO `json:"fileListAO"`
+	FileListAO
 }
 
 type TaskRes struct {
