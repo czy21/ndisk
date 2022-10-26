@@ -8,6 +8,7 @@ import (
 	fs1 "io/fs"
 	"os"
 	"path"
+	"strconv"
 	"time"
 )
 
@@ -84,14 +85,14 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
 						fileInfo.Size = q.Size
 						fileInfo.IsDir = false
-						fileInfo.Id = q.Id
+						fileInfo.Id = strconv.FormatInt(q.Id, 10)
 						err = nil
 					}
 				}
 				for _, q := range folder.Folders {
 					if q.Name == file.Target.BaseName {
 						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-						fileInfo.Id = q.Id
+						fileInfo.Id = strconv.FormatInt(q.Id, 10)
 						err = nil
 					}
 				}

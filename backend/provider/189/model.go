@@ -20,11 +20,11 @@ type BaseTrackModel[TID any, TCreateDate any, TUpdateDate any] struct {
 }
 
 type FolderVO struct {
-	BaseTrackModel[string, model.LocalTime, model.LocalTime]
+	BaseTrackModel[int64, model.LocalTime, model.LocalTime]
 }
 
 type FileVO struct {
-	BaseTrackModel[string, model.LocalTime, model.LocalTime]
+	BaseTrackModel[int64, model.LocalTime, model.LocalTime]
 	Size int64 `json:"size"`
 }
 type FolderChildrenRes struct {
