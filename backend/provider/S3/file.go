@@ -45,7 +45,9 @@ func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	api := API{f.File}
-	client, err := api.GetClient()
-	object, err := client.GetObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, minio.GetObjectOptions{})
+	object, err := api.GetObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, minio.GetObjectOptions{})
+	if err != nil {
+		return 0, err
+	}
 	return io.Copy(w, object)
 }

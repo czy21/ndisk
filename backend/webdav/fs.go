@@ -114,13 +114,6 @@ func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
 	return util.Copy(d.ResponseWriter, r.(*io.LimitedReader).R)
 }
 
-func limitBuf(val int) int {
-	if val < 10 || val > 64 {
-		val = 10
-	}
-	return val
-}
-
 func HandleHttp(name string, w *http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	p, fs := getProvider(name, "")

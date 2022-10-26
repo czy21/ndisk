@@ -39,6 +39,14 @@ func (a API) GetObjects(bucketName string, objectPrefix string) (objectInfos []m
 	return objectInfos, err
 }
 
+func (a API) GetObject(bucketName, objectName string, opts minio.GetObjectOptions) (*minio.Object, error) {
+	client, err := a.GetClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.GetObject(bucketName, objectName, opts)
+}
+
 func (a API) PutObject(bucketName, objectName string, reader io.Reader, objectSize int64, opts minio.PutObjectOptions) (n int64, err error) {
 	client, err := a.GetClient()
 	if err != nil {
