@@ -45,7 +45,18 @@ func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	api := API{f.File}
-	object, err := api.GetObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, minio.GetObjectOptions{})
+	httpMethod := util.GetHttpMethod(f.Ctx)
+	objectName := f.File.ProviderFolder.RemoteName
+	if httpMethod == "COPY" {
+		srcName := f.File.Target.Name
+		dstName := w.(File).Name()
+		src := minio.NewSourceInfo(objectName, srcName, nil)
+		dst, err := minio.NewDestinationInfo(objectName, dstName, nil, nil)
+		client, err := api.GetClient()
+		err = client.CopyObject(dst, src)
+		return n, err
+	}
+	object, err := api.GetObject(objectName, f.File.Target.RelPath, minio.GetObjectOptions{})
 	if err != nil {
 		return 0, err
 	}
