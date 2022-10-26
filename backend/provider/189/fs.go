@@ -38,7 +38,7 @@ func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error 
 	sourceDir, sourceBaseName := path.Split(file.Source.Name)
 	targetDir, targetBaseName := path.Split(file.Target.Name)
 	oldFileInfo, err := fs.GetFileInfo(ctx, file.Source.Name, file)
-	newFoldInfo, err := fs.GetFileInfo(ctx, targetDir, model.ProviderFile{})
+	newFoldInfo, err := fs.GetFileInfo(ctx, targetDir, file)
 	if sourceDir != targetDir {
 		err = api.Move(oldFileInfo.Id, sourceBaseName, oldFileInfo.IsDir, newFoldInfo.Id)
 		return err

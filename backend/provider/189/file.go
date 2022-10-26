@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/czy21/ndisk/cache"
+	"github.com/czy21/ndisk/constant"
 	http2 "github.com/czy21/ndisk/http"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
@@ -112,6 +113,15 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 // WriteTo Get
 func (f File) WriteTo(w io.Writer) (written int64, err error) {
 	api := API{File: f.File}
+	extra := f.Ctx.Value(constant.HttpExtra).(map[string]interface{})
+	if extra[constant.HttpExtraMethod] == "COPY" {
+		_, srcFName := path.Split(f.File.Target.Name)
+		dstD, _ := path.Split(w.(File).Name())
+		srcFileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
+		dstFileInfo, err := f.FS.GetFileInfo(f.Ctx, dstD, f.File)
+		err = api.Copy(srcFileInfo.Id, srcFName, srcFileInfo.IsDir, dstFileInfo.Id)
+		return srcFileInfo.Size, err
+	}
 	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
 	fileInfoVO, err := api.GetFileById(fileInfo.Id)
 	req := http2.GetClient().NewRequest()
