@@ -56,6 +56,12 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 }
 
 func getProvider(name string, oldName string) (model.ProviderFile, model.FileSystem) {
+	if name != "" {
+		name = path.Clean(name)
+	}
+	if oldName != "" {
+		oldName = path.Clean(oldName)
+	}
 	file := model.ProviderFile{
 		Target: model.ProviderFileMeta{
 			Name: name,
@@ -88,7 +94,6 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 	file.Source.DirNames = sourceDirNames
 	file.Source.IsRoot = sourceIsRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
-		file.FileInfo = &model.FileInfo{Name: name, Id: file.ProviderFolder.RemoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 		return file, fs
 	}
 	return file, local.NewFS()

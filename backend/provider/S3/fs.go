@@ -54,9 +54,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		fileInfo.Id = path.Join(fileInfo.Id) + strings.ReplaceAll(file.Target.Name, path.Join("/", file.ProviderFolder.Name), "")
 		if !file.Target.IsRoot {
 			api := API{file}
-			err = statObject(api, file.ProviderFolder.RemoteName, file.Target.RelPath, file.FileInfo)
+			err = statObject(api, file.ProviderFolder.RemoteName, file.Target.RelPath, fileInfo)
 			if err != nil {
-				err = statObject(api, file.ProviderFolder.RemoteName, path.Join(file.Target.RelPath)+"/", file.FileInfo)
+				err = statObject(api, file.ProviderFolder.RemoteName, path.Join(file.Target.RelPath)+"/", fileInfo)
 			}
 			if err != nil && err != fs1.ErrNotExist {
 				err = fs1.ErrNotExist

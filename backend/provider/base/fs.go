@@ -8,7 +8,7 @@ import (
 
 func GetFileInfo(ctx context.Context, name string, file model.ProviderFile, findFile func(fileInfo *model.FileInfo) error) (model.FileInfo, error) {
 	var err error
-	fileInfo := file.FileInfo
+	fileInfo := &model.FileInfo{Name: name, Id: file.ProviderFolder.RemoteName, IsDir: true, ModTime: *file.ProviderFolder.UpdateTime}
 	if cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(name), &fileInfo) {
 		return *fileInfo, err
 	}

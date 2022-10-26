@@ -49,6 +49,5 @@ type ProviderFile struct {
 	Target ProviderFileMeta
 	Source ProviderFileMeta
 
-	FileInfo       *FileInfo
 	ProviderFolder ProviderFolderMeta
 }
