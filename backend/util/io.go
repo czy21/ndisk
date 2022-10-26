@@ -24,6 +24,16 @@ type UpDownWriter interface {
 	DownloadChunk(dUrl string, p []byte, rangeStart int64, rangeEnd int64) (m int, err error)
 }
 
+func Copy(dst io.Writer, src io.Reader) (n int64, err error) {
+	if wt, ok := src.(io.WriterTo); ok {
+		return wt.WriteTo(dst)
+	}
+	if rt, ok := dst.(io.ReaderFrom); ok {
+		return rt.ReadFrom(src)
+	}
+	return 0, err
+}
+
 func WriteFull(dst io.Writer, src io.Reader, n int) (written int64, err error) {
 	wt, ok := dst.(UpDownWriter)
 	if !ok {

@@ -58,6 +58,9 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 			if err != nil {
 				err = statObject(api, file.ProviderFolder.RemoteName, path.Join(file.Target.RelPath)+"/", file.FileInfo)
 			}
+			if err != nil && err != fs1.ErrNotExist {
+				err = fs1.ErrNotExist
+			}
 			return err
 		}
 		return err

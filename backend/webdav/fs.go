@@ -66,10 +66,12 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 			Path: strings.TrimSuffix(oldName, "/"),
 		},
 	}
-	rootPath := path.Join(strings.SplitAfter(file.Target.Name, "/")[0:2]...)
-	for _, t := range providerMetas {
-		if rootPath == path.Join("/", t.Name) {
-			file.ProviderFolder = t
+	nameSplit := strings.SplitAfter(file.Target.Name, "/")
+	if len(nameSplit) >= 2 {
+		for _, t := range providerMetas {
+			if path.Join(nameSplit[0:2]...) == path.Join("/", t.Name) {
+				file.ProviderFolder = t
+			}
 		}
 	}
 	targetDir, targetFileName, targetDirNames, targetIsRoot := util.SplitPath(file.Target.Name, path.Join("/", file.ProviderFolder.Name))
@@ -99,8 +101,7 @@ type Uploader struct {
 }
 
 func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
-	l := limitBuf(u.File.ProviderFolder.Account.PutBuf)
-	return util.WriteFull(w, u.ReadCloser, 1024*1024*l)
+	return util.Copy(w, u.ReadCloser)
 }
 
 // Downloader download from remote
@@ -110,8 +111,7 @@ type Downloader struct {
 }
 
 func (d Downloader) ReadFrom(r io.Reader) (n int64, err error) {
-	l := limitBuf(d.File.ProviderFolder.Account.GetBuf)
-	return util.ReadFull(d.ResponseWriter, r.(*io.LimitedReader).R, 1024*1024*l)
+	return util.Copy(d.ResponseWriter, r.(*io.LimitedReader).R)
 }
 
 func limitBuf(val int) int {
