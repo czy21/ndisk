@@ -66,8 +66,19 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 // ReadFrom Put
 func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 	api := API{File: f.File}
-	dir, fName := path.Split(f.File.Target.Name)
-	fileInfo, err := f.FS.GetFileInfo(f.Ctx, dir, f.File)
+	folderId := f.File.ProviderFolder.RemoteName
+	for _, t := range f.File.Target.DirNames {
+		folders, err := api.GetFoldersById(folderId)
+		if err != nil {
+			return written, err
+		}
+		for _, f := range folders {
+			if f.Name == t {
+				folderId = f.Id
+				err = nil
+			}
+		}
+	}
 	buf := make([]byte, 1024*1024*10)
 	md5s := make([]string, 0)
 	md5Hash := md5.New()
@@ -75,7 +86,7 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 	if f.UploadFileSize() == 0 {
 		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
 	}
-	res, err := api.CreateFile(fileInfo.Id, fName, f.UploadFileSize(), fileMd5)
+	res, err := api.CreateFile(folderId, f.File.Target.BaseName, f.UploadFileSize(), fileMd5)
 	if err != nil {
 		return written, err
 	}
