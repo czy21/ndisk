@@ -48,10 +48,8 @@ func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	httpMethod := util.GetHttpMethod(f.Ctx)
 	objectName := f.File.ProviderFolder.RemoteName
 	if httpMethod == "COPY" {
-		srcName := f.File.Target.Name
-		dstName := w.(File).Name()
-		src := minio.NewSourceInfo(objectName, srcName, nil)
-		dst, err := minio.NewDestinationInfo(objectName, dstName, nil, nil)
+		src := minio.NewSourceInfo(objectName, f.File.Target.RelPath, nil)
+		dst, err := minio.NewDestinationInfo(objectName, w.(File).File.Target.RelPath, nil, nil)
 		client, err := api.GetClient()
 		err = client.CopyObject(dst, src)
 		return n, err
