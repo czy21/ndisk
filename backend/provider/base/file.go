@@ -52,7 +52,7 @@ func (f FileBase) UploadLimitSize() int64 {
 	return 1024 * 1024 * 8192
 }
 
-func (f FileBase) UploadFileSize() int64 {
+func (f FileBase) Size() int64 {
 	extra := f.Ctx.Value(constant.HttpExtra).(map[string]interface{})
 	return extra[constant.HttpExtraFileSize].(int64)
 }

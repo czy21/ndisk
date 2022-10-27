@@ -69,10 +69,10 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 	md5s := make([]string, 0)
 	md5Hash := md5.New()
 	fileMd5 := ""
-	if f.UploadFileSize() == 0 {
+	if f.Size() == 0 {
 		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
 	}
-	res, err := api.CreateFile(fileInfo.Id, f.File.Target.BaseName, f.UploadFileSize(), fileMd5)
+	res, err := api.CreateFile(fileInfo.Id, f.File.Target.BaseName, f.Size(), fileMd5)
 	if err != nil {
 		return written, err
 	}
@@ -81,14 +81,14 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 		return written, err
 	}
 	chunkL := len(buf)
-	chunks := int(math.Max(1, math.Ceil(float64(f.UploadFileSize())/float64(cap(buf)))))
+	chunks := int(math.Max(1, math.Ceil(float64(f.Size())/float64(cap(buf)))))
 	rangeS := int64(0)
 	rangeE := int64(0)
 	for i := 0; i < chunks; i++ {
 		nr, _ := io.ReadFull(r, buf)
 		rangeS = rangeE
 		rangeE += int64(nr)
-		web.LogChunk("Put", f.Name(), f.UploadFileSize(), chunks, chunkL, i, rangeS, rangeE, fmt.Sprintf("nr: %d", nr))
+		web.LogChunk("Put", f.Name(), f.Size(), chunks, chunkL, i, rangeS, rangeE, fmt.Sprintf("nr: %d", nr))
 		if nr > 0 {
 			bufBytes := buf[0:nr]
 			md5Hash.Write(bufBytes)
@@ -104,10 +104,10 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 	if err == nil {
 		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
 		sliceMd5 := fileMd5
-		if f.UploadFileSize() > int64(chunkL) {
+		if f.Size() > int64(chunkL) {
 			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
 		}
-		err = api.CommitFile(res.UploadFileId, f.UploadFileSize(), fileMd5, sliceMd5)
+		err = api.CommitFile(res.UploadFileId, f.Size(), fileMd5, sliceMd5)
 	}
 	return written, err
 }
