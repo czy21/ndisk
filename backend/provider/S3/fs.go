@@ -28,18 +28,41 @@ func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, f
 
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
 	api := API{file}
+	fileInfo, err := fs.GetFileInfo(ctx, file.Target.Name, file)
+	bucketName := file.ProviderFolder.RemoteName
+	objectName := file.Target.RelPath
 	client, err := api.GetClient()
-	err = client.RemoveObjectWithOptions(file.ProviderFolder.RemoteName, file.Target.RelPath, minio.RemoveObjectOptions{})
+	objectsCh := make(chan string)
+	if fileInfo.IsDir {
+		objectName += "/"
+		go func() {
+			defer close(objectsCh)
+			for o := range client.ListObjects(bucketName, objectName, true, nil) {
+				objectsCh <- o.Key
+			}
+		}()
+	} else {
+		objectsCh <- objectName
+	}
+	for aErr := range client.RemoveObjects(bucketName, objectsCh) {
+		if aErr.Err != nil {
+			err = aErr.Err
+			break
+		}
+	}
 	return err
 }
 
 func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) (err error) {
-	src := minio.NewSourceInfo(file.ProviderFolder.RemoteName, file.Source.RelPath, nil)
-	dst, err := minio.NewDestinationInfo(file.ProviderFolder.RemoteName, file.Target.RelPath, nil, nil)
+	bucketName := file.ProviderFolder.RemoteName
+	srcPath := file.Source.RelPath
+	dstPath := file.Target.RelPath
+	src := minio.NewSourceInfo(bucketName, srcPath, nil)
+	dst, err := minio.NewDestinationInfo(bucketName, dstPath, nil, nil)
 	api := API{file}
 	client, err := api.GetClient()
 	err = client.CopyObject(dst, src)
-	err = client.RemoveObjectWithOptions(file.ProviderFolder.RemoteName, file.Source.RelPath, minio.RemoveObjectOptions{})
+	err = client.RemoveObjectWithOptions(bucketName, srcPath, minio.RemoveObjectOptions{})
 	return err
 }
 
