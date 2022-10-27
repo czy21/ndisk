@@ -3,7 +3,6 @@ package _189
 import (
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
-	"github.com/czy21/ndisk/util"
 	"golang.org/x/net/context"
 	"golang.org/x/net/webdav"
 	fs1 "io/fs"
@@ -61,47 +60,44 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		var err error
 		remoteName := file.ProviderFolder.RemoteName
 		api := API{}
-		if !file.Target.IsRoot {
-			_, fileName, dirNames, _ := util.SplitPath(path.Clean(name), path.Join("/", file.ProviderFolder.Name))
-			for _, t := range dirNames {
-				folders, aErr := api.GetFoldersById(remoteName)
-				if aErr != nil {
-					err = aErr
-					break
-				}
-				for _, f := range folders {
-					if f.Name == t {
-						fileInfo.Id = f.Id
-						remoteName = fileInfo.Id
-					}
+		for _, t := range fileInfo.Parents {
+			folders, aErr := api.GetFoldersById(remoteName)
+			if aErr != nil {
+				err = aErr
+				break
+			}
+			for _, f := range folders {
+				if f.Name == t {
+					fileInfo.Id = f.Id
+					remoteName = fileInfo.Id
 				}
 			}
-			if fileName != "" {
-				err = fs1.ErrNotExist
-				folder, aErr := api.GetObjectsById(remoteName, fileName)
-				if aErr != nil {
-					err = aErr
-				}
-				for _, q := range folder.Files {
-					if q.Name == fileName {
-						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-						fileInfo.Size = q.Size
-						fileInfo.IsDir = false
-						fileInfo.Id = strconv.FormatInt(q.Id, 10)
-						err = nil
-					}
-				}
-				for _, q := range folder.Folders {
-					if q.Name == fileName {
-						fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-						fileInfo.Id = strconv.FormatInt(q.Id, 10)
-						err = nil
-					}
+		}
+		if fileInfo.Base != "" {
+			err = fs1.ErrNotExist
+			folder, aErr := api.GetObjectsById(remoteName, fileInfo.Base)
+			if aErr != nil {
+				err = aErr
+			}
+			for _, q := range folder.Files {
+				if q.Name == fileInfo.Base {
+					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+					fileInfo.Size = q.Size
+					fileInfo.IsDir = false
+					fileInfo.Id = strconv.FormatInt(q.Id, 10)
+					err = nil
 				}
 			}
-			if err != nil {
-				fileInfo.Id = ""
+			for _, q := range folder.Folders {
+				if q.Name == fileInfo.Base {
+					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
+					fileInfo.Id = strconv.FormatInt(q.Id, 10)
+					err = nil
+				}
 			}
+		}
+		if err != nil {
+			fileInfo.Id = ""
 		}
 		return err
 	})

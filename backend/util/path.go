@@ -5,19 +5,18 @@ import (
 	"strings"
 )
 
-/*
- @p absoute path
-*/
-func SplitPath(p string, pPrefix string) (string, string, []string, bool) {
+// SplitPath /*
+func SplitPath(p string, pPrefix string) (string, string, []string, string, bool) {
 	pSplits := strings.SplitAfter(p, "/")
 	if (pPrefix == "" || pPrefix == "/") && p != "" {
 		pPrefix = path.Join(pSplits[0:2]...)
 	}
-	dir, fileName := path.Split(strings.TrimPrefix(p, pPrefix))
-	isRoot := (dir == "" || dir == "/") && fileName == ""
-	var dirNames []string
+	rel := strings.TrimPrefix(p, pPrefix)
+	dir, base := path.Split(rel)
+	isRoot := (dir == "" || dir == "/") && base == ""
+	var parents []string
 	if !isRoot {
-		dirNames = strings.Split(strings.Trim(dir, "/"), "/")
+		parents = strings.Split(strings.Trim(dir, "/"), "/")
 	}
-	return dir, fileName, dirNames, isRoot
+	return dir, base, parents, strings.TrimPrefix(rel, "/"), isRoot
 }

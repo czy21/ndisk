@@ -33,7 +33,7 @@ func (a API) GetObjects(bucketName string, objectPrefix string) (objectInfos []m
 	}
 	doneCh := make(chan struct{})
 	defer close(doneCh)
-	for t := range client.ListObjectsV2(bucketName, objectPrefix, false, doneCh) {
+	for t := range client.ListObjects(bucketName, objectPrefix, false, doneCh) {
 		objectInfos = append(objectInfos, t)
 	}
 	return objectInfos, err

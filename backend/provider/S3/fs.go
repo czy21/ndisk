@@ -26,6 +26,13 @@ func (fs FileSystem) OpenFile(ctx context.Context, flag int, perm os.FileMode, f
 	return File{base.FileBase{Ctx: ctx, File: file, FS: fs}}, nil
 }
 
+func listObjectToChan(client *minio.Client, bucketName string, objectName string, recursive bool, objectsCh chan string) {
+	defer close(objectsCh)
+	for o := range client.ListObjects(bucketName, objectName, recursive, nil) {
+		objectsCh <- o.Key
+	}
+}
+
 func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) error {
 	api := API{file}
 	fileInfo, err := fs.GetFileInfo(ctx, file.Target.Name, file)
@@ -35,34 +42,39 @@ func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) err
 	objectsCh := make(chan string)
 	if fileInfo.IsDir {
 		objectName += "/"
-		go func() {
-			defer close(objectsCh)
-			for o := range client.ListObjects(bucketName, objectName, true, nil) {
-				objectsCh <- o.Key
-			}
-		}()
+		go listObjectToChan(client, bucketName, objectName, true, objectsCh)
 	} else {
 		objectsCh <- objectName
 	}
-	for aErr := range client.RemoveObjects(bucketName, objectsCh) {
-		if aErr.Err != nil {
-			err = aErr.Err
-			break
-		}
-	}
+	client.RemoveObjects(bucketName, objectsCh)
 	return err
 }
 
 func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) (err error) {
+	api := API{file}
+	client, err := api.GetClient()
 	bucketName := file.ProviderFolder.RemoteName
 	srcPath := file.Source.RelPath
 	dstPath := file.Target.RelPath
-	src := minio.NewSourceInfo(bucketName, srcPath, nil)
-	dst, err := minio.NewDestinationInfo(bucketName, dstPath, nil, nil)
-	api := API{file}
-	client, err := api.GetClient()
-	err = client.CopyObject(dst, src)
-	err = client.RemoveObjectWithOptions(bucketName, srcPath, minio.RemoveObjectOptions{})
+	srcInfo, err := fs.GetFileInfo(ctx, file.Source.Name, file)
+	objectsCh := make(chan string)
+	srcDstMap := make(map[string]string)
+	if srcInfo.IsDir {
+		srcPath += "/"
+		dstPath += "/"
+		go listObjectToChan(client, bucketName, srcPath, true, objectsCh)
+		for t := range objectsCh {
+			srcDstMap[t] = strings.ReplaceAll(t, srcPath, dstPath)
+		}
+	} else {
+		srcDstMap[srcPath] = dstPath
+	}
+	for k, v := range srcDstMap {
+		source := minio.NewSourceInfo(bucketName, k, nil)
+		target, _ := minio.NewDestinationInfo(bucketName, v, nil, nil)
+		err = client.CopyObject(target, source)
+		err = client.RemoveObject(bucketName, k)
+	}
 	return err
 }
 
@@ -74,17 +86,14 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return base.GetFileInfo(ctx, name, file, func(fileInfo *model.FileInfo) error {
 		var err error
-		fileInfo.Id = path.Join(fileInfo.Id) + strings.ReplaceAll(file.Target.Name, path.Join("/", file.ProviderFolder.Name), "")
-		if !file.Target.IsRoot {
-			api := API{file}
-			err = statObject(api, file.ProviderFolder.RemoteName, file.Target.RelPath, fileInfo)
-			if err != nil {
-				err = statObject(api, file.ProviderFolder.RemoteName, path.Join(file.Target.RelPath)+"/", fileInfo)
-			}
-			if err != nil && err != fs1.ErrNotExist {
-				err = fs1.ErrNotExist
-			}
-			return err
+		fileInfo.Id = path.Join(fileInfo.Id, "/", fileInfo.Rel)
+		api := API{file}
+		err = statObject(api, file.ProviderFolder.RemoteName, fileInfo.Rel, fileInfo)
+		if err != nil {
+			err = statObject(api, file.ProviderFolder.RemoteName, path.Join(fileInfo.Rel)+"/", fileInfo)
+		}
+		if err != nil && err != fs1.ErrNotExist {
+			err = fs1.ErrNotExist
 		}
 		return err
 	})

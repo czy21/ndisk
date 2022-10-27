@@ -80,19 +80,19 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 			}
 		}
 	}
-	targetDir, targetFileName, targetDirNames, targetIsRoot := util.SplitPath(file.Target.Name, path.Join("/", file.ProviderFolder.Name))
-	file.Target.RelPath = strings.TrimPrefix(targetDir+targetFileName, "/")
-	file.Target.BaseName = targetFileName
-	file.Target.Dir = targetDir
-	file.Target.DirNames = targetDirNames
-	file.Target.IsRoot = targetIsRoot
+	dstDir, dstFileName, dstDirNames, dstRel, dstIsRoot := util.SplitPath(file.Target.Name, path.Join("/", file.ProviderFolder.Name))
+	file.Target.RelPath = dstRel
+	file.Target.BaseName = dstFileName
+	file.Target.Dir = dstDir
+	file.Target.DirNames = dstDirNames
+	file.Target.IsRoot = dstIsRoot
 
-	sourceDir, sourceFileName, sourceDirNames, sourceIsRoot := util.SplitPath(file.Source.Name, path.Join("/", file.ProviderFolder.Name))
-	file.Source.RelPath = strings.TrimPrefix(sourceDir+sourceFileName, "/")
-	file.Source.BaseName = sourceFileName
-	file.Source.Dir = sourceDir
-	file.Source.DirNames = sourceDirNames
-	file.Source.IsRoot = sourceIsRoot
+	srcDir, srcFileName, srcDirNames, srcRel, srcIsRoot := util.SplitPath(file.Source.Name, path.Join("/", file.ProviderFolder.Name))
+	file.Source.RelPath = srcRel
+	file.Source.BaseName = srcFileName
+	file.Source.Dir = srcDir
+	file.Source.DirNames = srcDirNames
+	file.Source.IsRoot = srcIsRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
 		return file, fs
 	}

@@ -16,6 +16,12 @@ type FileInfo struct {
 	ModTime time.Time   `json:"modTime"`
 	IsDir   bool        `json:"isDir"`
 	Sys     any         `json:"sys"`
+	// extension
+	Rel     string   `json:"rel"`
+	Dir     string   `json:"dir"`
+	Base    string   `json:"base"`
+	Parents []string `json:"parents"`
+	IsRoot  bool     `json:"isRoot"`
 }
 
 type FileInfoDelegate struct {
