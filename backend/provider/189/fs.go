@@ -34,19 +34,19 @@ func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) err
 }
 func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) error {
 	api := API{}
-	sourceDir, sourceBaseName := path.Split(file.Source.Name)
-	targetDir, targetBaseName := path.Split(file.Target.Name)
-	oldFileInfo, err := fs.GetFileInfo(ctx, file.Source.Name, file)
-	newFoldInfo, err := fs.GetFileInfo(ctx, targetDir, file)
-	if sourceDir != targetDir {
-		err = api.Move(oldFileInfo.Id, sourceBaseName, oldFileInfo.IsDir, newFoldInfo.Id)
+	srcDir, srcBase := path.Split(file.Source.Name)
+	dstDir, dstBase := path.Split(file.Target.Name)
+	oldFI, err := fs.GetFileInfo(ctx, file.Source.Name, file)
+	newFI, err := fs.GetFileInfo(ctx, dstDir, file)
+	if srcDir != dstDir {
+		err = api.Move(oldFI.Id, srcBase, oldFI.IsDir, newFI.Id)
 		return err
 	}
 	if !os.IsNotExist(err) {
-		if oldFileInfo.IsDir {
-			err = api.RenameFolder(oldFileInfo.Id, targetBaseName)
+		if oldFI.IsDir {
+			err = api.RenameFolder(oldFI.Id, dstBase)
 		} else {
-			err = api.RenameFile(oldFileInfo.Id, targetBaseName)
+			err = api.RenameFile(oldFI.Id, dstBase)
 		}
 	}
 	return err
@@ -57,14 +57,14 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 }
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return base.GetFileInfo(ctx, name, file, func(fileInfo *model.FileInfo) error {
-		var err error
 		remoteName := file.ProviderFolder.RemoteName
+		var err error
 		api := API{}
 		for _, t := range fileInfo.Parents {
 			folders, aErr := api.GetFoldersById(remoteName)
 			if aErr != nil {
 				err = aErr
-				break
+				return err
 			}
 			for _, f := range folders {
 				if f.Name == t {
