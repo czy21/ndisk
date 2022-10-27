@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"github.com/czy21/ndisk/constant"
 	"github.com/czy21/ndisk/model"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -34,4 +35,29 @@ func LogFormatter() func(param gin.LogFormatterParams) string {
 
 func LogDav(fnName string, msg string) {
 	log.Debugf("[DAV] %10s %s", fnName, msg)
+}
+
+func LogChunk(
+	fnName string,
+	fileName string,
+	fileSize int64,
+	chunks int,
+	chunkL int,
+	chunkI int,
+	rangeS int64,
+	rangeE int64,
+	extension string) {
+	chunkArr := []interface{}{
+		constant.HttpExtraFileSize, fileSize,
+		constant.HttpExtraChunks, chunks,
+		constant.HttpExtraChunkL, chunkL,
+		constant.HttpExtraChunkI, chunkI,
+		constant.HttpExtraRangeS, rangeS,
+		constant.HttpExtraRangeE, rangeE,
+	}
+	var msg string
+	for i := 0; i < len(chunkArr)/2; i++ {
+		msg += fmt.Sprintf(" %s: %d", chunkArr[i*2], chunkArr[i*2+1])
+	}
+	LogDav(fnName, fmt.Sprintf("%s %s %s", fileName, msg, extension))
 }

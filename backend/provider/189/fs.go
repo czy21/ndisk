@@ -62,11 +62,12 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		remoteName := file.ProviderFolder.RemoteName
 		api := API{}
 		if !file.Target.IsRoot {
-			_, fileName, dirNames, _ := util.SplitPath(name, path.Join("/", file.ProviderFolder.Name))
+			_, fileName, dirNames, _ := util.SplitPath(path.Clean(name), path.Join("/", file.ProviderFolder.Name))
 			for _, t := range dirNames {
 				folders, aErr := api.GetFoldersById(remoteName)
 				if aErr != nil {
-					return aErr
+					err = aErr
+					break
 				}
 				for _, f := range folders {
 					if f.Name == t {
@@ -79,7 +80,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 				err = fs1.ErrNotExist
 				folder, aErr := api.GetObjectsById(remoteName, fileName)
 				if aErr != nil {
-					return aErr
+					err = aErr
 				}
 				for _, q := range folder.Files {
 					if q.Name == fileName {
@@ -98,7 +99,7 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 					}
 				}
 			}
-			if err == fs1.ErrNotExist {
+			if err != nil {
 				fileInfo.Id = ""
 			}
 		}

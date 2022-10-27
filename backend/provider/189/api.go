@@ -278,9 +278,9 @@ func (a API) UploadRequest(uri string, queryParam map[string]string, resVO inter
 		SetHeader("PkId", rsaRes.PKId).
 		SetQueryParam("params", encryptParam).
 		SetResult(resVO)
-	res, _ := req.Get("https://upload.cloud.189.cn" + uri)
+	res, err := req.Get("https://upload.cloud.189.cn" + uri)
 	if errPredicate() {
-		log.Error(res)
+		err = errors.New(res.String())
 	}
 	return err
 }

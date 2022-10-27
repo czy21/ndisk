@@ -16,6 +16,9 @@ func bootLog() {
 	if confLevel == "debug" {
 		log.SetLevel(log.DebugLevel)
 	}
+	if confLevel == "trace" {
+		log.SetLevel(log.TraceLevel)
+	}
 	var output io.Writer = os.Stdout
 	log.SetOutput(output)
 	if confFile != "" {

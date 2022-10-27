@@ -12,7 +12,7 @@ import (
 func Boot() {
 	gin.SetMode(gin.ReleaseMode)
 	logLevel := viper.GetString("log.level")
-	if logLevel == "debug" {
+	if logLevel != "info" {
 		gin.SetMode(gin.DebugMode)
 	}
 	address := fmt.Sprintf(":%s", viper.GetString("server.port"))

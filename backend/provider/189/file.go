@@ -10,6 +10,7 @@ import (
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
 	"github.com/czy21/ndisk/util"
+	"github.com/czy21/ndisk/web"
 	"io"
 	"io/fs"
 	"math"
@@ -25,11 +26,8 @@ type File struct {
 
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	api := API{File: f.File}
-	fileInfo, _ := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
+	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
 	folder, err := api.GetObjectsById(fileInfo.Id, "")
-	if err != nil {
-		return nil, err
-	}
 	var fileInfos []fs.FileInfo
 	for _, t := range folder.Folders {
 		fileInfos = append(fileInfos, model.FileInfoDelegate{
@@ -90,25 +88,30 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 		nr, _ := io.ReadFull(r, buf)
 		rangeS = rangeE
 		rangeE += int64(nr)
-		util.LogChunk("Put", f.Name(), f.UploadFileSize(), chunks, chunkL, i, rangeS, rangeE, fmt.Sprintf("nr: %d", nr))
+		web.LogChunk("Put", f.Name(), f.UploadFileSize(), chunks, chunkL, i, rangeS, rangeE, fmt.Sprintf("nr: %d", nr))
 		if nr > 0 {
 			bufBytes := buf[0:nr]
 			md5Hash.Write(bufBytes)
 			md5Bytes := util.GetMd5Bytes(bufBytes)
 			md5s = append(md5s, strings.ToUpper(hex.EncodeToString(md5Bytes)))
-			_ = api.UploadChunk(res.UploadFileId, bufBytes, md5Bytes, i+1)
+			err = api.UploadChunk(res.UploadFileId, bufBytes, md5Bytes, i+1)
 			written += int64(nr)
+			if err != nil {
+				break
+			}
 		}
 	}
-	fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
-	sliceMd5 := fileMd5
-	if f.UploadFileSize() > int64(chunkL) {
-		sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
+	if err == nil {
+		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
+		sliceMd5 := fileMd5
+		if f.UploadFileSize() > int64(chunkL) {
+			sliceMd5 = util.GetMD5Encode(strings.Join(md5s, "\n"))
+		}
+		err = api.CommitFile(res.UploadFileId, f.UploadFileSize(), fileMd5, sliceMd5)
 	}
-	err = api.CommitFile(res.UploadFileId, f.UploadFileSize(), fileMd5, sliceMd5)
 	return written, err
 }
-func (f File) CopyTo(w io.Writer, dst File) (written int64, err error) {
+func (f File) CopyTo(dst File) (written int64, err error) {
 	api := API{File: f.File}
 	_, srcFName := path.Split(f.File.Target.Name)
 	dstD, _ := path.Split(dst.Name())
@@ -122,11 +125,14 @@ func (f File) CopyTo(w io.Writer, dst File) (written int64, err error) {
 func (f File) WriteTo(w io.Writer) (written int64, err error) {
 	httpMethod := util.GetHttpMethod(f.Ctx)
 	if httpMethod == "COPY" {
-		return f.CopyTo(w, w.(File))
+		return f.CopyTo(w.(File))
 	}
 	api := API{File: f.File}
 	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
 	fileInfoVO, err := api.GetFileById(fileInfo.Id)
+	if err != nil {
+		return written, err
+	}
 	req := http2.GetClient().NewRequest()
 	buf := make([]byte, 1024*1024*f.File.ProviderFolder.Account.GetBuf)
 	chunkL := len(buf)
@@ -142,11 +148,19 @@ func (f File) WriteTo(w io.Writer) (written int64, err error) {
 			rangeE += remain
 		}
 		req.SetHeader("Range", fmt.Sprintf("bytes=%d-%d", rangeS, rangeE))
-		res, _ := req.Get(fileInfoVO.FileDownloadUrl)
-		util.LogChunk("Get", f.Name(), fileInfoVO.Size, chunks, chunkL, i, rangeS, rangeE, "")
+		res, eg := req.Get(fileInfoVO.FileDownloadUrl)
+		if eg != nil {
+			err = eg
+			break
+		}
+		web.LogChunk("Get", f.Name(), fileInfoVO.Size, chunks, chunkL, i, rangeS, rangeE, "")
 		cn := copy(buf, res.Body())
-		nw, _ := w.Write(buf[0:cn])
+		nw, ew := w.Write(buf[0:cn])
 		written += int64(nw)
+		if ew != nil {
+			err = ew
+			break
+		}
 	}
 	return written, err
 }
