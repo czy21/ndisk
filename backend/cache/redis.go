@@ -22,13 +22,13 @@ func (c Redis) Set(ctx context.Context, key string, value interface{}) {
 	_, _ = c.Cmd.Set(ctx, key, value, expiration).Result()
 }
 
+func (c Redis) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) {
+	_, _ = c.Cmd.SetEX(ctx, key, value, expiration).Result()
+}
+
 func (c Redis) SetObj(ctx context.Context, key string, value interface{}) {
 	val, _ := json.Marshal(value)
 	c.Set(ctx, key, val)
-}
-
-func (c Redis) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) {
-	_, _ = c.Cmd.SetEX(ctx, key, value, expiration).Result()
 }
 
 func (c Redis) SetObjEX(ctx context.Context, key string, value interface{}, expiration time.Duration) {
@@ -60,8 +60,13 @@ func (c Redis) GetObj(ctx context.Context, key string, v interface{}) bool {
 	return false
 }
 
-func (c Redis) GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration) {
-	panic("implement me")
+func (c Redis) GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration) bool {
+	val := c.GetEX(ctx, key, expiration)
+	if val != "" {
+		_ = json.Unmarshal([]byte(val), v)
+		return true
+	}
+	return false
 }
 
 func (c Redis) Del(ctx context.Context, key string) {

@@ -16,7 +16,7 @@ type Cache interface {
 	Get(ctx context.Context, key string) string
 	GetEX(ctx context.Context, key string, expiration time.Duration) string
 	GetObj(ctx context.Context, key string, v interface{}) bool
-	GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration)
+	GetObjEX(ctx context.Context, key string, v interface{}, expiration time.Duration) bool
 	Del(ctx context.Context, key string)
 	DelPrefix(ctx context.Context, prefix string)
 }
