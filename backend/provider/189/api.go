@@ -32,8 +32,8 @@ func (a API) getRequestWithJsonAndToken(req *resty.Request) *resty.Request {
 	return req
 }
 
-func (a API) logRes(funcName string, strBody string, ret ResponseVO) (err error) {
-	fmtMsg := fmt.Sprintf("%s %s", funcName, strBody)
+func (a API) checkError(funcName string, res *resty.Response, ret ResponseVO) (err error) {
+	fmtMsg := fmt.Sprintf("%s %s", funcName, res.String())
 	if ret.ResMsg != SuccessMsg {
 		err = errors.New(fmtMsg)
 	}
@@ -47,6 +47,7 @@ func (a API) setTokenHeader(req *resty.Request) {
 func (a API) GetObjectsById(folderId string, fileName string) (FileListAO, error) {
 	var (
 		ret FileListAORes
+		err error
 	)
 	pageIndex := 1
 	pageSize := 60
@@ -69,7 +70,7 @@ func (a API) GetObjectsById(folderId string, fileName string) (FileListAO, error
 			SetQueryParams(params).
 			SetResult(&pageRet)
 		res, _ := req.Get(fmt.Sprintf("%s/open/file/searchFiles.action", ApiUrl))
-		err := a.logRes("GetFolderById", res.String(), pageRet.ResponseVO)
+		err = a.checkError("GetObjectsById", res, pageRet.ResponseVO)
 		if err != nil || pageRet.FileListAO.Count == 0 {
 			break
 		}
@@ -77,7 +78,7 @@ func (a API) GetObjectsById(folderId string, fileName string) (FileListAO, error
 		ret.FileListAO.Files = append(ret.FileListAO.Files, pageRet.FileListAO.Files...)
 		pageIndex++
 	}
-	return ret.FileListAO, nil
+	return ret.FileListAO, err
 }
 
 func (a API) GetFoldersById(folderId string) ([]FolderChildrenRes, error) {
@@ -99,8 +100,8 @@ func (a API) GetFoldersById(folderId string) ([]FolderChildrenRes, error) {
 }
 func (a API) GetFileById(fileId string) (FileInfoVO, error) {
 	var (
-		err error
 		ret FileInfoVORes
+		err error
 	)
 	queryParam := map[string]string{
 		"noCache": QueryParamNoCache,
@@ -110,7 +111,7 @@ func (a API) GetFileById(fileId string) (FileInfoVO, error) {
 		SetQueryParams(queryParam).
 		SetResult(&ret)
 	res, _ := req.Get(fmt.Sprintf("%s/open/file/getFileInfo.action", ApiUrl))
-	err = a.logRes("GetFileById", res.String(), ret.ResponseVO)
+	err = a.checkError("GetFileById", res, ret.ResponseVO)
 	if ret.ResCode == ResFileNotFoundCode {
 		err = fs.ErrNotExist
 	}
@@ -130,7 +131,7 @@ func (a API) CreateFolder(parentFolderId string, name string) (err error) {
 		SetFormData(formData).
 		SetResult(&ret)
 	res, _ := req.Post(fmt.Sprintf("%s/open/file/createFolder.action", ApiUrl))
-	err = a.logRes("CreateFolder", res.String(), ret.ResponseVO)
+	err = a.checkError("CreateFolder", res, ret.ResponseVO)
 	return err
 }
 func (a API) Delete(fileId string, fileName string, isFolder bool) (err error) {
@@ -142,8 +143,11 @@ func (a API) Copy(fileId string, fileName string, isFolder bool, targetFolderId 
 func (a API) Move(fileId string, fileName string, isFolder bool, targetFolderId string) (err error) {
 	return a.CreateTask("MOVE", fileId, fileName, isFolder, map[string]string{"targetFolderId": targetFolderId})
 }
-func (a API) CreateTask(kind string, fileId string, fileName string, isFolder bool, extraFormParam map[string]string) (err error) {
-	var ret TaskRes
+func (a API) CreateTask(kind string, fileId string, fileName string, isFolder bool, extraFormParam map[string]string) error {
+	var (
+		ret TaskRes
+		err error
+	)
 	taskInfosBytes, err := json.Marshal([]map[string]string{
 		{
 			"fileId":   fileId,
@@ -168,20 +172,7 @@ func (a API) CreateTask(kind string, fileId string, fileName string, isFolder bo
 		SetQueryParams(queryParam).
 		SetResult(&ret)
 	res, _ := req.Post(fmt.Sprintf("%s/open/batch/createBatchTask.action", ApiUrl))
-	err = a.logRes("Delete", res.String(), ret.ResponseVO)
-	if err != nil {
-		return err
-	}
-	var taskStatus int
-	i := 0
-	for {
-		if err != nil || taskStatus == 4 || i >= 2 {
-			break
-		}
-		time.Sleep(500 * time.Millisecond)
-		taskStatus, err = a.CheckTask(ret.TaskId, kind)
-		i++
-	}
+	err = a.checkError(fmt.Sprintf("CreateTask %s", kind), res, ret.ResponseVO)
 	return err
 }
 func (a API) CheckTask(taskId string, kind string) (s int, err error) {
@@ -200,7 +191,7 @@ func (a API) CheckTask(taskId string, kind string) (s int, err error) {
 		SetFormData(formParam).
 		SetResult(&ret)
 	res, _ := req.Post(fmt.Sprintf("%s/open/batch/checkBatchTask.action", ApiUrl))
-	err = a.logRes("CheckTask", res.String(), ret.ResponseVO)
+	err = a.checkError("CheckTask", res, ret.ResponseVO)
 	return ret.TaskStatus, err
 }
 func (a API) RenameFile(fileId string, destName string) (err error) {
@@ -213,7 +204,7 @@ func (a API) RenameFile(fileId string, destName string) (err error) {
 		SetFormData(formParam).
 		SetResult(&ret)
 	res, _ := req.Post(fmt.Sprintf("%s/open/file/renameFile.action?noCache=%s", ApiUrl, QueryParamNoCache))
-	err = a.logRes("RenameFile", res.String(), ret.ResponseVO)
+	err = a.checkError("RenameFile", res, ret.ResponseVO)
 	return err
 }
 func (a API) RenameFolder(folderId string, destName string) (err error) {
@@ -226,7 +217,7 @@ func (a API) RenameFolder(folderId string, destName string) (err error) {
 		SetFormData(formParams).
 		SetResult(&ret)
 	res, _ := req.Post(fmt.Sprintf("%s/open/file/renameFolder.action?noCache=%s", ApiUrl, QueryParamNoCache))
-	err = a.logRes("RenameFolder", res.String(), ret.ResponseVO)
+	err = a.checkError("RenameFolder", res, ret.ResponseVO)
 	return err
 }
 func (a API) GetRSAKey() (ret RSAKeyRes, err error) {
@@ -236,7 +227,7 @@ func (a API) GetRSAKey() (ret RSAKeyRes, err error) {
 	cache.Client.GetObj(context.Background(), rsaCacheKey, &ret)
 	if ret.PKId == "" {
 		res, _ := req.Get(fmt.Sprintf("%s/security/generateRsaKey.action?noCache=%s", ApiUrl, QueryParamNoCache))
-		err = a.logRes("GetRSAKey", res.String(), ret.ResponseVO)
+		err = a.checkError("GetRSAKey", res, ret.ResponseVO)
 		if err != nil {
 			return ret, err
 		}
@@ -253,7 +244,7 @@ func (a API) GetUserBrief() (UserBriefInfoVO, error) {
 	req := a.getRequestWithJsonAndToken(http2.GetClient().NewRequest()).
 		SetResult(&ret)
 	res, _ := req.Get(fmt.Sprintf("%s/portal/v2/getUserBriefInfo.action?noCache=%s", ApiUrl, QueryParamNoCache))
-	err = a.logRes("GetUserBrief", res.String(), ret.ResponseVO)
+	err = a.checkError("GetUserBrief", res, ret.ResponseVO)
 	return ret.UserBriefInfoVO, err
 }
 func (a API) UploadRequest(uri string, queryParam map[string]string, resVO interface{}, errPredicate func() bool) (err error) {
