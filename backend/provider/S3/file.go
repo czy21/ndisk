@@ -39,7 +39,7 @@ func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 
 func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	api := API{f.File}
-	return api.PutObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, r, -1, minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
+	return api.PutObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, r, f.Size(), minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
 }
 
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
