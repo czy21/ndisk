@@ -14,9 +14,9 @@ func SplitPath(p string, pPrefix string) (string, string, []string, string, bool
 	rel := strings.TrimPrefix(p, pPrefix)
 	dir, base := path.Split(rel)
 	isRoot := (dir == "" || dir == "/") && base == ""
-	var parents []string
-	if !isRoot {
-		parents = strings.Split(strings.Trim(dir, "/"), "/")
+	parents := strings.Split(strings.Trim(dir, "/"), "/")
+	if len(parents) == 1 && parents[0] == "" {
+		parents = nil
 	}
 	return dir, base, parents, strings.TrimPrefix(rel, "/"), isRoot
 }

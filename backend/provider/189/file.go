@@ -113,11 +113,10 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 }
 func (f File) CopyTo(dst File) (written int64, err error) {
 	api := API{File: f.File}
-	_, srcFName := path.Split(f.File.Target.Name)
 	dstD, _ := path.Split(dst.Name())
 	srcFileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
 	dstFileInfo, err := f.FS.GetFileInfo(f.Ctx, dstD, f.File)
-	err = api.Copy(srcFileInfo.Id, srcFName, srcFileInfo.IsDir, dstFileInfo.Id)
+	err = api.Copy(srcFileInfo.Id, f.File.Target.BaseName, srcFileInfo.IsDir, dstFileInfo.Id)
 	return srcFileInfo.Size, err
 }
 

@@ -1,6 +1,7 @@
 package _189
 
 import (
+	"github.com/czy21/ndisk/cache"
 	"github.com/czy21/ndisk/model"
 	"github.com/czy21/ndisk/provider/base"
 	"golang.org/x/net/context"
@@ -57,19 +58,29 @@ func (fs FileSystem) Stat(ctx context.Context, file model.ProviderFile) (os.File
 }
 func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.ProviderFile) (model.FileInfo, error) {
 	return base.GetFileInfo(ctx, name, file, func(fileInfo *model.FileInfo) error {
-		remoteName := file.ProviderFolder.RemoteName
-		var err error
 		api := API{}
-		for _, t := range fileInfo.Parents {
-			folders, aErr := api.GetFoldersById(remoteName)
-			if aErr != nil {
-				err = aErr
-				return err
-			}
-			for _, f := range folders {
-				if f.Name == t {
-					fileInfo.Id = f.Id
-					remoteName = fileInfo.Id
+		remoteName := file.ProviderFolder.RemoteName
+		dir, _ := path.Split(name)
+		var (
+			err        error
+			parentInfo model.FileInfo
+		)
+		cache.Client.GetObj(ctx, cache.GetFileInfoCacheKey(path.Join(dir)), &parentInfo)
+		if parentInfo.Name != "" {
+			fileInfo.Id = parentInfo.Id
+			remoteName = fileInfo.Id
+		} else {
+			for _, t := range fileInfo.Parents {
+				folders, aErr := api.GetFoldersById(remoteName)
+				if aErr != nil {
+					err = aErr
+					return err
+				}
+				for _, f := range folders {
+					if f.Name == t {
+						fileInfo.Id = f.Id
+						remoteName = fileInfo.Id
+					}
 				}
 			}
 		}
