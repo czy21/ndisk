@@ -15,13 +15,12 @@ var clientMap sync.Map
 
 func (a API) GetClient() (*minio.Client, error) {
 	account := a.File.ProviderFolder.Account
-	var client *minio.Client
 	var err error
 	key := account.Endpoint + ":" + account.UserName
 	if client, ok := clientMap.Load(key); ok {
 		return client.(*minio.Client), err
 	}
-	client, err = minio.New(account.Endpoint, account.UserName, account.Password, false)
+	client, err := minio.New(account.Endpoint, account.UserName, account.Password, false)
 	clientMap.Store(key, client)
 	return client, err
 }
