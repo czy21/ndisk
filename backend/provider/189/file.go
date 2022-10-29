@@ -36,13 +36,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				IsDir: true,
 			},
 		})
-		fi := model.FileInfo{
-			Name:    path.Join(f.File.Target.Name, t.Name),
-			ModTime: time.Time(t.UpdateDate).Add(-8 * time.Hour),
-			Id:      strconv.FormatInt(t.Id, 10),
-			IsDir:   true,
-		}
-		cache.Client.SetObj(f.Ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
+		f.setCacheFileInfo(t.Id, t.Name, 0, t.UpdateDate, true)
 	}
 	for _, t := range folder.Files {
 		fileInfos = append(fileInfos, model.FileInfoDelegate{
@@ -50,15 +44,26 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				Name: t.Name,
 			},
 		})
-		fi := model.FileInfo{
-			Name:    path.Join(f.File.Target.Name, t.Name),
-			ModTime: time.Time(t.UpdateDate).Add(-8 * time.Hour),
-			Size:    t.Size,
-			Id:      strconv.FormatInt(t.Id, 10),
-		}
-		cache.Client.SetObj(f.Ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
+		f.setCacheFileInfo(t.Id, t.Name, t.Size, t.UpdateDate, false)
 	}
 	return fileInfos, err
+}
+
+func (f File) setCacheFileInfo(id int64, fileName string, size int64, updateTime model.LocalTime, isDir bool) {
+	fi := model.FileInfo{
+		Name:    path.Join(f.File.Target.Name, fileName),
+		ModTime: time.Time(updateTime).Add(-8 * time.Hour),
+		Size:    size,
+		Id:      strconv.FormatInt(id, 10),
+		IsDir:   isDir,
+	}
+	dir, baseName, parents, rel, isRoot := util.SplitPath(fi.Name, path.Join("/", f.File.ProviderFolder.Name))
+	fi.Rel = rel
+	fi.Dir = dir
+	fi.Parents = parents
+	fi.Base = baseName
+	fi.IsRoot = isRoot
+	cache.Client.SetObj(f.Ctx, cache.GetFileInfoCacheKey(fi.Name), &fi)
 }
 
 // ReadFrom Put
