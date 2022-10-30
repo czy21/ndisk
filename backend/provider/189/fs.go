@@ -90,19 +90,12 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 			if aErr != nil {
 				err = aErr
 			}
-			for _, q := range folder.Files {
-				if q.Name == fileInfo.Base {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.Size = q.Size
-					fileInfo.IsDir = false
-					fileInfo.Id = strconv.FormatInt(q.Id, 10)
-					err = nil
-				}
-			}
-			for _, q := range folder.Folders {
-				if q.Name == fileInfo.Base {
-					fileInfo.ModTime = time.Time(q.UpdateDate).Add(-8 * time.Hour)
-					fileInfo.Id = strconv.FormatInt(q.Id, 10)
+			for _, t := range folder {
+				if t.Name == fileInfo.Base {
+					fileInfo.ModTime = time.Time(t.UpdateDate).Add(-8 * time.Hour)
+					fileInfo.Size = t.Size
+					fileInfo.IsDir = t.IsDir
+					fileInfo.Id = strconv.FormatInt(t.Id, 10)
 					err = nil
 				}
 			}

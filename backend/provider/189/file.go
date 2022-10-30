@@ -27,24 +27,16 @@ type File struct {
 func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 	api := API{File: f.File}
 	fileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
-	folder, err := api.GetObjectsById(fileInfo.Id, "")
+	files, err := api.GetObjectsById(fileInfo.Id, "")
 	var fileInfos []fs.FileInfo
-	for _, t := range folder.Folders {
+	for _, t := range files {
 		fileInfos = append(fileInfos, model.FileInfoDelegate{
 			FileInfo: model.FileInfo{
 				Name:  t.Name,
 				IsDir: true,
 			},
 		})
-		f.setCacheFileInfo(t.Id, t.Name, 0, t.UpdateDate, true)
-	}
-	for _, t := range folder.Files {
-		fileInfos = append(fileInfos, model.FileInfoDelegate{
-			FileInfo: model.FileInfo{
-				Name: t.Name,
-			},
-		})
-		f.setCacheFileInfo(t.Id, t.Name, t.Size, t.UpdateDate, false)
+		f.setCacheFileInfo(t.Id, t.Name, 0, t.UpdateDate, t.IsDir)
 	}
 	return fileInfos, err
 }

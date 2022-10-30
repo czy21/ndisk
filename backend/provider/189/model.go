@@ -25,9 +25,10 @@ type FolderVO struct {
 
 type FileVO struct {
 	BaseTrackModel[int64, model.LocalTime, model.LocalTime]
-	Size int64 `json:"size"`
+	Size  int64 `json:"size"`
+	IsDir bool
 }
-type FolderChildrenRes struct {
+type FolderNodeRes struct {
 	Id       string `json:"id"`
 	Name     string `json:"name"`
 	PId      string `json:"pId"`
@@ -42,14 +43,12 @@ type FileRes struct {
 	ResponseVO
 	FileVO
 }
-type FileListAO struct {
-	Count   int        `json:"count"`
-	Files   []FileVO   `json:"fileList"`
-	Folders []FolderVO `json:"folderList"`
-}
+
 type FileListAORes struct {
 	ResponseVO
-	FileListAO
+	Count   int       `json:"count"`
+	Files   []*FileVO `json:"fileList"`
+	Folders []*FileVO `json:"folderList"`
 }
 
 type TaskRes struct {

@@ -44,10 +44,10 @@ func (a API) setTokenHeader(req *resty.Request) {
 	req.SetHeader("cookie", viper.GetString("cloud189.cookie"))
 }
 
-func (a API) GetObjectsById(folderId string, fileName string) (FileListAO, error) {
+func (a API) GetObjectsById(folderId string, fileName string) ([]*FileVO, error) {
 	var (
-		ret FileListAORes
-		err error
+		files []*FileVO
+		err   error
 	)
 	pageIndex := 1
 	pageSize := 60
@@ -71,18 +71,23 @@ func (a API) GetObjectsById(folderId string, fileName string) (FileListAO, error
 			SetResult(&pageRet)
 		res, _ := req.Get(fmt.Sprintf("%s/open/file/searchFiles.action", ApiUrl))
 		err = a.checkError("GetObjectsById", res, pageRet.ResponseVO)
-		if err != nil || pageRet.FileListAO.Count == 0 {
+		if err != nil || pageRet.Count == 0 {
 			break
 		}
-		ret.FileListAO.Folders = append(ret.FileListAO.Folders, pageRet.FileListAO.Folders...)
-		ret.FileListAO.Files = append(ret.FileListAO.Files, pageRet.FileListAO.Files...)
+		for _, t := range pageRet.Folders {
+			t.IsDir = true
+		}
+		for _, t := range pageRet.Files {
+			t.IsDir = false
+		}
+		files = append(append(files, pageRet.Folders...), pageRet.Files...)
 		pageIndex++
 	}
-	return ret.FileListAO, err
+	return files, err
 }
 
-func (a API) GetFoldersById(folderId string) ([]FolderChildrenRes, error) {
-	var ret []FolderChildrenRes
+func (a API) GetFoldersById(folderId string) ([]FolderNodeRes, error) {
+	var ret []FolderNodeRes
 	queryParam := map[string]string{
 		"noCache": QueryParamNoCache,
 	}
