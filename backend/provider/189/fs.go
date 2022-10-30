@@ -86,11 +86,11 @@ func (fs FileSystem) GetFileInfo(ctx context.Context, name string, file model.Pr
 		}
 		if fileInfo.Base != "" {
 			err = fs1.ErrNotExist
-			folder, aErr := api.GetObjectsById(remoteName, fileInfo.Base)
+			files, aErr := api.GetObjectsById(remoteName, fileInfo.Base)
 			if aErr != nil {
 				err = aErr
 			}
-			for _, t := range folder {
+			for _, t := range files {
 				if t.Name == fileInfo.Base {
 					fileInfo.ModTime = time.Time(t.UpdateDate).Add(-8 * time.Hour)
 					fileInfo.Size = t.Size

@@ -36,7 +36,7 @@ func (f File) Readdir(count int) ([]fs.FileInfo, error) {
 				IsDir: true,
 			},
 		})
-		f.setCacheFileInfo(t.Id, t.Name, 0, t.UpdateDate, t.IsDir)
+		f.setCacheFileInfo(t.Id, t.Name, t.Size, t.UpdateDate, t.IsDir)
 	}
 	return fileInfos, err
 }
