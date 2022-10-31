@@ -37,13 +37,13 @@ type ProviderFolderMeta struct {
 	ProviderFolderBO
 }
 type ProviderFileMeta struct {
-	Path     string
-	Name     string
-	RelPath  string
-	BaseName string
-	Dir      string
-	DirNames []string
-	IsRoot   bool
+	Path    string
+	Name    string
+	Rel     string
+	Base    string
+	Dir     string
+	Parents []string
+	IsRoot  bool
 }
 type ProviderFile struct {
 	Target ProviderFileMeta

@@ -69,7 +69,7 @@ func (f File) ReadFrom(r io.Reader) (written int64, err error) {
 	if f.Size() == 0 {
 		fileMd5 = hex.EncodeToString(md5Hash.Sum(nil))
 	}
-	res, err := api.CreateFile(fileInfo.Id, f.File.Target.BaseName, f.Size(), fileMd5)
+	res, err := api.CreateFile(fileInfo.Id, f.File.Target.Base, f.Size(), fileMd5)
 	if err != nil {
 		return written, err
 	}
@@ -113,7 +113,7 @@ func (f File) CopyTo(dst File) (written int64, err error) {
 	dstD, _ := path.Split(dst.Name())
 	srcFileInfo, err := f.FS.GetFileInfo(f.Ctx, f.File.Target.Name, f.File)
 	dstFileInfo, err := f.FS.GetFileInfo(f.Ctx, dstD, f.File)
-	err = api.Copy(srcFileInfo.Id, f.File.Target.BaseName, srcFileInfo.IsDir, dstFileInfo.Id)
+	err = api.Copy(srcFileInfo.Id, f.File.Target.Base, srcFileInfo.IsDir, dstFileInfo.Id)
 	return srcFileInfo.Size, err
 }
 

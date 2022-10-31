@@ -51,7 +51,7 @@ func (FileSystem) Stat(ctx context.Context, name string) (os.FileInfo, error) {
 		return model.FileInfoDelegate{FileInfo: model.FileInfo{IsDir: true}}, nil
 	}
 	f, fs := getProvider(name, "")
-	web.LogDav("Stat", fmt.Sprintf("%s dir:%s fileName:%s dirNames:%s isRoot:%t", name, f.Target.Dir, f.Target.BaseName, fmt.Sprint(f.Target.DirNames), f.Target.IsRoot))
+	web.LogDav("Stat", fmt.Sprintf("%s dir:%s fileName:%s dirNames:%s isRoot:%t", name, f.Target.Dir, f.Target.Base, fmt.Sprint(f.Target.Parents), f.Target.IsRoot))
 	return fs.Stat(ctx, f)
 }
 
@@ -81,17 +81,17 @@ func getProvider(name string, oldName string) (model.ProviderFile, model.FileSys
 		}
 	}
 	dstDir, dstFileName, dstDirNames, dstRel, dstIsRoot := util.SplitPath(file.Target.Name, path.Join("/", file.ProviderFolder.Name))
-	file.Target.RelPath = dstRel
-	file.Target.BaseName = dstFileName
+	file.Target.Rel = dstRel
+	file.Target.Base = dstFileName
 	file.Target.Dir = dstDir
-	file.Target.DirNames = dstDirNames
+	file.Target.Parents = dstDirNames
 	file.Target.IsRoot = dstIsRoot
 
 	srcDir, srcFileName, srcDirNames, srcRel, srcIsRoot := util.SplitPath(file.Source.Name, path.Join("/", file.ProviderFolder.Name))
-	file.Source.RelPath = srcRel
-	file.Source.BaseName = srcFileName
+	file.Source.Rel = srcRel
+	file.Source.Base = srcFileName
 	file.Source.Dir = srcDir
-	file.Source.DirNames = srcDirNames
+	file.Source.Parents = srcDirNames
 	file.Source.IsRoot = srcIsRoot
 	if fs := provider.GetProviders()[file.ProviderFolder.Account.Kind]; fs != nil {
 		return file, fs

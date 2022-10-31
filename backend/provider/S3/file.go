@@ -17,9 +17,9 @@ type File struct {
 
 func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 	api := API{File: f.File}
-	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, path.Join(f.File.Target.RelPath)+"/")
+	objectInfos, err := api.GetObjects(f.File.ProviderFolder.RemoteName, path.Join(f.File.Target.Rel)+"/")
 	for _, t := range objectInfos {
-		if path.Join(t.Key) == path.Join(f.File.Target.RelPath) {
+		if path.Join(t.Key) == path.Join(f.File.Target.Rel) {
 			continue
 		}
 		fileInfo := model.FileInfo{Name: path.Base(t.Key)}
@@ -39,7 +39,7 @@ func (f File) Readdir(count int) (fileInfos []fs.FileInfo, err error) {
 
 func (f File) ReadFrom(r io.Reader) (n int64, err error) {
 	api := API{f.File}
-	return api.PutObject(f.File.ProviderFolder.RemoteName, f.File.Target.RelPath, r, f.Size(), minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
+	return api.PutObject(f.File.ProviderFolder.RemoteName, f.File.Target.Rel, r, f.Size(), minio.PutObjectOptions{ContentType: util.GetContentType(f.Name())})
 }
 
 func (f File) WriteTo(w io.Writer) (n int64, err error) {
@@ -47,13 +47,13 @@ func (f File) WriteTo(w io.Writer) (n int64, err error) {
 	httpMethod := util.GetHttpMethod(f.Ctx)
 	objectName := f.File.ProviderFolder.RemoteName
 	if httpMethod == "COPY" {
-		src := minio.NewSourceInfo(objectName, f.File.Target.RelPath, nil)
-		dst, err := minio.NewDestinationInfo(objectName, w.(File).File.Target.RelPath, nil, nil)
+		src := minio.NewSourceInfo(objectName, f.File.Target.Rel, nil)
+		dst, err := minio.NewDestinationInfo(objectName, w.(File).File.Target.Rel, nil, nil)
 		client, err := api.GetClient()
 		err = client.CopyObject(dst, src)
 		return n, err
 	}
-	object, err := api.GetObject(objectName, f.File.Target.RelPath, minio.GetObjectOptions{})
+	object, err := api.GetObject(objectName, f.File.Target.Rel, minio.GetObjectOptions{})
 	if err != nil {
 		return 0, err
 	}

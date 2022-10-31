@@ -18,7 +18,7 @@ type FileSystem struct {
 func (fs FileSystem) Mkdir(ctx context.Context, perm os.FileMode, file model.ProviderFile) error {
 	api := API{file}
 	client, err := api.GetClient()
-	_, err = client.PutObject(file.ProviderFolder.RemoteName, path.Join(file.Target.RelPath)+"/", nil, 0, minio.PutObjectOptions{ContentType: ""})
+	_, err = client.PutObject(file.ProviderFolder.RemoteName, path.Join(file.Target.Rel)+"/", nil, 0, minio.PutObjectOptions{ContentType: ""})
 	return err
 }
 
@@ -37,7 +37,7 @@ func (fs FileSystem) RemoveAll(ctx context.Context, file model.ProviderFile) err
 	api := API{file}
 	fileInfo, err := fs.GetFileInfo(ctx, file.Target.Name, file)
 	bucketName := file.ProviderFolder.RemoteName
-	objectName := file.Target.RelPath
+	objectName := file.Target.Rel
 	client, err := api.GetClient()
 	objectsCh := make(chan string)
 	if fileInfo.IsDir {
@@ -54,8 +54,8 @@ func (fs FileSystem) Rename(ctx context.Context, file model.ProviderFile) (err e
 	api := API{file}
 	client, err := api.GetClient()
 	bucketName := file.ProviderFolder.RemoteName
-	srcPath := file.Source.RelPath
-	dstPath := file.Target.RelPath
+	srcPath := file.Source.Rel
+	dstPath := file.Target.Rel
 	srcInfo, err := fs.GetFileInfo(ctx, file.Source.Name, file)
 	objectsCh := make(chan string)
 	srcDstMap := make(map[string]string)
