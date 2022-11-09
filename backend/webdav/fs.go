@@ -106,6 +106,11 @@ type Uploader struct {
 }
 
 func (u Uploader) WriteTo(w io.Writer) (n int64, err error) {
+	if u.ReadCloser == http.NoBody {
+		if wr, ok := w.(io.ReaderFrom); ok {
+			return wr.ReadFrom(nil)
+		}
+	}
 	return util.Copy(w, u.ReadCloser)
 }
 
