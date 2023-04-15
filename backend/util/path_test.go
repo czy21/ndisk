@@ -6,8 +6,8 @@ import (
 )
 
 func PrintSplitPath(p string, pPrefix string) {
-	dir, fileName, dirs, isRoot := SplitPath(p, pPrefix)
-	fmt.Println(fmt.Sprintf("dir:%s fileName:%s dirNames:%s isRoot:%t", dir, fileName, dirs, isRoot))
+	dir, base, parents, rel, isRoot := SplitPath(p, pPrefix)
+	fmt.Println(fmt.Sprintf("%s dir:%s base:%s parents:%s rel:%s isRoot:%t", p, dir, base, parents, rel, isRoot))
 }
 
 func TestSplitPath(t *testing.T) {
